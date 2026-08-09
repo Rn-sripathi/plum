@@ -92,6 +92,53 @@ def test_upload_accepts_member_treatment_amount_and_files(client, tmp_path):
     assert resp.json()["component"] == "extraction_agent"
 
 
+def test_corrupt_file_is_a_member_problem_not_a_server_error(client, tmp_path):
+    """§6: bad input must not crash — and a damaged upload is the member's to
+    fix, so it must NOT surface as a 503 infrastructure failure."""
+    good = tmp_path / "rx.jpg"
+    _page().save(good)
+
+    metadata = {
+        "member_id": "EMP001",
+        "policy_id": "PLUM_GHI_2024",
+        "claim_category": "CONSULTATION",
+        "treatment_date": "2024-11-01",
+        "claimed_amount": 1500,
+    }
+    resp = client.post(
+        "/claims/upload",
+        data={"metadata": json.dumps(metadata), "document_types": "PRESCRIPTION,HOSPITAL_BILL"},
+        files=[
+            ("files", ("rx.jpg", good.read_bytes(), "image/jpeg")),
+            ("files", ("bill.jpg", b"not an image at all" * 20, "image/jpeg")),
+        ],
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "DOCUMENTS_REQUIRED"
+    damaged = [p for p in body["problems"] if p["file_name"] == "bill.jpg"]
+    assert len(damaged) == 1, "the damaged file must be reported exactly once"
+    assert "damaged" in damaged[0]["message"]
+    assert "Re-upload" in damaged[0]["action_needed"]
+
+
+def test_truncated_pdf_is_reported_as_damaged(client, tmp_path):
+    metadata = {
+        "member_id": "EMP001",
+        "policy_id": "PLUM_GHI_2024",
+        "claim_category": "CONSULTATION",
+        "treatment_date": "2024-11-01",
+        "claimed_amount": 1500,
+    }
+    resp = client.post(
+        "/claims/upload",
+        data={"metadata": json.dumps(metadata), "document_types": "HOSPITAL_BILL"},
+        files=[("files", ("bill.pdf", b"%PDF-1.4 truncated", "application/pdf"))],
+    )
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "DOCUMENTS_REQUIRED"
+
+
 def test_upload_rejects_empty_document_set(client):
     metadata = {
         "member_id": "EMP001",

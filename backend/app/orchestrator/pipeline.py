@@ -26,6 +26,7 @@ from app.orchestrator.trace import TraceBuilder
 
 PENALTY_DEGRADED = -0.20
 PENALTY_UNITEMIZED = -0.05
+PENALTY_AMOUNT_MISMATCH = -0.25
 PENALTY_SEMANTIC_DOWN = -0.10
 PENALTY_GRAPH_DOWN = -0.05
 
@@ -165,6 +166,14 @@ def process_claim(
         )
     if any("itemized" in note for note in adjudication.notes):
         penalties.append(("bill not itemized; adjudicated on billed total", PENALTY_UNITEMIZED))
+    if any(
+        c.name == "amount_reconciliation" and c.outcome is Outcome.FAIL
+        for c in adjudication.checks
+    ):
+        # Claimed and documented amounts disagree: either an over-claim or a
+        # misread document. Push the claim into the review band rather than
+        # settling silently on the documented figure.
+        penalties.append(("claimed amount disagrees with the documents", PENALTY_AMOUNT_MISMATCH))
 
     if submission.simulate_component_failure:
         # TC011: the least critical stage takes the simulated hit — same

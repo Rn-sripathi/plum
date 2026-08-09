@@ -114,6 +114,33 @@ def _render_pdf(path: Path) -> list[str]:
         pdf.close()
 
 
+def is_decodable(path: Path) -> bool:
+    """Can this file be opened as an image or PDF at all?
+
+    Checked locally before any vision call so a damaged upload is reported as
+    a member-fixable document problem ("re-upload this file") instead of
+    masquerading as an infrastructure outage.
+    """
+    try:
+        if not path.exists() or path.stat().st_size == 0:
+            return False
+        if path.suffix.lower() == ".pdf":
+            import pypdfium2 as pdfium
+
+            pdf = pdfium.PdfDocument(str(path))
+            try:
+                return len(pdf) > 0
+            finally:
+                pdf.close()
+        from PIL import Image
+
+        with Image.open(path) as image:
+            image.verify()
+        return True
+    except Exception:
+        return False
+
+
 def image_parts(path: Path) -> tuple[list[str], int]:
     """Data URIs for a document, plus its total page count (1 for images)."""
     if path.suffix.lower() == ".pdf":

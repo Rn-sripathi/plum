@@ -62,15 +62,23 @@ def test_unknown_claim_is_404(client):
     assert client.get("/claims/NOPE").status_code == 404
 
 
-def test_upload_without_llm_returns_503_with_guidance(client, by_id):
+def test_upload_without_llm_returns_503_with_guidance(client, by_id, tmp_path):
+    """Valid files that simply cannot be extracted (no LLM configured) are an
+    infrastructure failure: 503 with retry guidance, not a member problem."""
+    from PIL import Image
+
+    image = tmp_path / "page.jpg"
+    Image.new("RGB", (300, 400), "white").save(image)
+    payload = image.read_bytes()
+
     meta = dict(by_id["TC004"])
     meta.pop("documents")
     resp = client.post(
         "/claims/upload",
         data={"metadata": __import__("json").dumps(meta), "document_types": "PRESCRIPTION,HOSPITAL_BILL"},
         files=[
-            ("files", ("rx.jpg", b"fake-image-bytes", "image/jpeg")),
-            ("files", ("bill.jpg", b"fake-image-bytes", "image/jpeg")),
+            ("files", ("rx.jpg", payload, "image/jpeg")),
+            ("files", ("bill.jpg", payload, "image/jpeg")),
         ],
     )
     assert resp.status_code == 503

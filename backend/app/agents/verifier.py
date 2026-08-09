@@ -13,7 +13,7 @@ slots in here in Phase 4 behind the same contract.
 import re
 from pathlib import Path
 
-from app.agents.llm import DocumentAI
+from app.agents.llm import DocumentAI, is_decodable
 from app.core.errors import ComponentUnavailable, DocumentVerificationStop
 from app.kb.snapshot import PolicySnapshot
 from app.models import (
@@ -58,13 +58,52 @@ def verify_documents(
     eff_types: list[DocumentType | None] = []
     eff_quality: list[DocumentQuality | None] = []
     type_sources: list[str] = []
+    damaged: set[str] = set()
     for doc in docs:
         eff, quality, source = doc.actual_type, doc.quality, "DECLARED"
+
+        # File integrity first — a damaged upload is the member's to fix, and
+        # checking locally avoids a vision call that would fail confusingly.
+        if doc.storage_path and not is_decodable(Path(doc.storage_path)):
+            damaged.add(doc.file_id)
+            name = doc.file_name or doc.file_id
+            problems.append(
+                DocumentProblem(
+                    kind=DocumentProblemKind.UNREADABLE,
+                    file_id=doc.file_id,
+                    file_name=doc.file_name,
+                    found="a damaged or unsupported file",
+                    required="a valid JPG, PNG, or PDF",
+                    message=(
+                        f"'{name}' could not be opened — the file is damaged or is not a "
+                        f"supported format. Nothing could be read from it."
+                    ),
+                    action_needed=(
+                        f"Re-upload '{name}' as a JPG, PNG, or PDF. If you exported it from "
+                        f"another app, try taking a fresh photo of the original document."
+                    ),
+                )
+            )
+            tb.step(
+                "document_verifier", "file integrity", Outcome.FAIL,
+                f"{doc.file_id} ('{name}') is not a decodable image or PDF; "
+                f"reported to the member as a damaged upload.",
+            )
+            eff_types.append(eff)
+            eff_quality.append(DocumentQuality.UNREADABLE)
+            type_sources.append(source)
+            continue
+
         if doc_ai is not None and doc_ai.is_configured and doc.storage_path:
             try:
                 cls_type, conf, cls_quality = doc_ai.classify(Path(doc.storage_path))
                 quality = quality or cls_quality
-                if eff is not None and cls_type is not eff and conf >= 0.6:
+                # A type read off an unreadable scan is a guess, not evidence:
+                # never accuse the member of the wrong document when the real
+                # problem is that we could not read it. The UNREADABLE check
+                # below owns this document's message.
+                unreadable = quality is DocumentQuality.UNREADABLE
+                if eff is not None and cls_type is not eff and conf >= 0.6 and not unreadable:
                     problems.append(
                         DocumentProblem(
                             kind=DocumentProblemKind.WRONG_TYPE,
@@ -82,6 +121,15 @@ def verify_documents(
                     tb.step(
                         "document_verifier", "document classification", Outcome.FAIL,
                         f"{doc.file_id}: declared {eff.value} but classified as {cls_type.value} (conf {conf:.2f}).",
+                    )
+                elif unreadable:
+                    if eff is None:
+                        eff, source = cls_type, "CLASSIFIED"
+                    tb.step(
+                        "document_verifier", "document classification", Outcome.DEGRADED,
+                        f"{doc.file_id}: too unreadable to classify reliably "
+                        f"(best guess {cls_type.value} at {conf:.2f}); treating illegibility as "
+                        f"the problem to report.",
                     )
                 else:
                     if eff is None:
@@ -173,6 +221,8 @@ def verify_documents(
 
     # 2. Readability ------------------------------------------------------------
     for doc, eff, quality in zip(docs, eff_types, eff_quality):
+        if doc.file_id in damaged:
+            continue  # already reported as a damaged file; don't say it twice
         doc_label = f"{eff.value if eff else 'document'}" + (
             f" ('{doc.file_name}')" if doc.file_name else f" ({doc.file_id})"
         )

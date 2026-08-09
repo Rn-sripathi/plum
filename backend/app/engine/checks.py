@@ -458,6 +458,54 @@ def adjudicate_line_items(
     )
 
 
+RECONCILIATION_TOLERANCE = Decimal("0.01")  # 1% — covers rounding, not misreads
+
+
+def check_amount_reconciliation(
+    claim: ClaimSubmission, documented_total: Decimal | None, itemized: bool
+) -> RuleCheck:
+    """Does what the member claimed match what the documents actually say?
+
+    A gap means one of two things, and we cannot tell which from here: the
+    member over-claimed, or extraction misread a messy document. Either way a
+    human should see it — silently paying the documented figure while the
+    member expects more is how disputes start. The pipeline turns a FAIL here
+    into a confidence penalty, which routes the claim into review.
+    """
+    if documented_total is None:
+        return RuleCheck(
+            rule_ref=None,
+            name="amount_reconciliation",
+            outcome=Outcome.SKIPPED,
+            detail="No total could be read from the documents; claimed amount not cross-checked.",
+        )
+    gap = abs(claim.claimed_amount - documented_total)
+    allowed = claim.claimed_amount * RECONCILIATION_TOLERANCE
+    source = "itemized line items" if itemized else "billed total"
+    if gap > allowed:
+        direction = "less than" if documented_total < claim.claimed_amount else "more than"
+        return RuleCheck(
+            rule_ref=None,
+            name="amount_reconciliation",
+            outcome=Outcome.FAIL,
+            detail=(
+                f"Claimed {fmt_inr(claim.claimed_amount)} but the documents show "
+                f"{fmt_inr(documented_total)} ({source}) — {fmt_inr(gap)} {direction} claimed. "
+                f"This is either an over-claim or a misread document, so the claim is flagged "
+                f"for human review rather than settled on the difference."
+            ),
+        )
+    return RuleCheck(
+        rule_ref=None,
+        name="amount_reconciliation",
+        outcome=Outcome.PASS,
+        detail=(
+            f"Claimed {fmt_inr(claim.claimed_amount)} matches the documented "
+            f"{fmt_inr(documented_total)} ({source})."
+        ),
+    )
+
+
 def check_per_claim_cap(
     claim: ClaimSubmission, eligible_amount: Decimal, snapshot: PolicySnapshot
 ) -> RuleCheck:

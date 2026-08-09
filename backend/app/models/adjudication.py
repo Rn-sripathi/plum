@@ -17,7 +17,13 @@ from .trace import DecisionTrace
 class RuleCheck(BaseModel):
     """Outcome of one adjudication rule (§6 of the plan)."""
 
-    rule_ref: str = Field(description="Pointer into policy terms.")
+    rule_ref: str | None = Field(
+        default=None,
+        description=(
+            "Pointer into policy terms. None for checks with no policy clause behind "
+            "them, e.g. data-integrity reconciliation."
+        ),
+    )
     name: str = Field(description="Short rule name, e.g. 'waiting_period.diabetes'.")
     outcome: Outcome
     detail: str = Field(description="Specific result incl. relevant numbers/dates.")

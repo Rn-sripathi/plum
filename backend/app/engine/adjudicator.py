@@ -34,12 +34,14 @@ class ClaimFacts:
     hospital_name: str | None = None
     line_items: list[LineItem] = field(default_factory=list)
     itemized: bool = True
+    documented_total: Decimal | None = None
     notes: list[str] = field(default_factory=list)
 
 
 def gather_facts(claim: ClaimSubmission, documents: list[ExtractedDocument]) -> ClaimFacts:
     facts = ClaimFacts()
     bill_total: Decimal | None = None
+    documented_total: Decimal | None = None
     for doc in documents:
         content = doc.content
         if facts.diagnosis is None and content.diagnosis:
@@ -52,7 +54,10 @@ def gather_facts(claim: ClaimSubmission, documents: list[ExtractedDocument]) -> 
             facts.line_items.extend(content.line_items)
         elif content.total is not None:
             bill_total = content.total
-    if not facts.line_items:
+    if facts.line_items:
+        facts.documented_total = sum((i.amount for i in facts.line_items), Decimal(0))
+    else:
+        facts.documented_total = bill_total
         amount = bill_total if bill_total is not None else claim.claimed_amount
         facts.line_items = [LineItem(description="Billed amount (no itemized bill)", amount=amount)]
         facts.itemized = False
@@ -76,6 +81,9 @@ def adjudicate(
     # -> line items -> per-claim cap -> financials
     all_checks += C.check_eligibility(claim, snapshot)
     all_checks += C.check_submission_rules(claim, snapshot)
+    all_checks.append(
+        C.check_amount_reconciliation(claim, facts.documented_total, facts.itemized)
+    )
 
     exclusion_check, exclusion_match = C.check_exclusions(
         claim, facts.diagnosis, facts.treatment_text, snapshot, semantic_hints

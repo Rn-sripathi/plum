@@ -5,7 +5,14 @@ from decimal import Decimal
 from app.engine import matching
 from app.engine.financial import compute_breakdown
 from app.engine.fraud import assess_fraud
-from app.models import ClaimCategory, ClaimSubmission, FraudSignalCode, LineItemDecision
+from app.models import (
+    ClaimCategory,
+    ClaimSubmission,
+    FraudSignalCode,
+    LineItemDecision,
+    Outcome,
+)
+from app.orchestrator.pipeline import process_claim
 
 
 class TestMatching:
@@ -121,6 +128,56 @@ class TestFinancial:
             ytd_claims_amount=None,
         )
         assert any("assumed" in n for n in notes)
+
+
+class TestAmountReconciliation:
+    """Guards against settling on misread amounts: if what the member claimed
+    and what the documents say disagree, a human must look."""
+
+    def _claim(self, amount: int, total: int | None):
+        docs = [{"file_id": "F1", "actual_type": "PRESCRIPTION", "content": {"diagnosis": "Viral Fever"}}]
+        bill = {"file_id": "F2", "actual_type": "HOSPITAL_BILL", "content": {}}
+        if total is not None:
+            bill["content"] = {"line_items": [{"description": "Consultation Fee", "amount": total}]}
+        docs.append(bill)
+        return ClaimSubmission.model_validate(
+            {
+                "member_id": "EMP001",
+                "policy_id": "PLUM_GHI_2024",
+                "claim_category": "CONSULTATION",
+                "treatment_date": "2024-11-01",
+                "claimed_amount": amount,
+                "ytd_claims_amount": 0,
+                "documents": docs,
+            }
+        )
+
+    def test_matching_amounts_pass_cleanly(self, snapshot):
+        result = process_claim(self._claim(1500, 1500), snapshot, claim_id="REC1")
+        check = next(c for c in result.trace.steps if c.action == "amount_reconciliation")
+        assert check.outcome is Outcome.PASS
+        assert result.confidence > 0.9
+        assert result.manual_review_recommended is False
+
+    def test_misread_or_overclaimed_amount_routes_to_review(self, snapshot):
+        # Documents show ₹1,150 but the member claimed ₹1,500 — the exact
+        # failure a blurry bill produced against the live vision model.
+        result = process_claim(self._claim(1500, 1150), snapshot, claim_id="REC2")
+        check = next(c for c in result.trace.steps if c.action == "amount_reconciliation")
+        assert check.outcome is Outcome.FAIL
+        assert "₹1,500" in check.detail and "₹1,150" in check.detail
+        assert result.manual_review_recommended is True
+        assert result.confidence < 0.75
+
+    def test_rounding_difference_tolerated(self, snapshot):
+        result = process_claim(self._claim(1500, 1495), snapshot, claim_id="REC3")
+        check = next(c for c in result.trace.steps if c.action == "amount_reconciliation")
+        assert check.outcome is Outcome.PASS
+
+    def test_no_documented_total_is_skipped_not_failed(self, snapshot):
+        result = process_claim(self._claim(1500, None), snapshot, claim_id="REC4")
+        check = next(c for c in result.trace.steps if c.action == "amount_reconciliation")
+        assert check.outcome is Outcome.SKIPPED
 
 
 class TestFraud:

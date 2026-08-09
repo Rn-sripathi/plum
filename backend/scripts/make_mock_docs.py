@@ -88,6 +88,12 @@ def main() -> None:
     render(PRESCRIPTION, OUT / "prescription_rajesh.jpg")
     render(HOSPITAL_BILL, OUT / "hospital_bill_city_clinic.jpg")
     render(HOSPITAL_BILL, OUT / "blurry_bill.jpg", blur=6.0)
+    # Partially legible: vision reads it, but with low field confidence — the
+    # case that exercises the amount-reconciliation guard.
+    render(HOSPITAL_BILL, OUT / "smudged_bill.jpg", blur=1.6)
+    # Not an image at all: must be reported as a damaged upload, never a 503.
+    (OUT / "corrupt.jpg").write_bytes(b"this is not an image at all" * 20)
+    print(f"wrote {OUT / 'corrupt.jpg'} (deliberately invalid)")
     render_pdf([HOSPITAL_BILL], OUT / "hospital_bill.pdf")
     render_pdf(
         [PRESCRIPTION, HOSPITAL_BILL], OUT / "prescription_and_bill_2page.pdf"
