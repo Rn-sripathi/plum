@@ -27,12 +27,10 @@
 }
 
 .logo {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 26px;
-  letter-spacing: -0.045em;
-  color: var(--plum-coral);
-  line-height: 1;
+  height: 26px;
+  width: auto;
+  display: block;
+  color: var(--plum-coral); /* the glyph fills with currentColor */
 }
 
 * { box-sizing: border-box; }
