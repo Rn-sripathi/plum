@@ -101,7 +101,22 @@ function Decision({ result }) {
   );
 }
 
-export default function ResultView({ result }) {
+export default function ResultView({ result, liveSteps }) {
+  if (!result && liveSteps) {
+    return (
+      <div className="panel">
+        <h2>
+          Deciding<span className="dots" /> — {liveSteps.length} check
+          {liveSteps.length === 1 ? "" : "s"} so far
+        </h2>
+        <p className="hint">
+          Each check appears as the pipeline performs it. Nothing is decided until every
+          check below has run.
+        </p>
+        <TraceTimeline trace={{ steps: liveSteps }} />
+      </div>
+    );
+  }
   if (!result) {
     return (
       <div className="panel">

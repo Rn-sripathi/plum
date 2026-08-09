@@ -133,6 +133,22 @@ tr.clickable:hover { background: #f4f5fb; }
 .step .detail { color: #3d4459; margin-top: 2px; line-height: 1.45; }
 .step .meta { color: var(--muted); font-size: 11.5px; margin-top: 3px; }
 
+.dots::after {
+  content: "";
+  animation: dots 1.2s steps(4, end) infinite;
+}
+@keyframes dots {
+  0% { content: ""; }
+  25% { content: "."; }
+  50% { content: ".."; }
+  75% { content: "..."; }
+}
+.step { animation: step-in 0.28s ease-out; }
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
 .tabs { display: flex; gap: 6px; margin-bottom: 4px; }
 .tab {
   flex: 1;

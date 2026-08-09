@@ -19,7 +19,7 @@ const BLANK = {
   hospital_name: "",
 };
 
-export default function SubmitForm({ onResult }) {
+export default function SubmitForm({ onResult, onStep, onStart }) {
   const [mode, setMode] = useState("upload"); // "upload" | "structured"
   const [cases, setCases] = useState([]);
   const [preset, setPreset] = useState("");
@@ -66,25 +66,28 @@ export default function SubmitForm({ onResult }) {
     const metadata = { ...form, claimed_amount: Number(form.claimed_amount) };
     if (!metadata.hospital_name) delete metadata.hospital_name;
 
-    setBusy(true);
-    try {
-      let result;
-      if (mode === "upload") {
-        if (!files.length) {
-          setError("Select at least one document to upload.");
-          return;
-        }
-        result = await api.uploadClaim(metadata, files, fileTypes);
-      } else {
-        let documents;
-        try {
-          documents = JSON.parse(docsJson);
-        } catch {
-          setError("Documents JSON is invalid.");
-          return;
-        }
-        result = await api.submitClaim({ ...metadata, documents });
+    let documents;
+    if (mode === "upload") {
+      if (!files.length) {
+        setError("Select at least one document to upload.");
+        return;
       }
+    } else {
+      try {
+        documents = JSON.parse(docsJson);
+      } catch {
+        setError("Documents JSON is invalid.");
+        return;
+      }
+    }
+
+    setBusy(true);
+    onStart?.();
+    try {
+      const result =
+        mode === "upload"
+          ? await api.uploadClaimStreaming(metadata, files, fileTypes, onStep)
+          : await api.submitClaimStreaming({ ...metadata, documents }, onStep);
       onResult(result);
     } catch (err) {
       setError(`${err.status || ""} ${err.message}`.trim());

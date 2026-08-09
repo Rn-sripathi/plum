@@ -7,9 +7,12 @@ retry guidance.
 """
 
 import json
+import queue
+import threading
 from uuid import uuid4
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
 
 from app.core.config import settings
@@ -22,38 +25,14 @@ from app.orchestrator.pipeline import process_claim
 router = APIRouter()
 
 
-def _process_and_store(request: Request, submission: ClaimSubmission) -> dict:
-    state = request.app.state
-    result = process_claim(
-        submission,
-        state.snapshot,
-        doc_ai=state.doc_ai,
-        semantic=state.semantic,
-        graph=state.graph,
-    )
-    payload = json.loads(result.model_dump_json())
-    try:
-        state.store.save(submission, result)
-        payload["persistence"] = "ok"
-    except Exception as exc:  # store outage: decision still returned (PLAN §4)
-        payload["persistence"] = f"failed: {exc}"
-    return payload
+def _submission_from_upload(
+    metadata: str, files: list[UploadFile], document_types: str
+) -> ClaimSubmission:
+    """Turn a multipart upload into a validated ClaimSubmission.
 
-
-@router.post("/claims")
-def submit_claim(request: Request, submission: ClaimSubmission) -> dict:
-    """Submit a claim as JSON (documents pre-typed, optionally pre-extracted)."""
-    return _process_and_store(request, submission)
-
-
-@router.post("/claims/upload")
-def submit_claim_with_files(
-    request: Request,
-    metadata: str = Form(description="ClaimSubmission JSON without document content"),
-    files: list[UploadFile] = File(default=[]),
-    document_types: str = Form(default="", description="Comma-separated declared type per file, in order"),
-) -> dict:
-    """Submit a claim with real document files (vision extraction path)."""
+    Shared by the buffered and streaming upload routes so both reject bad
+    input identically (422, never a 500).
+    """
     try:
         meta = json.loads(metadata)
     except json.JSONDecodeError as exc:
@@ -84,10 +63,132 @@ def submit_claim_with_files(
         )
     meta["documents"] = [d.model_dump(mode="json") for d in documents]
     try:
-        submission = ClaimSubmission.model_validate(meta)
+        return ClaimSubmission.model_validate(meta)
     except ValidationError as exc:
         # Bad metadata must read like a form error, never a server crash.
         raise HTTPException(422, json.loads(exc.json())) from exc
+
+
+def _sse(event: str, data: object) -> str:
+    return f"event: {event}\ndata: {json.dumps(data, default=str)}\n\n"
+
+
+def _stream_claim(request: Request, submission: ClaimSubmission) -> StreamingResponse:
+    """Run the pipeline and emit each trace step as it happens.
+
+    The decision is streamed while it is being made, so a reviewer watches the
+    checks land in order rather than receiving a verdict with an explanation
+    attached after the fact. Events: `step` per trace step, then exactly one
+    terminal `result` or `error`.
+    """
+    state = request.app.state
+    events: queue.Queue = queue.Queue()
+    done = object()
+
+    def on_step(step) -> None:
+        events.put(("step", json.loads(step.model_dump_json())))
+
+    def run() -> None:
+        try:
+            result = process_claim(
+                submission,
+                state.snapshot,
+                doc_ai=state.doc_ai,
+                semantic=state.semantic,
+                graph=state.graph,
+                on_step=on_step,
+            )
+            payload = json.loads(result.model_dump_json())
+            try:
+                state.store.save(submission, result)
+                payload["persistence"] = "ok"
+            except Exception as exc:
+                payload["persistence"] = f"failed: {exc}"
+            events.put(("result", payload))
+        except ComponentUnavailable as exc:
+            events.put((
+                "error",
+                {
+                    "error": exc.code,
+                    "component": exc.component,
+                    "message": exc.message,
+                    "guidance": "The claim was not decided. Retry once the component recovers.",
+                },
+            ))
+        except Exception as exc:  # last resort — the stream still closes cleanly
+            events.put(("error", {"error": "UNEXPECTED", "message": str(exc)}))
+        finally:
+            events.put(done)
+
+    threading.Thread(target=run, daemon=True).start()
+
+    def generate():
+        while True:
+            item = events.get()
+            if item is done:
+                return
+            event, data = item
+            yield _sse(event, data)
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+def _process_and_store(request: Request, submission: ClaimSubmission) -> dict:
+    state = request.app.state
+    result = process_claim(
+        submission,
+        state.snapshot,
+        doc_ai=state.doc_ai,
+        semantic=state.semantic,
+        graph=state.graph,
+    )
+    payload = json.loads(result.model_dump_json())
+    try:
+        state.store.save(submission, result)
+        payload["persistence"] = "ok"
+    except Exception as exc:  # store outage: decision still returned (PLAN §4)
+        payload["persistence"] = f"failed: {exc}"
+    return payload
+
+
+@router.post("/claims")
+def submit_claim(request: Request, submission: ClaimSubmission) -> dict:
+    """Submit a claim as JSON (documents pre-typed, optionally pre-extracted)."""
+    return _process_and_store(request, submission)
+
+
+@router.post("/claims/stream")
+def submit_claim_streaming(request: Request, submission: ClaimSubmission) -> StreamingResponse:
+    """Same as POST /claims, streamed as Server-Sent Events."""
+    return _stream_claim(request, submission)
+
+
+@router.post("/claims/upload/stream")
+def submit_claim_with_files_streaming(
+    request: Request,
+    metadata: str = Form(description="ClaimSubmission JSON without document content"),
+    files: list[UploadFile] = File(default=[]),
+    document_types: str = Form(default=""),
+) -> StreamingResponse:
+    """Upload path, streamed. Most useful here: vision classification and
+    extraction take seconds per document, so each step lands as it completes."""
+    submission = _submission_from_upload(metadata, files, document_types)
+    return _stream_claim(request, submission)
+
+
+@router.post("/claims/upload")
+def submit_claim_with_files(
+    request: Request,
+    metadata: str = Form(description="ClaimSubmission JSON without document content"),
+    files: list[UploadFile] = File(default=[]),
+    document_types: str = Form(default="", description="Comma-separated declared type per file, in order"),
+) -> dict:
+    """Submit a claim with real document files (vision extraction path)."""
+    submission = _submission_from_upload(metadata, files, document_types)
     return _process_and_store(request, submission)
 
 

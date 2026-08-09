@@ -8,6 +8,7 @@ Returns `ClaimDecision`, or `DocumentProblemReport` when verification stops
 the claim before any decision is made.
 """
 
+from collections.abc import Callable
 from uuid import uuid4
 
 from app.agents.extraction import extract_documents
@@ -20,7 +21,7 @@ from app.engine.synthesizer import synthesize
 from app.kb.graph import PolicyGraph
 from app.kb.semantic import SemanticHit, SemanticPolicyIndex
 from app.kb.snapshot import PolicySnapshot
-from app.models import ClaimDecision, ClaimSubmission, FraudAssessment, Outcome
+from app.models import ClaimDecision, ClaimSubmission, FraudAssessment, Outcome, TraceStep
 from app.models.documents import DocumentProblemReport
 from app.orchestrator.trace import TraceBuilder
 
@@ -38,9 +39,10 @@ def process_claim(
     doc_ai: DocumentAI | None = None,
     semantic: SemanticPolicyIndex | None = None,
     graph: PolicyGraph | None = None,
+    on_step: Callable[[TraceStep], None] | None = None,
 ) -> ClaimDecision | DocumentProblemReport:
     claim_id = claim_id or f"CLM_{uuid4().hex[:8].upper()}"
-    tb = TraceBuilder(claim_id)
+    tb = TraceBuilder(claim_id, on_step=on_step)
     penalties: list[tuple[str, float]] = []
 
     tb.step(
