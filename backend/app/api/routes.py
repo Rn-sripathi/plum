@@ -16,7 +16,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import ValidationError
 
-from app.core.config import settings
+from app.core.config import REPO_ROOT, settings
 from app.core.errors import ComponentUnavailable, IntakeError
 from app.eval.runner import run_all
 from app.models import ClaimSubmission, DocumentType
@@ -260,6 +260,38 @@ def get_trace(request: Request, claim_id: str) -> dict:
     if record is None:
         raise HTTPException(404, f"No claim '{claim_id}'.")
     return record["result"]["trace"]
+
+
+# Only these are readable — never an arbitrary path under docs/.
+_PUBLIC_DOCS = {
+    "architecture": ("ARCHITECTURE.md", "Architecture"),
+    "contracts": ("CONTRACTS.md", "Component Contracts"),
+    "assumptions": ("ASSUMPTIONS.md", "Assumptions & Trade-offs"),
+    "eval": ("EVAL_REPORT.md", "Eval Report"),
+}
+
+
+@router.get("/project-docs")
+def list_docs() -> list[dict]:
+    """Project documents the console can display."""
+    return [
+        {"slug": slug, "title": title}
+        for slug, (filename, title) in _PUBLIC_DOCS.items()
+        if (REPO_ROOT / "docs" / filename).is_file()
+    ]
+
+
+@router.get("/project-docs/{slug}")
+def get_doc(slug: str) -> dict:
+    """Serve one project document as markdown for in-app rendering."""
+    entry = _PUBLIC_DOCS.get(slug)
+    if entry is None:
+        raise HTTPException(404, f"No document '{slug}'.")
+    filename, title = entry
+    path = REPO_ROOT / "docs" / filename
+    if not path.is_file():
+        raise HTTPException(404, f"'{filename}' has not been generated yet.")
+    return {"slug": slug, "title": title, "markdown": path.read_text(encoding="utf-8")}
 
 
 @router.get("/eval/cases")

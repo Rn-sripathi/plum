@@ -1,11 +1,21 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import ClaimsList from "./components/ClaimsList";
+import DocView from "./components/DocView";
 import Logo from "./components/Logo";
 import ResultView from "./components/ResultView";
 import SubmitForm from "./components/SubmitForm";
 
+const NAV = [
+  { id: "console", label: "Console" },
+  { id: "eval", label: "Eval report" },
+  { id: "architecture", label: "Architecture" },
+  { id: "contracts", label: "Contracts" },
+  { id: "assumptions", label: "Assumptions" },
+];
+
 export default function App() {
+  const [view, setView] = useState("console");
   const [result, setResult] = useState(null);
   const [liveSteps, setLiveSteps] = useState(null); // null = not streaming
   const [health, setHealth] = useState(null);
@@ -40,8 +50,23 @@ export default function App() {
       <header className="topbar">
         <Logo />
         <h1>Claims Processing</h1>
+        <nav className="nav">
+          {NAV.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={view === item.id ? "nav-link active" : "nav-link"}
+              onClick={() => setView(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+          <a className="nav-link" href={api.apiDocsUrl()} target="_blank" rel="noreferrer">
+            API ↗
+          </a>
+        </nav>
         {health ? (
-          <span className="badge ok">
+          <span className="badge ok" title="live component status">
             {health.policy} · store {health.store} · llm {health.llm} · index{" "}
             {health.semantic_index} · graph {health.policy_graph}
           </span>
@@ -51,13 +76,20 @@ export default function App() {
           </span>
         )}
       </header>
-      <main className="layout">
-        <div>
-          <SubmitForm onResult={handleResult} onStep={handleStep} onStart={handleStart} />
-          <ClaimsList onSelect={handleSelect} refreshKey={refreshKey} />
-        </div>
-        <ResultView result={result} liveSteps={liveSteps} />
-      </main>
+
+      {view === "console" ? (
+        <main className="layout">
+          <div>
+            <SubmitForm onResult={handleResult} onStep={handleStep} onStart={handleStart} />
+            <ClaimsList onSelect={handleSelect} refreshKey={refreshKey} />
+          </div>
+          <ResultView result={result} liveSteps={liveSteps} />
+        </main>
+      ) : (
+        <main className="doc-layout">
+          <DocView slug={view} />
+        </main>
+      )}
     </>
   );
 }

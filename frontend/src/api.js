@@ -77,6 +77,9 @@ async function consume(resp, onStep) {
 export const api = {
   health: () => request("/health"),
   documentUrl: (claimId, fileId) => `${BASE}/claims/${claimId}/documents/${fileId}`,
+  listDocs: () => request("/project-docs"),
+  getDoc: (slug) => request(`/project-docs/${slug}`),
+  apiDocsUrl: () => `${BASE}/docs`,
   submitClaim: (submission) =>
     request("/claims", { method: "POST", body: JSON.stringify(submission) }),
   uploadClaim: (metadata, files, documentTypes) => {
