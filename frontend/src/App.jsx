@@ -70,7 +70,7 @@ export default function App() {
             onMouseEnter={() => setMenuOpen(false)}
             onClick={() => go("console")}
           >
-            Console
+            <span className="nav-sign">+</span> Console
           </button>
           <button
             type="button"
@@ -78,7 +78,7 @@ export default function App() {
             onMouseEnter={() => setMenuOpen(false)}
             onClick={() => go("eval")}
           >
-            Eval report
+            <span className="nav-sign">+</span> Eval report
           </button>
           <button
             type="button"
