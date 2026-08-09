@@ -271,7 +271,7 @@ tr.clickable:hover { background: #f4f5fb; }
   margin: 0 0 20px;
   padding: 4px;
   background: #f6eff2;
-  border-radius: 999px;
+  border-radius: 10px;
 }
 .tab-thumb {
   position: absolute;
@@ -279,7 +279,7 @@ tr.clickable:hover { background: #f4f5fb; }
   bottom: 4px;
   left: 4px;
   width: calc(50% - 4px);
-  border-radius: 999px;
+  border-radius: 7px;
   background: var(--plum-coral);
   box-shadow: 0 1px 3px rgba(44, 10, 38, 0.18);
   transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
@@ -292,7 +292,7 @@ tr.clickable:hover { background: #f4f5fb; }
   flex: 1;
   background: none;
   border: none;
-  border-radius: 999px;
+  border-radius: 7px;
   padding: 9px 12px;
   font-size: 13.5px;
   font-weight: 500;
