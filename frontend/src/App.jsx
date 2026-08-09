@@ -8,6 +8,16 @@ import ResultView from "./components/ResultView";
 import StatusChip from "./components/StatusChip";
 import SubmitForm from "./components/SubmitForm";
 
+/** Two bars, not a glyph swap — so + can rotate into − rather than blink. */
+function Sign({ open = false }) {
+  return (
+    <span className={open ? "nav-sign open" : "nav-sign"} aria-hidden="true">
+      <i />
+      <i />
+    </span>
+  );
+}
+
 export default function App() {
   const [view, setView] = useState("console");
   const [docSlug, setDocSlug] = useState("architecture");
@@ -72,7 +82,7 @@ export default function App() {
             onMouseEnter={() => setMenuOpen(false)}
             onClick={() => go("console")}
           >
-            <span className="nav-sign">+</span> Console
+            <Sign /> Console
           </button>
           <button
             type="button"
@@ -80,7 +90,7 @@ export default function App() {
             onMouseEnter={() => setMenuOpen(false)}
             onClick={() => go("eval")}
           >
-            <span className="nav-sign">+</span> Eval report
+            <Sign /> Eval report
           </button>
           <button
             type="button"
@@ -89,7 +99,7 @@ export default function App() {
             onMouseEnter={() => setMenuOpen(true)}
             onClick={() => setMenuOpen((o) => !o)}
           >
-            <span className="nav-sign">{menuOpen ? "−" : "+"}</span> Docs
+            <Sign open={menuOpen} /> Docs
           </button>
         </nav>
         <StatusChip health={health} />

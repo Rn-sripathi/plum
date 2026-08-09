@@ -121,7 +121,11 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
   min-width: 0;
 }
 .nav-link {
-  display: inline-block;
+  /* inline-flex centres the drawn sign against the caps exactly; the row is
+     centre-aligned throughout, so no baseline is being relied on. */
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   background: none;
   border: none;
   border-radius: 0;
@@ -142,12 +146,41 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
    would otherwise paint the primary coral fill behind a nav link. */
 .nav-link:hover:not(:disabled) { background: none; color: var(--plum-coral); }
 .nav-link.active { background: none; color: var(--plum-coral); font-weight: 700; }
-/* Fixed width so the label does not shift when + becomes −. */
+/* The sign is drawn from two bars rather than typed, so + rotates into −
+   instead of blinking between two glyphs. Fixed size, so the label never
+   shifts. */
 .nav-sign {
-  display: inline-block;
+  position: relative;
+  flex: none;
   width: 9px;
-  text-align: center;
-  font-weight: 500;
+  height: 9px;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-sign i {
+  position: absolute;
+  background: currentColor;
+  border-radius: 1px;
+}
+.nav-sign i:first-child {   /* horizontal bar — always visible */
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1.5px;
+  margin-top: -0.75px;
+}
+.nav-sign i:last-child {    /* vertical bar — folds away to leave a minus */
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1.5px;
+  margin-left: -0.75px;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+}
+.nav-sign.open { transform: rotate(180deg); }
+.nav-sign.open i:last-child { transform: rotate(90deg); opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-sign, .nav-sign i { transition: none; }
 }
 
 /* Expanding menu panel */
