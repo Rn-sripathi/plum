@@ -59,6 +59,67 @@ HOSPITAL_BILL = [
 ]
 
 
+PRESCRIPTION_FOLLOWUP = [
+    "Dr. Neha Kulkarni, MBBS, MD (General Medicine)",
+    "Reg. No: KA/51234/2017",
+    "Sunrise Clinic, 8 Residency Road, Bengaluru",
+    "-" * 60,
+    "Patient: Rajesh Kumar          Date: 05-Nov-2024",
+    "Age: 39 years   Gender: M",
+    "-" * 60,
+    "Diagnosis: Viral Fever - follow up",
+    "",
+    "Rx:",
+    "1. Tab Azithromycin 500mg - 1-0-0 x 3 days",
+    "2. Syrup Ascoril - 10ml 1-1-1 x 5 days",
+    "",
+    "Review: After 1 week",
+    "                       [Signed] Dr. Neha Kulkarni",
+]
+
+PHARMACY_BILL = [
+    "HEALTH FIRST PHARMACY",
+    "Drug Lic. No: KA-BLR-2291",
+    "22 Brigade Road, Bengaluru",
+    "-" * 60,
+    "Bill No: HFP-24-09821    Date: 25-Oct-2024",
+    "Patient: Sneha Reddy     Dr: Dr. Arun Sharma",
+    "-" * 60,
+    "MEDICINE        BATCH   EXP    QTY  MRP    AMT",
+    "Paracetamol 650 A2341  03/26    15  2.50   37.50",
+    "Azithromycin500 B7821  06/26    10  45.00  450.00",
+    "Cough Syrup     C1102  11/25     1  180.00 180.00",
+    "Multivitamin    D5540  02/27    30  4.42   132.50",
+    "",
+    "Subtotal:                              800.00",
+    "Net Amount:                            800.00",
+    "-" * 60,
+    "Pharmacist: R. Sharma   [Stamp]",
+]
+
+HOSPITAL_BILL_OTHER_PATIENT = [
+    "CITY MEDICAL CENTRE",
+    "12 MG Road, Bengaluru - 560001",
+    "GSTIN: 29ABCDE1234F1ZX",
+    "-" * 60,
+    "BILL / RECEIPT",
+    "Bill No: CMC/2024/08477    Date: 01-Nov-2024",
+    "-" * 60,
+    "Patient Name: Arjun Mehta",
+    "Age/Gender: 44 / Male",
+    "Referring Doctor: Dr. Arun Sharma",
+    "-" * 60,
+    "DESCRIPTION                  QTY   RATE     AMOUNT",
+    "Consultation Fee (OPD)        1   1000.00  1000.00",
+    "CBC (Complete Blood Count)    1    300.00   300.00",
+    "Dengue NS1 Antigen Test       1    200.00   200.00",
+    "",
+    "Total Amount:                         1500.00",
+    "-" * 60,
+    "Payment Mode: Card    Received by: Cashier",
+]
+
+
 def render(lines: list[str], path: Path, blur: float = 0.0) -> None:
     img = Image.new("RGB", (720, 40 + 34 * len(lines)), "white")
     draw = ImageDraw.Draw(img)
@@ -86,7 +147,15 @@ def render_pdf(pages: list[list[str]], path: Path) -> None:
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     render(PRESCRIPTION, OUT / "prescription_rajesh.jpg")
+    # A second, visibly different prescription — a file picker will not let you
+    # choose the same file twice, and TC001 needs two prescriptions.
+    render(PRESCRIPTION_FOLLOWUP, OUT / "prescription_followup.jpg")
     render(HOSPITAL_BILL, OUT / "hospital_bill_city_clinic.jpg")
+    # TC002: a pharmacy bill, readable and unreadable.
+    render(PHARMACY_BILL, OUT / "pharmacy_bill.jpg")
+    render(PHARMACY_BILL, OUT / "pharmacy_bill_unreadable.jpg", blur=7.0)
+    # TC003: same treatment, different patient printed on the bill.
+    render(HOSPITAL_BILL_OTHER_PATIENT, OUT / "hospital_bill_arjun_mehta.jpg")
     render(HOSPITAL_BILL, OUT / "blurry_bill.jpg", blur=6.0)
     # Partially legible: vision reads it, but with low field confidence — the
     # case that exercises the amount-reconciliation guard.

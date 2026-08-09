@@ -22,6 +22,7 @@ from app.models import (
     DocumentProblemKind,
     DocumentQuality,
     DocumentType,
+    ExtractedDocument,
     Outcome,
     VerifiedDocument,
     VerifiedDocuments,
@@ -257,15 +258,55 @@ def verify_documents(
                 confidence_delta=PENALTY_POOR_DOC,
             )
 
-    # 3. Cross-document patient consistency --------------------------------------
-    named: list[tuple[str, str]] = []  # (doc label, name)
-    for doc, eff in zip(docs, eff_types):
-        name = doc.patient_name_on_doc or (doc.content.patient_name if doc.content else None)
-        if name:
-            label = f"{eff.value if eff else 'document'}" + (
-                f" ('{doc.file_name}')" if doc.file_name else ""
+    # Checks that need the documents' *contents* (patient identity, doctor
+    # registration) run after extraction — see verify_extracted_documents.
+    if problems:
+        raise DocumentVerificationStop(problems)
+
+    return VerifiedDocuments(
+        documents=[
+            VerifiedDocument(
+                file_id=d.file_id,
+                file_name=d.file_name,
+                doc_type=eff,
+                type_source=source,
+                quality=quality or DocumentQuality.GOOD,
+                patient_name_on_doc=d.patient_name_on_doc,
+                content=d.content,
+                storage_path=d.storage_path,
             )
+            for d, eff, quality, source in zip(docs, eff_types, eff_quality, type_sources)
+        ],
+        warnings=warnings,
+    )
+
+
+def verify_extracted_documents(
+    claim: ClaimSubmission,
+    documents: list[ExtractedDocument],
+    snapshot: PolicySnapshot,
+    tb: TraceBuilder,
+) -> list[str]:
+    """Second verification phase — the checks that need document *contents*.
+
+    Whether a claim's documents describe the same patient cannot be known
+    before the documents are read, so this runs after extraction and can still
+    stop the claim before any adjudication happens. Structural problems (wrong
+    type, unreadable, damaged) are caught earlier, in verify_documents.
+
+    Returns non-blocking warnings; raises DocumentVerificationStop on a
+    patient mismatch.
+    """
+    problems: list[DocumentProblem] = []
+    warnings: list[str] = []
+
+    named: list[tuple[str, str]] = []  # (label, patient name)
+    for doc in documents:
+        name = doc.content.patient_name
+        if name:
+            label = doc.doc_type.value + (f" ('{doc.file_name}')" if doc.file_name else "")
             named.append((label, name))
+
     distinct = {_norm_name(n) for _, n in named}
     if len(distinct) > 1:
         listing = "; ".join(f"{label} is for {name}" for label, name in named)
@@ -299,7 +340,8 @@ def verify_documents(
             )
             tb.step(
                 "document_verifier", "patient consistency", Outcome.DEGRADED,
-                f"All documents name '{patient}', which is not the member or a known dependent.",
+                f"All documents name '{patient}', which is neither the member "
+                f"({claim.member_id}) nor a registered dependent.",
                 confidence_delta=PENALTY_UNVERIFIED_FIELD,
             )
         else:
@@ -310,36 +352,19 @@ def verify_documents(
     else:
         tb.step(
             "document_verifier", "patient consistency", Outcome.SKIPPED,
-            "No patient names present on the documents; nothing to cross-check.",
+            "No patient name could be read from any document; nothing to cross-check.",
         )
 
-    # 4. Doctor registration format (warning only) --------------------------------
-    for doc in docs:
-        reg = doc.content.doctor_registration if doc.content else None
+    for doc in documents:
+        reg = doc.content.doctor_registration
         if reg and not _REG_RE.match(reg):
             warnings.append(f"Doctor registration '{reg}' does not match any known state format.")
             tb.step(
                 "document_verifier", "registration format", Outcome.DEGRADED,
-                f"Registration '{reg}' on {doc.file_id} does not match known formats; unverified.",
+                f"Registration '{reg}' on {doc.file_id} does not match known state formats; unverified.",
                 confidence_delta=PENALTY_UNVERIFIED_FIELD,
             )
 
     if problems:
         raise DocumentVerificationStop(problems)
-
-    return VerifiedDocuments(
-        documents=[
-            VerifiedDocument(
-                file_id=d.file_id,
-                file_name=d.file_name,
-                doc_type=eff,
-                type_source=source,
-                quality=quality or DocumentQuality.GOOD,
-                patient_name_on_doc=d.patient_name_on_doc,
-                content=d.content,
-                storage_path=d.storage_path,
-            )
-            for d, eff, quality, source in zip(docs, eff_types, eff_quality, type_sources)
-        ],
-        warnings=warnings,
-    )
+    return warnings

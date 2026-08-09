@@ -115,6 +115,9 @@ class ExtractedDocument(BaseModel):
     """
 
     file_id: str
+    file_name: str | None = Field(
+        default=None, description="Original upload name, so problems can point at the file."
+    )
     doc_type: DocumentType
     quality: DocumentQuality = DocumentQuality.GOOD
     content: DocumentContent

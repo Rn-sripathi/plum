@@ -28,6 +28,7 @@ def from_verified(doc: VerifiedDocument) -> ExtractedDocument:
         content = content.model_copy(update={"patient_name": doc.patient_name_on_doc})
     return ExtractedDocument(
         file_id=doc.file_id,
+        file_name=doc.file_name,
         doc_type=doc.doc_type,
         quality=doc.quality or DocumentQuality.GOOD,
         content=content,
@@ -48,11 +49,13 @@ def extract_documents(
     extracted: list[ExtractedDocument] = []
     live, skipped = 0, 0
     for doc in documents:
-        if doc.content is not None:
+        # Nothing to extract *from*: the submission supplied the document's
+        # contents itself (eval cases), so pass them through unchanged.
+        if doc.content is not None or doc.storage_path is None:
             extracted.append(from_verified(doc))
             skipped += 1
             continue
-        if doc_ai is None or not doc_ai.is_configured or not doc.storage_path:
+        if doc_ai is None or not doc_ai.is_configured:
             raise ComponentUnavailable(
                 "extraction_agent",
                 f"Document {doc.file_id} has no pre-extracted content and no vision "
@@ -69,6 +72,7 @@ def extract_documents(
         extracted.append(
             ExtractedDocument(
                 file_id=doc.file_id,
+                file_name=doc.file_name,
                 doc_type=doc.doc_type,
                 quality=doc.quality,
                 content=content,

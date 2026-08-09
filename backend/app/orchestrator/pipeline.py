@@ -13,7 +13,7 @@ from uuid import uuid4
 
 from app.agents.extraction import extract_documents
 from app.agents.llm import DocumentAI
-from app.agents.verifier import verify_documents
+from app.agents.verifier import verify_documents, verify_extracted_documents
 from app.core.errors import ComponentUnavailable, DocumentVerificationStop
 from app.engine.adjudicator import adjudicate
 from app.engine.fraud import assess_fraud
@@ -78,6 +78,30 @@ def process_claim(
     ]
 
     documents = extract_documents(verified.documents, doc_ai, tb, penalties)
+
+    # Second verification phase: patient identity and other content checks are
+    # only knowable once the documents have been read. Still before any
+    # adjudication — a claim carrying someone else's bill never gets decided.
+    try:
+        verify_extracted_documents(submission, documents, snapshot, tb)
+    except DocumentVerificationStop as stop:
+        tb.step(
+            "document_verifier",
+            action="verification stopped",
+            outcome=Outcome.FAIL,
+            detail=(
+                f"{len(stop.problems)} document problem(s) found after reading the documents; "
+                f"processing stopped before any decision."
+            ),
+        )
+        return DocumentProblemReport(claim_id=claim_id, problems=stop.problems, trace=tb.build())
+    penalties += [
+        (s.detail, s.confidence_delta)
+        for s in tb.steps
+        if s.component == "document_verifier"
+        and s.confidence_delta
+        and (s.detail, s.confidence_delta) not in penalties
+    ]
 
     # --- Policy retriever: rule source + semantic concept candidates ---------
     if graph is not None and graph.is_configured:
