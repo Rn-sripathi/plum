@@ -32,6 +32,11 @@
   width: auto;
   display: block;
   color: var(--plum-coral); /* glyphs fill with currentColor */
+  /* An SVG's baseline is its bottom edge, but the wordmark's own baseline sits
+     above that — the "p" descender occupies the last 13.9% of the viewBox
+     (30 − 25.83 units). Pulling the margin edge up by that much drops the
+     glyphs so their baseline meets the text's. 24px × 0.139 ≈ 3.4px. */
+  margin-bottom: -3.4px;
 }
 
 * { box-sizing: border-box; }
@@ -99,9 +104,10 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
 .topbar-main {
   display: flex;
   align-items: baseline;
-  gap: 26px;
+  gap: 14px;
   min-width: 0;
 }
+.topbar-main .nav { margin-left: 12px; }
 .nav {
   display: flex;
   align-items: baseline;

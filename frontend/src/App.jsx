@@ -61,9 +61,9 @@ export default function App() {
   return (
     <div className="shell" onMouseLeave={() => setMenuOpen(false)}>
       <header className="topbar">
-        <Logo />
-        {/* Title and nav share a baseline; the group is centred as a whole. */}
+        {/* Logo, title and nav all share one baseline; the group is centred. */}
         <div className="topbar-main">
+        <Logo />
         <h1>Claims Processing</h1>
         <nav className="nav">
           <button
