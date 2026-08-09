@@ -107,9 +107,30 @@ code change.
 | **Neo4j AuraDB** — `kb/graph.py` | `NEO4J_URI` + `NEO4J_PASSWORD` | Policy-as-graph (categories, rules, doc requirements, member/dependent edges) — the multi-policy scale story; runtime cross-checks graph vs snapshot in the trace | In-memory snapshot, −0.05 confidence, `DEGRADED` trace step |
 
 The matching hierarchy for free text → policy concept: **token match
-(deterministic, always on) → vector candidates above 0.75 similarity → LLM
-judgment (extraction only)**. Every tier's result lands in the trace with a
-score, and no tier but the deterministic one can fire without being visible.
+(deterministic, always on) → vector candidates above the similarity threshold
+→ LLM judgment (extraction only)**. Every tier's result lands in the trace
+with a score, and no tier but the deterministic one can fire without being
+visible.
+
+`SEMANTIC_EXCLUSION_THRESHOLD` is calibrated against live
+`text-embedding-3-small` scores, not guessed: the paraphrase "stomach
+reduction operation for weight" — which shares no distinctive token with any
+clause — scores 0.57 against "Bariatric surgery" and 0.48 against "Obesity
+and weight loss programs", while unrelated diagnoses fall well below. The
+threshold sits at 0.55.
+
+**Verified live** (`scripts/verify_kb.py`): Neon Postgres healthy with claim
++ trace round-trips, Neo4j Aura serving `CONSULTATION → [HOSPITAL_BILL,
+PRESCRIPTION]` from the graph, Qdrant Cloud answering the paraphrase query
+above from 48 indexed policy concepts. Neo4j writes/reads go through the
+driver's **managed transactions**, which retry transient failures — Aura Free
+drops idle connections routinely, and a dropped connection must not surface
+as a failed claim.
+
+The eval passes **12/12 in both modes**: deterministic (no credentials — the
+committed `EVAL_REPORT.md`, reproducible on any machine) and
+`--with-kb` (routed through all three live stores). That equivalence is the
+point: the stores add reach, never authority.
 
 ## Known limitations, and the 10x plan
 

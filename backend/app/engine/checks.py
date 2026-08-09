@@ -144,7 +144,10 @@ def check_submission_rules(claim: ClaimSubmission, snapshot: PolicySnapshot) -> 
     return checks
 
 
-SEMANTIC_EXCLUSION_THRESHOLD = 0.75
+# Calibrated against text-embedding-3-small live scores: true paraphrase
+# matches land ~0.5–0.65 (e.g. "stomach reduction operation" -> "Bariatric
+# surgery" at 0.57); unrelated diagnoses score well below 0.5.
+SEMANTIC_EXCLUSION_THRESHOLD = 0.55
 
 
 def check_exclusions(

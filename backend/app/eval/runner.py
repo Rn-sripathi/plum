@@ -62,9 +62,11 @@ def _searchable_text(result: ClaimDecision | DocumentProblemReport) -> str:
     return " ".join(parts)
 
 
-def evaluate_case(case: dict, snapshot: PolicySnapshot) -> CaseResult:
+def evaluate_case(case: dict, snapshot: PolicySnapshot, semantic=None, graph=None) -> CaseResult:
     submission = ClaimSubmission.model_validate(case["input"])
-    result = process_claim(submission, snapshot, claim_id=case["case_id"])
+    result = process_claim(
+        submission, snapshot, claim_id=case["case_id"], semantic=semantic, graph=graph
+    )
     expected = case["expected"]
     cr = CaseResult(case["case_id"], case["case_name"], expected, result)
 
@@ -116,10 +118,20 @@ def evaluate_case(case: dict, snapshot: PolicySnapshot) -> CaseResult:
     return cr
 
 
-def run_all() -> list[CaseResult]:
+def run_all(with_kb: bool = False) -> list[CaseResult]:
+    """Run all 12 cases. `with_kb=True` routes through the live knowledge
+    stores (Qdrant semantic tier + Neo4j rule source) — the Phase 5 exit
+    criterion is 12/12 both with the KB live and with it absent."""
     snapshot = PolicySnapshot.from_file(settings.policy_terms_path)
     cases = json.loads(settings.test_cases_path.read_text(encoding="utf-8"))["test_cases"]
-    return [evaluate_case(case, snapshot) for case in cases]
+    semantic = graph = None
+    if with_kb:
+        from app.kb.graph import PolicyGraph
+        from app.kb.semantic import SemanticPolicyIndex
+
+        semantic = SemanticPolicyIndex(settings)
+        graph = PolicyGraph(settings)
+    return [evaluate_case(case, snapshot, semantic, graph) for case in cases]
 
 
 # --- report rendering --------------------------------------------------------
@@ -219,13 +231,21 @@ def render_report(results: list[CaseResult]) -> str:
 
 
 def main() -> None:
-    results = run_all()
-    report = render_report(results)
-    out = REPO_ROOT / "docs" / "EVAL_REPORT.md"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(report, encoding="utf-8")
+    import sys
+
+    with_kb = "--with-kb" in sys.argv
+    results = run_all(with_kb=with_kb)
     matched = sum(1 for r in results if r.matched)
-    print(f"{matched}/{len(results)} matched -> {out}")
+    if with_kb:
+        # Live-KB verification run: report to stdout, keep the committed
+        # report as the deterministic (reproducible-anywhere) run.
+        print(f"[live KB] {matched}/{len(results)} matched")
+    else:
+        report = render_report(results)
+        out = REPO_ROOT / "docs" / "EVAL_REPORT.md"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(report, encoding="utf-8")
+        print(f"{matched}/{len(results)} matched -> {out}")
     for cr in results:
         if not cr.matched:
             print(f"  MISMATCH {cr.case_id}: {'; '.join(cr.mismatches)}")

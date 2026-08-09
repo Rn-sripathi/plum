@@ -51,10 +51,12 @@ export NEO4J_PASSWORD=...
 # For Qdrant Cloud instead: export QDRANT_URL=... and QDRANT_API_KEY=...
 ```
 
-Then load the knowledge stores and restart the API:
+Then load the knowledge stores and verify them:
 
 ```bash
-uv run python -m app.kb.ingest    # policy_terms.json -> Qdrant + Neo4j
+uv run python -m app.kb.ingest             # policy_terms.json -> Qdrant + Neo4j
+uv run python scripts/verify_kb.py         # live check of all three stores
+uv run python -m app.eval.runner --with-kb # 12/12 through the live stores
 ```
 
 `GET /health` reports each store's live status (connected / fallback /
@@ -65,9 +67,13 @@ disabled). Generate demo documents for the real-upload path with
 
 ```bash
 cd backend
-uv run pytest                      # 75 tests: units, 12 pipeline cases, API
+uv run pytest                      # 83 tests (85 with store credentials set)
 uv run python -m app.eval.runner   # regenerates docs/EVAL_REPORT.md (12/12)
 ```
+
+The eval passes **12/12 both ways**: on the deterministic tier (no accounts,
+no API key — reproducible anywhere) and routed through the live knowledge
+stores (`--with-kb`).
 
 ## Repo layout
 

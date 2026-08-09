@@ -56,73 +56,81 @@ class PolicyGraph:
         return self._driver.session()
 
     def ingest(self, terms: PolicyTerms) -> dict[str, int]:
-        """(Re)build this policy's subgraph. Returns node counts by label."""
+        """(Re)build this policy's subgraph. Returns node counts by label.
+
+        Uses managed transactions so the driver retries transient failures —
+        Aura Free instances drop idle connections routinely.
+        """
         pid = terms.policy_id
+
+        def _write(tx) -> dict[str, int]:
+            tx.run(
+                "MERGE (p:Policy {policy_id: $pid}) "
+                "SET p.name = $name, p.insurer = $insurer, "
+                "    p.per_claim_limit = $pcl, p.annual_opd_limit = $aol",
+                pid=pid, name=terms.policy_name, insurer=terms.insurer,
+                pcl=float(terms.coverage.per_claim_limit),
+                aol=float(terms.coverage.annual_opd_limit),
+            )
+            for name, cat in terms.opd_categories.items():
+                tx.run(
+                    "MATCH (p:Policy {policy_id: $pid}) "
+                    "MERGE (c:Category {policy_id: $pid, name: $name}) "
+                    "SET c += $props MERGE (p)-[:HAS_CATEGORY]->(c)",
+                    pid=pid, name=name.upper(), props=_props(cat.model_dump()),
+                )
+            for cat_name, reqs in terms.document_requirements.items():
+                for doc_type, rel in [(t, "REQUIRES_DOC") for t in reqs.required] + [
+                    (t, "ACCEPTS_DOC") for t in reqs.optional
+                ]:
+                    tx.run(
+                        f"MATCH (c:Category {{policy_id: $pid, name: $cat}}) "
+                        f"MERGE (d:DocType {{name: $doc}}) MERGE (c)-[:{rel}]->(d)",
+                        pid=pid, cat=cat_name, doc=doc_type,
+                    )
+            for clause in (
+                terms.exclusions.conditions
+                + terms.exclusions.dental_exclusions
+                + terms.exclusions.vision_exclusions
+            ):
+                tx.run(
+                    "MATCH (p:Policy {policy_id: $pid}) "
+                    "MERGE (e:Exclusion {policy_id: $pid, clause: $clause}) "
+                    "MERGE (p)-[:EXCLUDES]->(e)",
+                    pid=pid, clause=clause,
+                )
+            for key, days in terms.waiting_periods.specific_conditions.items():
+                tx.run(
+                    "MATCH (p:Policy {policy_id: $pid}) "
+                    "MERGE (w:Condition {policy_id: $pid, key: $key}) SET w.days = $days "
+                    "MERGE (p)-[:HAS_WAITING_PERIOD]->(w)",
+                    pid=pid, key=key, days=days,
+                )
+            for member in terms.members:
+                tx.run(
+                    "MATCH (p:Policy {policy_id: $pid}) "
+                    "MERGE (m:Member {member_id: $mid}) SET m += $props "
+                    "MERGE (p)-[:COVERS]->(m)",
+                    pid=pid, mid=member.member_id,
+                    props=_props(member.model_dump(exclude={"dependents"})),
+                )
+            for member in terms.members:
+                if member.primary_member_id:
+                    tx.run(
+                        "MATCH (d:Member {member_id: $dep}), (m:Member {member_id: $primary}) "
+                        "MERGE (d)-[:DEPENDENT_OF]->(m)",
+                        dep=member.member_id, primary=member.primary_member_id,
+                    )
+            rows = tx.run(
+                "MATCH (n) WHERE n.policy_id = $pid OR n:DocType OR n:Member "
+                "RETURN labels(n)[0] AS label, count(n) AS n",
+                pid=pid,
+            ).data()
+            return {row["label"]: row["n"] for row in rows}
+
         try:
             with self._session() as session:
-                session.run(
-                    "MERGE (p:Policy {policy_id: $pid}) "
-                    "SET p.name = $name, p.insurer = $insurer, "
-                    "    p.per_claim_limit = $pcl, p.annual_opd_limit = $aol",
-                    pid=pid, name=terms.policy_name, insurer=terms.insurer,
-                    pcl=float(terms.coverage.per_claim_limit),
-                    aol=float(terms.coverage.annual_opd_limit),
-                )
-                for name, cat in terms.opd_categories.items():
-                    session.run(
-                        "MATCH (p:Policy {policy_id: $pid}) "
-                        "MERGE (c:Category {policy_id: $pid, name: $name}) "
-                        "SET c += $props MERGE (p)-[:HAS_CATEGORY]->(c)",
-                        pid=pid, name=name.upper(), props=_props(cat.model_dump()),
-                    )
-                for cat_name, reqs in terms.document_requirements.items():
-                    for doc_type, rel in [(t, "REQUIRES_DOC") for t in reqs.required] + [
-                        (t, "ACCEPTS_DOC") for t in reqs.optional
-                    ]:
-                        session.run(
-                            f"MATCH (c:Category {{policy_id: $pid, name: $cat}}) "
-                            f"MERGE (d:DocType {{name: $doc}}) MERGE (c)-[:{rel}]->(d)",
-                            pid=pid, cat=cat_name, doc=doc_type,
-                        )
-                for clause in (
-                    terms.exclusions.conditions
-                    + terms.exclusions.dental_exclusions
-                    + terms.exclusions.vision_exclusions
-                ):
-                    session.run(
-                        "MATCH (p:Policy {policy_id: $pid}) "
-                        "MERGE (e:Exclusion {policy_id: $pid, clause: $clause}) "
-                        "MERGE (p)-[:EXCLUDES]->(e)",
-                        pid=pid, clause=clause,
-                    )
-                for key, days in terms.waiting_periods.specific_conditions.items():
-                    session.run(
-                        "MATCH (p:Policy {policy_id: $pid}) "
-                        "MERGE (w:Condition {policy_id: $pid, key: $key}) SET w.days = $days "
-                        "MERGE (p)-[:HAS_WAITING_PERIOD]->(w)",
-                        pid=pid, key=key, days=days,
-                    )
-                for member in terms.members:
-                    session.run(
-                        "MATCH (p:Policy {policy_id: $pid}) "
-                        "MERGE (m:Member {member_id: $mid}) SET m += $props "
-                        "MERGE (p)-[:COVERS]->(m)",
-                        pid=pid, mid=member.member_id,
-                        props=_props(member.model_dump(exclude={"dependents"})),
-                    )
-                for member in terms.members:
-                    if member.primary_member_id:
-                        session.run(
-                            "MATCH (d:Member {member_id: $dep}), (m:Member {member_id: $primary}) "
-                            "MERGE (d)-[:DEPENDENT_OF]->(m)",
-                            dep=member.member_id, primary=member.primary_member_id,
-                        )
-                counts = session.run(
-                    "MATCH (n) WHERE n.policy_id = $pid OR n:DocType OR n:Member "
-                    "RETURN labels(n)[0] AS label, count(n) AS n",
-                    pid=pid,
-                ).data()
-            return {row["label"]: row["n"] for row in counts}
+                return session.execute_write(_write)
         except ComponentUnavailable:
             raise
         except Exception as exc:
@@ -130,14 +138,18 @@ class PolicyGraph:
 
     def document_requirements(self, policy_id: str, category: str) -> list[str]:
         """Required doc types for a category, straight from the graph."""
+
+        def _read(tx) -> list[str]:
+            rows = tx.run(
+                "MATCH (:Category {policy_id: $pid, name: $cat})-[:REQUIRES_DOC]->(d:DocType) "
+                "RETURN d.name AS name ORDER BY name",
+                pid=policy_id, cat=category,
+            ).data()
+            return [r["name"] for r in rows]
+
         try:
             with self._session() as session:
-                rows = session.run(
-                    "MATCH (:Category {policy_id: $pid, name: $cat})-[:REQUIRES_DOC]->(d:DocType) "
-                    "RETURN d.name AS name ORDER BY name",
-                    pid=policy_id, cat=category,
-                ).data()
-            return [r["name"] for r in rows]
+                return session.execute_read(_read)
         except ComponentUnavailable:
             raise
         except Exception as exc:

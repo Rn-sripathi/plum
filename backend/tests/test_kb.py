@@ -25,10 +25,21 @@ def bow_embedder(texts):
     return vectors
 
 
+def _isolated_settings(tmp_path) -> Settings:
+    """Settings that can never reach live stores, whatever is in .env."""
+    return Settings(
+        OPENAI_API_KEY=None,
+        QDRANT_URL=None,
+        QDRANT_API_KEY=None,
+        qdrant_local_dir=tmp_path,
+    )
+
+
 @pytest.fixture(scope="module")
 def semantic_index(tmp_path_factory, snapshot):
-    settings = Settings(qdrant_local_dir=tmp_path_factory.mktemp("qdrant"))
-    index = SemanticPolicyIndex(settings, embedder=bow_embedder)
+    index = SemanticPolicyIndex(
+        _isolated_settings(tmp_path_factory.mktemp("qdrant")), embedder=bow_embedder
+    )
     count = index.ingest(snapshot.terms)
     assert count > 30
     return index
@@ -45,7 +56,7 @@ class TestSemanticIndex:
         assert semantic_index.healthy()
 
     def test_unconfigured_index_raises_component_unavailable(self, tmp_path):
-        index = SemanticPolicyIndex(Settings(qdrant_local_dir=tmp_path))
+        index = SemanticPolicyIndex(_isolated_settings(tmp_path))
         assert not index.is_configured
         with pytest.raises(ComponentUnavailable):
             index.search("anything")
@@ -88,7 +99,7 @@ class TestSemanticExclusionTier:
             None,
             snapshot,
             semantic_hints=[
-                SemanticHit("Bariatric surgery", "exclusion", "exclusions.conditions[6]", 0.60)
+                SemanticHit("Bariatric surgery", "exclusion", "exclusions.conditions[6]", 0.40)
             ],
         )
         assert check.outcome is Outcome.PASS
