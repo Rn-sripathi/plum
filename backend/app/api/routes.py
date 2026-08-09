@@ -10,6 +10,7 @@ import json
 from uuid import uuid4
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from pydantic import ValidationError
 
 from app.core.config import settings
 from app.core.errors import ComponentUnavailable, IntakeError
@@ -58,6 +59,13 @@ def submit_claim_with_files(
     except json.JSONDecodeError as exc:
         raise HTTPException(422, f"metadata is not valid JSON: {exc}") from exc
 
+    if not files:
+        raise HTTPException(
+            422,
+            "A claim needs at least one document. Attach the bill, prescription, or "
+            "report for this treatment (images or PDFs) and submit again.",
+        )
+
     declared = [t.strip() or None for t in document_types.split(",")] if document_types else []
     upload_root = settings.upload_path / uuid4().hex[:12]
     upload_root.mkdir(parents=True, exist_ok=True)
@@ -75,7 +83,11 @@ def submit_claim_with_files(
             )
         )
     meta["documents"] = [d.model_dump(mode="json") for d in documents]
-    submission = ClaimSubmission.model_validate(meta)
+    try:
+        submission = ClaimSubmission.model_validate(meta)
+    except ValidationError as exc:
+        # Bad metadata must read like a form error, never a server crash.
+        raise HTTPException(422, json.loads(exc.json())) from exc
     return _process_and_store(request, submission)
 
 

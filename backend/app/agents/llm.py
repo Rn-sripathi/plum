@@ -12,6 +12,7 @@ configured, `is_configured` is False and callers never attempt a call.
 import base64
 import json
 import mimetypes
+from io import BytesIO
 from pathlib import Path
 
 from app.core.config import Settings
@@ -82,9 +83,48 @@ give a 0..1 confidence in field_confidence. List every legibility problem in war
 Expand Indian medical shorthand (HTN=Hypertension, T2DM=Type 2 Diabetes)."""
 
 
-def _data_uri(path: Path) -> str:
+MAX_PDF_PAGES = 5
+PDF_RENDER_SCALE = 2  # ~144 DPI — legible for handwriting without huge payloads
+
+
+def _data_uri(mime: str, payload: bytes) -> str:
+    return f"data:{mime};base64,{base64.b64encode(payload).decode()}"
+
+
+def _render_pdf(path: Path) -> list[str]:
+    """Render PDF pages to PNG data URIs.
+
+    Vision models take images, not PDFs, so multi-page scanned bills are
+    rasterized a page at a time and sent together — matching the guidance in
+    `sample_documents_guide.md` ("process each page separately; aggregate line
+    items"). Beyond MAX_PDF_PAGES the tail is dropped and the caller warns.
+    """
+    import pypdfium2 as pdfium
+
+    pdf = pdfium.PdfDocument(str(path))
+    try:
+        uris = []
+        for index in range(min(len(pdf), MAX_PDF_PAGES)):
+            image = pdf[index].render(scale=PDF_RENDER_SCALE).to_pil()
+            buffer = BytesIO()
+            image.save(buffer, format="PNG")
+            uris.append(_data_uri("image/png", buffer.getvalue()))
+        return uris
+    finally:
+        pdf.close()
+
+
+def image_parts(path: Path) -> tuple[list[str], int]:
+    """Data URIs for a document, plus its total page count (1 for images)."""
+    if path.suffix.lower() == ".pdf":
+        import pypdfium2 as pdfium
+
+        pdf = pdfium.PdfDocument(str(path))
+        pages = len(pdf)
+        pdf.close()
+        return _render_pdf(path), pages
     mime = mimetypes.guess_type(path.name)[0] or "image/jpeg"
-    return f"data:{mime};base64,{base64.b64encode(path.read_bytes()).decode()}"
+    return [_data_uri(mime, path.read_bytes())], 1
 
 
 class DocumentAI:
@@ -104,10 +144,16 @@ class DocumentAI:
     def is_configured(self) -> bool:
         return self._client is not None
 
-    def _vision_call(self, system: str, image_path: Path, schema: dict) -> dict:
+    def _vision_call(
+        self, system: str, image_path: Path, schema: dict, first_page_only: bool = False
+    ) -> tuple[dict, int]:
+        """Returns the parsed response and the document's page count."""
         if self._client is None:
             raise ComponentUnavailable("llm", "No LLM configured (OPENAI_API_KEY not set).")
         try:
+            uris, pages = image_parts(image_path)
+            if first_page_only:
+                uris = uris[:1]
             response = self._client.chat.completions.create(
                 model=self._settings.openai_model,
                 response_format={"type": "json_schema", "json_schema": schema},
@@ -116,23 +162,24 @@ class DocumentAI:
                     {
                         "role": "user",
                         "content": [
-                            {"type": "image_url", "image_url": {"url": _data_uri(image_path)}}
+                            {"type": "image_url", "image_url": {"url": uri}} for uri in uris
                         ],
                     },
                 ],
             )
-            return json.loads(response.choices[0].message.content)
+            return json.loads(response.choices[0].message.content), pages
         except ComponentUnavailable:
             raise
         except Exception as exc:  # SDK/timeouts/network — degrade, never crash the pipeline
             raise ComponentUnavailable("llm", f"LLM call failed after retries: {exc}") from exc
 
     def classify(self, image_path: Path) -> tuple[DocumentType, float, DocumentQuality]:
-        """Identify a document's type and readability from the image alone."""
-        data = self._vision_call(
+        """Identify a document's type and readability. PDFs classify off page 1."""
+        data, _ = self._vision_call(
             "Classify this Indian medical document by type and assess its readability.",
             image_path,
             _CLASSIFY_SCHEMA,
+            first_page_only=True,
         )
         return (
             DocumentType(data["doc_type"]),
@@ -141,9 +188,20 @@ class DocumentAI:
         )
 
     def extract(self, image_path: Path, doc_type: DocumentType) -> tuple[DocumentContent, dict[str, float], list[str]]:
-        """Extract structured fields with per-field confidence and warnings."""
-        data = self._vision_call(_EXTRACT_PROMPT.format(doc_type=doc_type.value), image_path, _EXTRACT_SCHEMA)
+        """Extract structured fields with per-field confidence and warnings.
+
+        Multi-page PDFs are sent page by page in one request so line items
+        are aggregated across pages.
+        """
+        data, pages = self._vision_call(
+            _EXTRACT_PROMPT.format(doc_type=doc_type.value), image_path, _EXTRACT_SCHEMA
+        )
         confidence = {k: float(v) for k, v in data.pop("field_confidence", {}).items()}
         warnings = list(data.pop("warnings", []))
+        if pages > MAX_PDF_PAGES:
+            warnings.append(
+                f"Document has {pages} pages; only the first {MAX_PDF_PAGES} were read. "
+                f"Line items on later pages were not extracted."
+            )
         content = DocumentContent.model_validate({k: v for k, v in data.items() if v is not None})
         return content, confidence, warnings

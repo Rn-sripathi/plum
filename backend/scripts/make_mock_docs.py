@@ -70,11 +70,28 @@ def render(lines: list[str], path: Path, blur: float = 0.0) -> None:
     print(f"wrote {path}")
 
 
+def render_pdf(pages: list[list[str]], path: Path) -> None:
+    """Multi-page PDF — the pipeline rasterizes each page for extraction."""
+    images = []
+    for lines in pages:
+        img = Image.new("RGB", (720, 40 + 34 * len(lines)), "white")
+        draw = ImageDraw.Draw(img)
+        for i, line in enumerate(lines):
+            draw.text((40, 24 + 34 * i), line, fill="black")
+        images.append(img)
+    images[0].save(path, save_all=True, append_images=images[1:])
+    print(f"wrote {path} ({len(images)} page(s))")
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     render(PRESCRIPTION, OUT / "prescription_rajesh.jpg")
     render(HOSPITAL_BILL, OUT / "hospital_bill_city_clinic.jpg")
     render(HOSPITAL_BILL, OUT / "blurry_bill.jpg", blur=6.0)
+    render_pdf([HOSPITAL_BILL], OUT / "hospital_bill.pdf")
+    render_pdf(
+        [PRESCRIPTION, HOSPITAL_BILL], OUT / "prescription_and_bill_2page.pdf"
+    )
 
 
 if __name__ == "__main__":
