@@ -83,11 +83,14 @@ def extract_documents(
         live += 1
         low = [k for k, v in confidence.items() if v < LOW_FIELD_THRESHOLD]
         if low or warnings:
+            name = doc.file_name or doc.file_id
             detail = (
-                f"{doc.file_id}: low-confidence fields {low or 'none'}; warnings: "
-                f"{'; '.join(warnings) or 'none'}."
+                f"Some fields on '{name}' were hard to read"
+                + (f" ({', '.join(low)})" if low else "")
+                + (f"; the reader noted: {'; '.join(warnings)}" if warnings else "")
+                + "."
             )
-            penalties.append((f"extraction uncertainty on {doc.file_id}", PENALTY_LOW_FIELD_CONFIDENCE))
+            penalties.append((detail, PENALTY_LOW_FIELD_CONFIDENCE))
             tb.step(
                 "extraction_agent", "field confidence review", Outcome.DEGRADED, detail,
                 confidence_delta=PENALTY_LOW_FIELD_CONFIDENCE,

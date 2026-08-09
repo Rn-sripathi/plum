@@ -53,6 +53,21 @@ def synthesize(
     reasons: list[str] = []
     manual_review_recommended = False
 
+    # Why confidence moved. Reporting only the final number ("0.48 is below
+    # the floor") is circular — the reader needs the signals that caused it,
+    # which otherwise sit buried in the trace.
+    concerns: list[str] = [
+        check.detail
+        for check in adjudication.checks
+        if check.outcome is Outcome.FAIL
+        and check.rejection_reason is None
+        and check.name != "line_items"
+    ]
+    concerns += [reason for reason, delta in penalties if delta]
+    # A signal can surface both as an engine check and as a confidence
+    # penalty; say it once.
+    concerns = list(dict.fromkeys(concerns))
+
     if fraud.requires_manual_review and decision is not Decision.REJECTED:
         decision = Decision.MANUAL_REVIEW
         reasons.append(
@@ -62,13 +77,15 @@ def synthesize(
     elif confidence < GRAY_ZONE_LOW and decision in (Decision.APPROVED, Decision.PARTIAL):
         decision = Decision.MANUAL_REVIEW
         reasons.append(
-            f"Confidence {confidence:.2f} is below the {GRAY_ZONE_LOW} auto-decision floor; routed to manual review."
+            f"Routed to manual review: confidence {confidence:.2f} is below the "
+            f"{GRAY_ZONE_LOW} auto-decision floor because of the following."
         )
 
     if GRAY_ZONE_LOW <= confidence <= GRAY_ZONE_HIGH:
         manual_review_recommended = True
         reasons.append(
-            f"Confidence {confidence:.2f} is in the review zone ({GRAY_ZONE_LOW}–{GRAY_ZONE_HIGH}); manual review recommended."
+            f"Manual review recommended: confidence {confidence:.2f} sits in the review zone "
+            f"({GRAY_ZONE_LOW}–{GRAY_ZONE_HIGH}) because of the following."
         )
     if tb.degraded_components:
         manual_review_recommended = True
@@ -76,6 +93,12 @@ def synthesize(
             f"Processing was incomplete — {', '.join(tb.degraded_components)} failed and was skipped. "
             "Manual review recommended."
         )
+    if concerns:
+        if not reasons:  # nothing above already introduced them
+            reasons.append(
+                f"Confidence {confidence:.2f} (from {BASE_CONFIDENCE}); the following were noted."
+            )
+        reasons += concerns
 
     approved_amount = Decimal(0)
     if decision in (Decision.APPROVED, Decision.PARTIAL) and adjudication.financial:

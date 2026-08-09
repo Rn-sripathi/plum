@@ -192,14 +192,20 @@ def process_claim(
         )
     if any("itemized" in note for note in adjudication.notes):
         penalties.append(("bill not itemized; adjudicated on billed total", PENALTY_UNITEMIZED))
-    if any(
-        c.name == "amount_reconciliation" and c.outcome is Outcome.FAIL
-        for c in adjudication.checks
-    ):
+    mismatch = next(
+        (
+            c
+            for c in adjudication.checks
+            if c.name == "amount_reconciliation" and c.outcome is Outcome.FAIL
+        ),
+        None,
+    )
+    if mismatch is not None:
         # Claimed and documented amounts disagree: either an over-claim or a
         # misread document. Push the claim into the review band rather than
-        # settling silently on the documented figure.
-        penalties.append(("claimed amount disagrees with the documents", PENALTY_AMOUNT_MISMATCH))
+        # settling silently on the documented figure. The check's own detail
+        # is the reason, so the explanation carries the actual figures.
+        penalties.append((mismatch.detail, PENALTY_AMOUNT_MISMATCH))
 
     if submission.simulate_component_failure:
         # TC011: the least critical stage takes the simulated hit — same

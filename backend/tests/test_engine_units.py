@@ -159,6 +159,16 @@ class TestAmountReconciliation:
         assert result.confidence > 0.9
         assert result.manual_review_recommended is False
 
+    def test_reasons_state_why_confidence_fell(self, snapshot):
+        """A decision must name the signals behind its confidence, not just
+        report the resulting number — "0.48 is below 0.5" explains nothing."""
+        result = process_claim(self._claim(1500, 1150), snapshot, claim_id="REC5")
+        text = " ".join(result.reasons)
+        assert "₹1,500" in text and "₹1,150" in text, (
+            f"the discrepancy that lowered confidence must appear in the reasons: {result.reasons}"
+        )
+        assert any("review" in r.lower() for r in result.reasons)
+
     def test_misread_or_overclaimed_amount_routes_to_review(self, snapshot):
         # Documents show ₹1,150 but the member claimed ₹1,500 — the exact
         # failure a blurry bill produced against the live vision model.
