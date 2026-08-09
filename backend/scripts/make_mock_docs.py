@@ -96,6 +96,46 @@ PRESCRIPTION_SNEHA = [
     "                       [Signed] Dr. Arun Sharma",
 ]
 
+PRESCRIPTION_VIKRAM = [
+    "Dr. Sunil Mehta, MBBS, MD (Diabetology)",
+    "Reg. No: GJ/56789/2014",
+    "Sterling Clinic, 44 CG Road, Ahmedabad",
+    "-" * 60,
+    "Patient: Vikram Joshi          Date: 15-Oct-2024",
+    "Age: 45 years   Gender: M",
+    "-" * 60,
+    "Diagnosis: Type 2 Diabetes Mellitus",
+    "",
+    "Rx:",
+    "1. Tab Metformin 500mg - 1-0-1 x 30 days",
+    "2. Tab Glimepiride 1mg - 1-0-0 x 30 days",
+    "",
+    "Advice: HbA1c after 3 months, diet control",
+    "                       [Signed] Dr. Sunil Mehta",
+]
+
+HOSPITAL_BILL_VIKRAM = [
+    "STERLING CLINIC",
+    "44 CG Road, Ahmedabad - 380009",
+    "-" * 60,
+    "BILL / RECEIPT",
+    "Bill No: SC/2024/1188    Date: 15-Oct-2024",
+    "-" * 60,
+    "Patient Name: Vikram Joshi",
+    "Age/Gender: 45 / Male",
+    "Consulting Doctor: Dr. Sunil Mehta",
+    "-" * 60,
+    "DESCRIPTION                  QTY   RATE     AMOUNT",
+    "Specialist Consultation       1   1200.00  1200.00",
+    "HbA1c Test                    1    800.00   800.00",
+    "Fasting Blood Sugar           1    400.00   400.00",
+    "Lipid Profile                 1    600.00   600.00",
+    "",
+    "Total Amount:                         3000.00",
+    "-" * 60,
+    "Payment Mode: UPI    Received by: Cashier",
+]
+
 PHARMACY_BILL = [
     "HEALTH FIRST PHARMACY",
     "Drug Lic. No: KA-BLR-2291",
@@ -170,6 +210,9 @@ def main() -> None:
     # choose the same file twice, and TC001 needs two prescriptions.
     render(PRESCRIPTION_FOLLOWUP, OUT / "prescription_followup.jpg")
     render(HOSPITAL_BILL, OUT / "hospital_bill_city_clinic.jpg")
+    # TC005: diabetes claim inside the 90-day condition waiting period.
+    render(PRESCRIPTION_VIKRAM, OUT / "prescription_vikram_diabetes.jpg")
+    render(HOSPITAL_BILL_VIKRAM, OUT / "hospital_bill_vikram.jpg")
     # TC002: matching prescription plus a pharmacy bill, readable and not.
     render(PRESCRIPTION_SNEHA, OUT / "prescription_sneha.jpg")
     render(PHARMACY_BILL, OUT / "pharmacy_bill.jpg")
