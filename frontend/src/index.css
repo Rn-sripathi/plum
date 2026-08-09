@@ -27,10 +27,10 @@
 }
 
 .logo {
-  height: 26px;
+  height: 24px;
   width: auto;
   display: block;
-  color: var(--plum-coral); /* the glyph fills with currentColor */
+  color: var(--plum-coral); /* glyphs fill with currentColor */
 }
 
 * { box-sizing: border-box; }
