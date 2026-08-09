@@ -136,6 +136,27 @@ HOSPITAL_BILL_VIKRAM = [
     "Payment Mode: UPI    Received by: Cashier",
 ]
 
+DENTAL_BILL_PRIYA = [
+    "SMILE DENTAL CLINIC",
+    "7 Koramangala 5th Block, Bengaluru - 560095",
+    "GSTIN: 29SMILE4321K1ZP",
+    "-" * 60,
+    "BILL / RECEIPT",
+    "Bill No: SDC/2024/0442    Date: 15-Oct-2024",
+    "-" * 60,
+    "Patient Name: Priya Singh",
+    "Age/Gender: 34 / Female",
+    "Treating Dentist: Dr. Kavya Rao, BDS, MDS",
+    "-" * 60,
+    "DESCRIPTION                  QTY   RATE     AMOUNT",
+    "Root Canal Treatment          1   8000.00  8000.00",
+    "Teeth Whitening               1   4000.00  4000.00",
+    "",
+    "Total Amount:                        12000.00",
+    "-" * 60,
+    "Payment Mode: Card    Received by: Reception",
+]
+
 PHARMACY_BILL = [
     "HEALTH FIRST PHARMACY",
     "Drug Lic. No: KA-BLR-2291",
@@ -210,6 +231,8 @@ def main() -> None:
     # choose the same file twice, and TC001 needs two prescriptions.
     render(PRESCRIPTION_FOLLOWUP, OUT / "prescription_followup.jpg")
     render(HOSPITAL_BILL, OUT / "hospital_bill_city_clinic.jpg")
+    # TC006: dental bill mixing a covered treatment with a cosmetic one.
+    render(DENTAL_BILL_PRIYA, OUT / "dental_bill_priya.jpg")
     # TC005: diabetes claim inside the 90-day condition waiting period.
     render(PRESCRIPTION_VIKRAM, OUT / "prescription_vikram_diabetes.jpg")
     render(HOSPITAL_BILL_VIKRAM, OUT / "hospital_bill_vikram.jpg")

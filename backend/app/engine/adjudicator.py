@@ -85,8 +85,18 @@ def adjudicate(
         C.check_amount_reconciliation(claim, facts.documented_total, facts.itemized)
     )
 
+    # Claim-level exclusion screens the *condition being treated*. Procedures
+    # are judged individually at line-item level, so a bill listing several
+    # treatments — one of them cosmetic — must not have the whole claim
+    # rejected off a concatenated treatment string (a root canal billed
+    # alongside teeth whitening is still payable). Treatment text is only
+    # screened here when there are no line items to judge instead.
     exclusion_check, exclusion_match = C.check_exclusions(
-        claim, facts.diagnosis, facts.treatment_text, snapshot, semantic_hints
+        claim,
+        facts.diagnosis,
+        None if facts.itemized else facts.treatment_text,
+        snapshot,
+        semantic_hints,
     )
     all_checks.append(exclusion_check)
 

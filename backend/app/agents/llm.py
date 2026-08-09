@@ -74,6 +74,32 @@ _EXTRACT_SCHEMA = {
     },
 }
 
+_CLASSIFY_PROMPT = """Classify this Indian medical document into exactly one type, using
+these definitions. The types are an insurer's categories, not everyday language, so follow
+the definitions even when a document's specialty suggests otherwise.
+
+DECIDING RULE: if the document's purpose is to charge money — it lists amounts and a total
+payable — it is a BILL, whichever kind of clinic issued it. A dental clinic's invoice is a
+HOSPITAL_BILL, not a DENTAL_REPORT. A report never carries charges.
+
+  PRESCRIPTION        A doctor's Rx: medicines with dosage/duration, or tests ordered.
+                      No charges.
+  HOSPITAL_BILL       An itemized invoice or receipt from any hospital or clinic —
+                      including dental, eye and ayurvedic clinics — listing services
+                      with amounts and a total.
+  PHARMACY_BILL       An itemized invoice from a pharmacy/chemist: medicines with
+                      quantity, MRP and amount. Usually shows a drug licence number.
+  LAB_REPORT          Laboratory test results: test names with values, units and
+                      normal ranges.
+  DIAGNOSTIC_REPORT   Imaging findings written by a radiologist (MRI, CT, X-ray,
+                      ultrasound) — narrative findings and an impression, no charges.
+  DISCHARGE_SUMMARY   Hospital admission/discharge narrative: course of treatment,
+                      dates of admission and discharge.
+  DENTAL_REPORT       Dental clinical findings or a treatment plan with NO charges.
+
+Also assess readability: GOOD = the text can be read; POOR = readable but degraded
+(blurred, skewed, stamped over); UNREADABLE = no text can be recovered."""
+
 _EXTRACT_PROMPT = """You are extracting structured data from an Indian medical document
 ({doc_type}). Documents may be handwritten, stamped over, photographed at an angle, or
 partially illegible. Extract what you can read; NEVER guess. For each extracted field,
@@ -130,10 +156,7 @@ class DocumentAI:
     def classify(self, image_path: Path) -> tuple[DocumentType, float, DocumentQuality]:
         """Identify a document's type and readability. PDFs classify off page 1."""
         data, _ = self._vision_call(
-            "Classify this Indian medical document by type and assess its readability.",
-            image_path,
-            _CLASSIFY_SCHEMA,
-            first_page_only=True,
+            _CLASSIFY_PROMPT, image_path, _CLASSIFY_SCHEMA, first_page_only=True
         )
         return (
             DocumentType(data["doc_type"]),

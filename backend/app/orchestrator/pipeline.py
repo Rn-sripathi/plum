@@ -143,11 +143,14 @@ def process_claim(
 
     semantic_hints: list[SemanticHit] | None = None
     if semantic is not None and semantic.is_configured:
+        # Only the condition/treatment text feeds claim-level exclusion.
+        # Line-item descriptions are deliberately excluded: a candidate raised
+        # by one billed procedure must never reject the whole claim — those
+        # are adjudicated per line item.
         texts: list[str] = []
         for doc in documents:
             content = doc.content
             texts += [t for t in (content.diagnosis, content.treatment) if t]
-            texts += [item.description for item in (content.line_items or [])]
         try:
             best: dict[str, SemanticHit] = {}
             for text in texts:
