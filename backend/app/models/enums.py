@@ -78,6 +78,7 @@ class DocumentProblemKind(str, Enum):
     MISSING_REQUIRED = "MISSING_REQUIRED"
     UNREADABLE = "UNREADABLE"
     PATIENT_MISMATCH = "PATIENT_MISMATCH"
+    UNCLASSIFIED = "UNCLASSIFIED"
 
 
 class FraudSignalCode(str, Enum):

@@ -10,7 +10,8 @@ the claim before any decision is made.
 
 from uuid import uuid4
 
-from app.agents.extraction import from_verified
+from app.agents.extraction import extract_documents
+from app.agents.llm import DocumentAI
 from app.agents.verifier import verify_documents
 from app.core.errors import DocumentVerificationStop
 from app.engine.adjudicator import adjudicate
@@ -29,6 +30,7 @@ def process_claim(
     submission: ClaimSubmission,
     snapshot: PolicySnapshot,
     claim_id: str | None = None,
+    doc_ai: DocumentAI | None = None,
 ) -> ClaimDecision | DocumentProblemReport:
     claim_id = claim_id or f"CLM_{uuid4().hex[:8].upper()}"
     tb = TraceBuilder(claim_id)
@@ -46,7 +48,7 @@ def process_claim(
     )
 
     try:
-        verified = verify_documents(submission, snapshot, tb)
+        verified = verify_documents(submission, snapshot, tb, doc_ai)
     except DocumentVerificationStop as stop:
         tb.step(
             "document_verifier",
@@ -66,14 +68,7 @@ def process_claim(
         if s.component == "document_verifier" and s.confidence_delta
     ]
 
-    documents = [from_verified(d) for d in verified.documents]
-    tb.step(
-        "extraction_agent",
-        action="extract structured data from documents",
-        outcome=Outcome.SKIPPED,
-        detail="Pre-extracted content supplied with the submission; vision extraction skipped (test mode).",
-        input_summary=", ".join(f"{d.file_id}:{d.doc_type.value}" for d in documents),
-    )
+    documents = extract_documents(verified.documents, doc_ai, tb, penalties)
 
     adjudication = adjudicate(submission, documents, snapshot)
     for check in adjudication.checks:

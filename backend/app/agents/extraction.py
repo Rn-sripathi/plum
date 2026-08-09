@@ -1,13 +1,24 @@
-"""Extraction agent — Phase 2/3 ships only the test-mode path.
+"""Extraction agent — dual-mode.
 
-When a verified document carries pre-extracted `content` (eval cases), it is
-converted to an `ExtractedDocument` with `extraction_skipped=True` and full
-field confidence. The GPT-4o vision path plugs in here in Phase 4 behind the
-same output contract.
+Test mode: a verified document carrying pre-extracted `content` becomes an
+`ExtractedDocument` with `extraction_skipped=True` and full field confidence.
+Real mode: GPT-4o vision extracts from the stored file with per-field
+confidence and legibility warnings. Per the resilience table: if the LLM is
+down and no pre-extracted content exists, processing stops with retry
+guidance (`ComponentUnavailable`) — the one failure the pipeline cannot
+degrade around.
 """
 
-from app.models import DocumentQuality, ExtractedDocument, VerifiedDocument
+from pathlib import Path
+
+from app.agents.llm import DocumentAI
+from app.core.errors import ComponentUnavailable
+from app.models import DocumentQuality, ExtractedDocument, Outcome, VerifiedDocument
 from app.models.documents import DocumentContent
+from app.orchestrator.trace import TraceBuilder
+
+PENALTY_LOW_FIELD_CONFIDENCE = -0.10
+LOW_FIELD_THRESHOLD = 0.7
 
 
 def from_verified(doc: VerifiedDocument) -> ExtractedDocument:
@@ -25,3 +36,68 @@ def from_verified(doc: VerifiedDocument) -> ExtractedDocument:
         },
         extraction_skipped=True,
     )
+
+
+def extract_documents(
+    documents: list[VerifiedDocument],
+    doc_ai: DocumentAI | None,
+    tb: TraceBuilder,
+    penalties: list[tuple[str, float]],
+) -> list[ExtractedDocument]:
+    """Extract every verified document, choosing the mode per document."""
+    extracted: list[ExtractedDocument] = []
+    live, skipped = 0, 0
+    for doc in documents:
+        if doc.content is not None:
+            extracted.append(from_verified(doc))
+            skipped += 1
+            continue
+        if doc_ai is None or not doc_ai.is_configured or not doc.storage_path:
+            raise ComponentUnavailable(
+                "extraction_agent",
+                f"Document {doc.file_id} has no pre-extracted content and no vision "
+                f"extraction is available. Please retry later — the claim was not decided.",
+            )
+        try:
+            content, confidence, warnings = doc_ai.extract(Path(doc.storage_path), doc.doc_type)
+        except ComponentUnavailable as exc:
+            raise ComponentUnavailable(
+                "extraction_agent",
+                f"Extraction failed for document {doc.file_id} ({exc.message}). "
+                f"Please retry later — the claim was not decided.",
+            ) from exc
+        extracted.append(
+            ExtractedDocument(
+                file_id=doc.file_id,
+                doc_type=doc.doc_type,
+                quality=doc.quality,
+                content=content,
+                field_confidence=confidence,
+                warnings=warnings,
+            )
+        )
+        live += 1
+        low = [k for k, v in confidence.items() if v < LOW_FIELD_THRESHOLD]
+        if low or warnings:
+            detail = (
+                f"{doc.file_id}: low-confidence fields {low or 'none'}; warnings: "
+                f"{'; '.join(warnings) or 'none'}."
+            )
+            penalties.append((f"extraction uncertainty on {doc.file_id}", PENALTY_LOW_FIELD_CONFIDENCE))
+            tb.step(
+                "extraction_agent", "field confidence review", Outcome.DEGRADED, detail,
+                confidence_delta=PENALTY_LOW_FIELD_CONFIDENCE,
+            )
+    tb.step(
+        "extraction_agent",
+        action="extract structured data from documents",
+        outcome=Outcome.PASS if live else Outcome.SKIPPED,
+        detail=(
+            f"{live} document(s) extracted via GPT-4o vision; {skipped} used pre-extracted "
+            f"content (test mode)."
+            if live
+            else "Pre-extracted content supplied with the submission; vision extraction skipped (test mode)."
+        ),
+        input_summary=", ".join(f"{d.file_id}:{d.doc_type.value}" for d in extracted),
+    )
+    return extracted

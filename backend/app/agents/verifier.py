@@ -11,14 +11,17 @@ slots in here in Phase 4 behind the same contract.
 """
 
 import re
+from pathlib import Path
 
-from app.core.errors import DocumentVerificationStop
+from app.agents.llm import DocumentAI
+from app.core.errors import ComponentUnavailable, DocumentVerificationStop
 from app.kb.snapshot import PolicySnapshot
 from app.models import (
     ClaimSubmission,
     DocumentProblem,
     DocumentProblemKind,
     DocumentQuality,
+    DocumentType,
     Outcome,
     VerifiedDocument,
     VerifiedDocuments,
@@ -38,17 +41,87 @@ def _norm_name(name: str) -> str:
 
 
 def verify_documents(
-    claim: ClaimSubmission, snapshot: PolicySnapshot, tb: TraceBuilder
+    claim: ClaimSubmission,
+    snapshot: PolicySnapshot,
+    tb: TraceBuilder,
+    doc_ai: DocumentAI | None = None,
 ) -> VerifiedDocuments:
     problems: list[DocumentProblem] = []
     warnings: list[str] = []
     docs = claim.documents
     category = claim.claim_category.value
 
+    # 0. Establish each document's effective type and quality --------------------
+    # Test mode: declared `actual_type` is ground truth. Real mode: GPT-4o vision
+    # classifies the file; a mismatch with the declared type is a blocking
+    # problem; a classifier outage degrades to trusting the declared type.
+    eff_types: list[DocumentType | None] = []
+    eff_quality: list[DocumentQuality | None] = []
+    type_sources: list[str] = []
+    for doc in docs:
+        eff, quality, source = doc.actual_type, doc.quality, "DECLARED"
+        if doc_ai is not None and doc_ai.is_configured and doc.storage_path:
+            try:
+                cls_type, conf, cls_quality = doc_ai.classify(Path(doc.storage_path))
+                quality = quality or cls_quality
+                if eff is not None and cls_type is not eff and conf >= 0.6:
+                    problems.append(
+                        DocumentProblem(
+                            kind=DocumentProblemKind.WRONG_TYPE,
+                            file_id=doc.file_id,
+                            file_name=doc.file_name,
+                            found=cls_type.value,
+                            required=eff.value,
+                            message=(
+                                f"'{doc.file_name or doc.file_id}' was uploaded as a {eff.value} "
+                                f"but the document reads as a {cls_type.value}."
+                            ),
+                            action_needed=f"Upload the actual {eff.value.replace('_', ' ').lower()} for this claim.",
+                        )
+                    )
+                    tb.step(
+                        "document_verifier", "document classification", Outcome.FAIL,
+                        f"{doc.file_id}: declared {eff.value} but classified as {cls_type.value} (conf {conf:.2f}).",
+                    )
+                else:
+                    if eff is None:
+                        eff, source = cls_type, "CLASSIFIED"
+                    tb.step(
+                        "document_verifier", "document classification", Outcome.PASS,
+                        f"{doc.file_id}: classified as {cls_type.value} (conf {conf:.2f}), quality {quality.value if quality else 'GOOD'}.",
+                    )
+            except ComponentUnavailable:
+                warnings.append(
+                    f"Document classifier unavailable for {doc.file_id}; trusting declared type."
+                )
+                tb.step(
+                    "document_verifier", "document classification", Outcome.DEGRADED,
+                    f"{doc.file_id}: classifier unavailable; declared type {eff.value if eff else 'UNKNOWN'} trusted, unverified.",
+                    confidence_delta=PENALTY_POOR_DOC,
+                )
+        if eff is None:
+            problems.append(
+                DocumentProblem(
+                    kind=DocumentProblemKind.UNCLASSIFIED,
+                    file_id=doc.file_id,
+                    file_name=doc.file_name,
+                    found="document of unknown type",
+                    required="a typed document",
+                    message=(
+                        f"The type of '{doc.file_name or doc.file_id}' could not be determined "
+                        f"from the upload."
+                    ),
+                    action_needed="Select the document type when uploading, or upload a clearer copy.",
+                )
+            )
+        eff_types.append(eff)
+        eff_quality.append(quality)
+        type_sources.append(source)
+
     # 1. Required document types ------------------------------------------------
     reqs = snapshot.document_requirements(claim.claim_category)
     required = list(reqs.required) if reqs else []
-    submitted_types = [d.actual_type.value if d.actual_type else "UNKNOWN" for d in docs]
+    submitted_types = [t.value if t else "UNKNOWN" for t in eff_types]
     uploaded_desc = ", ".join(
         f"{t}{f' ({d.file_name})' if d.file_name else ''}"
         for d, t in zip(docs, submitted_types)
@@ -99,17 +172,17 @@ def verify_documents(
         )
 
     # 2. Readability ------------------------------------------------------------
-    for doc in docs:
-        doc_label = f"{doc.actual_type.value if doc.actual_type else 'document'}" + (
+    for doc, eff, quality in zip(docs, eff_types, eff_quality):
+        doc_label = f"{eff.value if eff else 'document'}" + (
             f" ('{doc.file_name}')" if doc.file_name else f" ({doc.file_id})"
         )
-        if doc.quality is DocumentQuality.UNREADABLE:
+        if quality is DocumentQuality.UNREADABLE:
             problems.append(
                 DocumentProblem(
                     kind=DocumentProblemKind.UNREADABLE,
                     file_id=doc.file_id,
                     file_name=doc.file_name,
-                    found=f"unreadable {doc.actual_type.value if doc.actual_type else 'document'}",
+                    found=f"unreadable {eff.value if eff else 'document'}",
                     required="a readable copy of the same document",
                     message=(
                         f"Your {doc_label} could not be read — the image is too blurry or damaged "
@@ -126,7 +199,7 @@ def verify_documents(
                 "document_verifier", "readability check", Outcome.FAIL,
                 f"{doc_label} is UNREADABLE; requesting re-upload of this document only.",
             )
-        elif doc.quality is DocumentQuality.POOR:
+        elif quality is DocumentQuality.POOR:
             warnings.append(f"{doc_label} is poor quality; extracted fields carry lower confidence.")
             tb.step(
                 "document_verifier", "readability check", Outcome.DEGRADED,
@@ -136,10 +209,10 @@ def verify_documents(
 
     # 3. Cross-document patient consistency --------------------------------------
     named: list[tuple[str, str]] = []  # (doc label, name)
-    for doc in docs:
+    for doc, eff in zip(docs, eff_types):
         name = doc.patient_name_on_doc or (doc.content.patient_name if doc.content else None)
         if name:
-            label = f"{doc.actual_type.value if doc.actual_type else 'document'}" + (
+            label = f"{eff.value if eff else 'document'}" + (
                 f" ('{doc.file_name}')" if doc.file_name else ""
             )
             named.append((label, name))
@@ -209,14 +282,14 @@ def verify_documents(
             VerifiedDocument(
                 file_id=d.file_id,
                 file_name=d.file_name,
-                doc_type=d.actual_type,
-                type_source="DECLARED",
-                quality=d.quality or DocumentQuality.GOOD,
+                doc_type=eff,
+                type_source=source,
+                quality=quality or DocumentQuality.GOOD,
                 patient_name_on_doc=d.patient_name_on_doc,
                 content=d.content,
                 storage_path=d.storage_path,
             )
-            for d in docs
+            for d, eff, quality, source in zip(docs, eff_types, eff_quality, type_sources)
         ],
         warnings=warnings,
     )
