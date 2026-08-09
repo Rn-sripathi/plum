@@ -3,17 +3,14 @@ import { api } from "./api";
 import ClaimsList from "./components/ClaimsList";
 import DocView, { DocsPage } from "./components/DocView";
 import Logo from "./components/Logo";
+import NavMenu from "./components/NavMenu";
 import ResultView from "./components/ResultView";
 import SubmitForm from "./components/SubmitForm";
 
-const NAV = [
-  { id: "console", label: "Console" },
-  { id: "eval", label: "Eval report" },
-  { id: "docs", label: "Docs" },
-];
-
 export default function App() {
   const [view, setView] = useState("console");
+  const [docSlug, setDocSlug] = useState("architecture");
+  const [menuOpen, setMenuOpen] = useState(false);
   const [result, setResult] = useState(null);
   const [liveSteps, setLiveSteps] = useState(null); // null = not streaming
   const [health, setHealth] = useState(null);
@@ -22,6 +19,23 @@ export default function App() {
   useEffect(() => {
     api.health().then(setHealth).catch(() => setHealth(null));
   }, [refreshKey]);
+
+  // The whole page washes warm while the menu is open, as on plumhr.com.
+  useEffect(() => {
+    document.body.classList.toggle("menu-open", menuOpen);
+    return () => document.body.classList.remove("menu-open");
+  }, [menuOpen]);
+
+  function go(next) {
+    setView(next);
+    setMenuOpen(false);
+  }
+
+  function openDoc(slug) {
+    setDocSlug(slug);
+    setView("docs");
+    setMenuOpen(false);
+  }
 
   function handleStart() {
     setResult(null);
@@ -44,21 +58,36 @@ export default function App() {
   }
 
   return (
-    <>
+    <div className="shell" onMouseLeave={() => setMenuOpen(false)}>
       <header className="topbar">
         <Logo />
         <h1>Claims Processing</h1>
         <nav className="nav">
-          {NAV.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={view === item.id ? "nav-link active" : "nav-link"}
-              onClick={() => setView(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
+          <button
+            type="button"
+            className={view === "console" ? "nav-link active" : "nav-link"}
+            onMouseEnter={() => setMenuOpen(false)}
+            onClick={() => go("console")}
+          >
+            Console
+          </button>
+          <button
+            type="button"
+            className={view === "eval" ? "nav-link active" : "nav-link"}
+            onMouseEnter={() => setMenuOpen(false)}
+            onClick={() => go("eval")}
+          >
+            Eval report
+          </button>
+          <button
+            type="button"
+            className={view === "docs" ? "nav-link active" : "nav-link"}
+            aria-expanded={menuOpen}
+            onMouseEnter={() => setMenuOpen(true)}
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            <span className="nav-sign">{menuOpen ? "−" : "+"}</span> Docs
+          </button>
         </nav>
         {health ? (
           <span className="badge ok" title="live component status">
@@ -72,6 +101,8 @@ export default function App() {
         )}
       </header>
 
+      <NavMenu open={menuOpen} onPick={openDoc} />
+
       {view === "console" ? (
         <main className="layout">
           <div>
@@ -82,9 +113,13 @@ export default function App() {
         </main>
       ) : (
         <main className="doc-layout">
-          {view === "docs" ? <DocsPage /> : <DocView slug={view} />}
+          {view === "docs" ? (
+            <DocsPage slug={docSlug} onSelect={setDocSlug} />
+          ) : (
+            <DocView slug={view} />
+          )}
         </main>
       )}
-    </>
+    </div>
   );
 }

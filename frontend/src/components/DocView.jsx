@@ -3,15 +3,14 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { api } from "../api";
 
-/** The project documents, with the eval report reachable from its own nav item. */
-const DOC_TABS = [
+/** The project documents, also listed in the nav's Docs menu. */
+export const DOC_TABS = [
   { slug: "architecture", label: "Architecture" },
   { slug: "contracts", label: "Contracts" },
   { slug: "assumptions", label: "Assumptions" },
 ];
 
-export function DocsPage() {
-  const [slug, setSlug] = useState("architecture");
+export function DocsPage({ slug, onSelect }) {
   return (
     <>
       <div className="doc-tabs">
@@ -20,7 +19,7 @@ export function DocsPage() {
             key={tab.slug}
             type="button"
             className={slug === tab.slug ? "doc-tab active" : "doc-tab"}
-            onClick={() => setSlug(tab.slug)}
+            onClick={() => onSelect(tab.slug)}
           >
             {tab.label}
           </button>
