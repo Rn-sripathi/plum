@@ -13,6 +13,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from .enums import DocumentProblemKind, DocumentQuality, DocumentType
+from .trace import DecisionTrace
 
 
 class LineItem(BaseModel):
@@ -92,6 +93,18 @@ class VerifiedDocuments(BaseModel):
 
     documents: list[VerifiedDocument]
     warnings: list[str] = Field(default_factory=list)
+
+
+class DocumentProblemReport(BaseModel):
+    """Returned instead of a decision when verification stops the claim early
+    (TC001–TC003). `decision` is explicitly None — the claim was neither
+    approved nor rejected; the member must fix the documents and resubmit."""
+
+    claim_id: str
+    status: Literal["DOCUMENTS_REQUIRED"] = "DOCUMENTS_REQUIRED"
+    decision: None = None
+    problems: list[DocumentProblem]
+    trace: DecisionTrace
 
 
 class ExtractedDocument(BaseModel):

@@ -1,23 +1,27 @@
-"""Claim processing pipeline — Phase 2 wiring (no document verifier yet;
-that stage slots in front in Phase 3, and vision extraction in Phase 4).
+"""Claim processing pipeline.
 
-Stage order (PLAN.md §4): intake -> [verify docs] -> extract -> adjudicate ->
-fraud -> synthesize. Every stage's work lands in the trace; failures degrade,
-they never crash the pipeline.
+Stage order (PLAN.md §4): intake -> verify documents (fail fast, TC001–TC003)
+-> extract -> adjudicate -> fraud -> synthesize. Every stage's work lands in
+the trace; component failures degrade, they never crash the pipeline.
+
+Returns `ClaimDecision`, or `DocumentProblemReport` when verification stops
+the claim before any decision is made.
 """
 
 from uuid import uuid4
 
-from app.agents.extraction import from_submitted
+from app.agents.extraction import from_verified
+from app.agents.verifier import verify_documents
+from app.core.errors import DocumentVerificationStop
 from app.engine.adjudicator import adjudicate
 from app.engine.fraud import assess_fraud
 from app.engine.synthesizer import synthesize
 from app.kb.snapshot import PolicySnapshot
-from app.models import ClaimDecision, ClaimSubmission, DocumentQuality, FraudAssessment, Outcome
+from app.models import ClaimDecision, ClaimSubmission, FraudAssessment, Outcome
+from app.models.documents import DocumentProblemReport
 from app.orchestrator.trace import TraceBuilder
 
 PENALTY_DEGRADED = -0.20
-PENALTY_POOR_DOC = -0.10
 PENALTY_UNITEMIZED = -0.05
 
 
@@ -25,7 +29,7 @@ def process_claim(
     submission: ClaimSubmission,
     snapshot: PolicySnapshot,
     claim_id: str | None = None,
-) -> ClaimDecision:
+) -> ClaimDecision | DocumentProblemReport:
     claim_id = claim_id or f"CLM_{uuid4().hex[:8].upper()}"
     tb = TraceBuilder(claim_id)
     penalties: list[tuple[str, float]] = []
@@ -41,7 +45,28 @@ def process_claim(
         ),
     )
 
-    documents = [from_submitted(d) for d in submission.documents]
+    try:
+        verified = verify_documents(submission, snapshot, tb)
+    except DocumentVerificationStop as stop:
+        tb.step(
+            "document_verifier",
+            action="verification stopped",
+            outcome=Outcome.FAIL,
+            detail=(
+                f"{len(stop.problems)} document problem(s) found; processing stopped before "
+                f"any decision. The claim is returned to the member with instructions."
+            ),
+        )
+        return DocumentProblemReport(claim_id=claim_id, problems=stop.problems, trace=tb.build())
+
+    # Verifier warnings (poor quality, unverified fields) carry confidence deltas.
+    penalties += [
+        (s.detail, s.confidence_delta)
+        for s in tb.steps
+        if s.component == "document_verifier" and s.confidence_delta
+    ]
+
+    documents = [from_verified(d) for d in verified.documents]
     tb.step(
         "extraction_agent",
         action="extract structured data from documents",
@@ -49,16 +74,6 @@ def process_claim(
         detail="Pre-extracted content supplied with the submission; vision extraction skipped (test mode).",
         input_summary=", ".join(f"{d.file_id}:{d.doc_type.value}" for d in documents),
     )
-    for doc in documents:
-        if doc.quality is DocumentQuality.POOR:
-            penalties.append((f"document {doc.file_id} quality POOR", PENALTY_POOR_DOC))
-            tb.step(
-                "extraction_agent",
-                action="document quality check",
-                outcome=Outcome.DEGRADED,
-                detail=f"Document {doc.file_id} is poor quality; extracted fields carry lower confidence.",
-                confidence_delta=PENALTY_POOR_DOC,
-            )
 
     adjudication = adjudicate(submission, documents, snapshot)
     for check in adjudication.checks:
