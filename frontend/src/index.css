@@ -133,6 +133,18 @@ tr.clickable:hover { background: #f4f5fb; }
 .step .detail { color: #3d4459; margin-top: 2px; line-height: 1.45; }
 .step .meta { color: var(--muted); font-size: 11.5px; margin-top: 3px; }
 
+.tabs { display: flex; gap: 6px; margin-bottom: 4px; }
+.tab {
+  flex: 1;
+  background: #eef0f6;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 9px 12px;
+}
+.tab.active { background: var(--accent); color: #fff; }
+
+input[type="file"] { padding: 7px; background: #fbfbfd; }
+
 .error-box { background: var(--red-bg); color: var(--red); border-radius: 8px; padding: 12px 14px; font-size: 13.5px; }
 .hint { color: var(--muted); font-size: 12.5px; margin-top: 8px; line-height: 1.5; }
 .section-gap { margin-top: 18px; }

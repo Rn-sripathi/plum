@@ -16,7 +16,14 @@ visible for the eval run. Practice once — the three required beats are marked.
 
 ## 1. REQUIRED BEAT — claim stopped early by a document problem (2–3 min)
 
-- Load preset **TC001** (two prescriptions for a consultation claim).
+**Lead with real files** (stronger than the JSON path): in **Upload documents**
+mode, attach `data/mock_documents/prescription_rajesh.jpg` *twice* for a
+CONSULTATION claim, leaving both types on **Auto-detect**. GPT-4o vision
+classifies both images as PRESCRIPTION and the verifier stops the claim —
+nothing was *declared*, the system read the images and worked out what they
+were. Then switch to **Structured (eval cases)** mode and load preset **TC001**
+to show the same behavior on the assignment's own test case.
+
 - Submit. Point at the result: **no decision was made** — status
   `DOCUMENTS REQUIRED`.
 - Read the message aloud: it names what was uploaded (PRESCRIPTION), what is

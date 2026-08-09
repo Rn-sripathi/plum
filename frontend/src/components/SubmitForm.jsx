@@ -5,6 +5,11 @@ const CATEGORIES = [
   "CONSULTATION", "DIAGNOSTIC", "PHARMACY", "DENTAL", "VISION", "ALTERNATIVE_MEDICINE",
 ];
 
+const DOC_TYPES = [
+  "PRESCRIPTION", "HOSPITAL_BILL", "PHARMACY_BILL", "LAB_REPORT",
+  "DIAGNOSTIC_REPORT", "DISCHARGE_SUMMARY", "DENTAL_REPORT",
+];
+
 const BLANK = {
   member_id: "EMP001",
   policy_id: "PLUM_GHI_2024",
@@ -12,14 +17,16 @@ const BLANK = {
   treatment_date: "2024-11-01",
   claimed_amount: 1500,
   hospital_name: "",
-  documents: [],
 };
 
-export default function SubmitForm({ onResult, onBusy }) {
+export default function SubmitForm({ onResult }) {
+  const [mode, setMode] = useState("upload"); // "upload" | "structured"
   const [cases, setCases] = useState([]);
   const [preset, setPreset] = useState("");
   const [form, setForm] = useState(BLANK);
   const [docsJson, setDocsJson] = useState("[]");
+  const [files, setFiles] = useState([]);
+  const [fileTypes, setFileTypes] = useState([]);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -41,29 +48,48 @@ export default function SubmitForm({ onResult, onBusy }) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
+  function pickFiles(fileList) {
+    const picked = Array.from(fileList);
+    setFiles(picked);
+    setFileTypes(picked.map(() => ""));
+    setError(null);
+  }
+
+  function setFileType(index, value) {
+    setFileTypes((types) => types.map((t, i) => (i === index ? value : t)));
+  }
+
   async function submit(e) {
     e.preventDefault();
     setError(null);
-    let documents;
-    try {
-      documents = JSON.parse(docsJson);
-    } catch {
-      setError("Documents JSON is invalid.");
-      return;
-    }
-    const payload = { ...form, documents };
-    if (!payload.hospital_name) delete payload.hospital_name;
-    payload.claimed_amount = Number(payload.claimed_amount);
+
+    const metadata = { ...form, claimed_amount: Number(form.claimed_amount) };
+    if (!metadata.hospital_name) delete metadata.hospital_name;
+
     setBusy(true);
-    onBusy?.(true);
     try {
-      const result = await api.submitClaim(payload);
+      let result;
+      if (mode === "upload") {
+        if (!files.length) {
+          setError("Select at least one document to upload.");
+          return;
+        }
+        result = await api.uploadClaim(metadata, files, fileTypes);
+      } else {
+        let documents;
+        try {
+          documents = JSON.parse(docsJson);
+        } catch {
+          setError("Documents JSON is invalid.");
+          return;
+        }
+        result = await api.submitClaim({ ...metadata, documents });
+      }
       onResult(result);
     } catch (err) {
       setError(`${err.status || ""} ${err.message}`.trim());
     } finally {
       setBusy(false);
-      onBusy?.(false);
     }
   }
 
@@ -71,15 +97,22 @@ export default function SubmitForm({ onResult, onBusy }) {
     <form className="panel" onSubmit={submit}>
       <h2>Submit a claim</h2>
 
-      <label>Load a test-case preset</label>
-      <select value={preset} onChange={(e) => loadPreset(e.target.value)}>
-        <option value="">— start from scratch —</option>
-        {cases.map((c) => (
-          <option key={c.case_id} value={c.case_id}>
-            {c.case_id} — {c.case_name}
-          </option>
-        ))}
-      </select>
+      <div className="tabs">
+        <button
+          type="button"
+          className={mode === "upload" ? "tab active" : "tab"}
+          onClick={() => setMode("upload")}
+        >
+          Upload documents
+        </button>
+        <button
+          type="button"
+          className={mode === "structured" ? "tab active" : "tab"}
+          onClick={() => setMode("structured")}
+        >
+          Structured (eval cases)
+        </button>
+      </div>
 
       <div className="row">
         <div>
@@ -87,7 +120,7 @@ export default function SubmitForm({ onResult, onBusy }) {
           <input value={form.member_id} onChange={(e) => set("member_id", e.target.value)} />
         </div>
         <div>
-          <label>Category</label>
+          <label>Treatment type</label>
           <select value={form.claim_category} onChange={(e) => set("claim_category", e.target.value)}>
             {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
           </select>
@@ -105,23 +138,80 @@ export default function SubmitForm({ onResult, onBusy }) {
         </div>
       </div>
 
-      <label>Hospital name (optional — network discount)</label>
-      <input value={form.hospital_name || ""} onChange={(e) => set("hospital_name", e.target.value)} placeholder="e.g. Apollo Hospitals" />
+      <label>Hospital name (optional — enables network discount)</label>
+      <input
+        value={form.hospital_name || ""}
+        onChange={(e) => set("hospital_name", e.target.value)}
+        placeholder="e.g. Apollo Hospitals"
+      />
 
-      <label>Documents (JSON)</label>
-      <textarea value={docsJson} onChange={(e) => setDocsJson(e.target.value)} spellCheck={false} />
-      <div className="hint">
-        Each document: <code>file_id</code>, <code>actual_type</code>, optional <code>quality</code>,{" "}
-        <code>patient_name_on_doc</code>, <code>content</code> (pre-extracted fields).
-      </div>
+      {mode === "upload" ? (
+        <>
+          <label>Documents (images or PDFs)</label>
+          <input
+            type="file"
+            multiple
+            accept="image/*,application/pdf"
+            onChange={(e) => pickFiles(e.target.files)}
+          />
+          {files.length > 0 && (
+            <table>
+              <thead>
+                <tr><th>File</th><th>Declared type</th></tr>
+              </thead>
+              <tbody>
+                {files.map((file, i) => (
+                  <tr key={file.name + i}>
+                    <td>{file.name}</td>
+                    <td>
+                      <select value={fileTypes[i]} onChange={(e) => setFileType(i, e.target.value)}>
+                        <option value="">Auto-detect (vision)</option>
+                        {DOC_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <div className="hint">
+            Leave the type as <b>Auto-detect</b> to let GPT-4o vision classify each document and
+            extract its fields. Declare a type instead to have the system cross-check what you
+            claimed against what the document actually is. Sample documents:{" "}
+            <code>data/mock_documents/</code>.
+          </div>
+        </>
+      ) : (
+        <>
+          <label>Load a test-case preset</label>
+          <select value={preset} onChange={(e) => loadPreset(e.target.value)}>
+            <option value="">— choose a case —</option>
+            {cases.map((c) => (
+              <option key={c.case_id} value={c.case_id}>
+                {c.case_id} — {c.case_name}
+              </option>
+            ))}
+          </select>
+
+          <label>Documents (pre-extracted JSON)</label>
+          <textarea value={docsJson} onChange={(e) => setDocsJson(e.target.value)} spellCheck={false} />
+          <div className="hint">
+            The assignment's 12 evaluation cases supply document contents as structured data
+            rather than image files. This mode replays them through the identical pipeline —
+            only the extraction stage differs, and the trace records that it was skipped.
+          </div>
+        </>
+      )}
 
       {error && <div className="error-box section-gap">{error}</div>}
 
       <div className="actions">
         <button type="submit" disabled={busy}>{busy ? "Processing…" : "Submit claim"}</button>
-        <button type="button" className="secondary" onClick={() => loadPreset(preset)} disabled={!preset}>
-          Reset preset
-        </button>
+        {mode === "structured" && (
+          <button type="button" className="secondary" onClick={() => loadPreset(preset)} disabled={!preset}>
+            Reset preset
+          </button>
+        )}
       </div>
     </form>
   );

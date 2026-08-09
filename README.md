@@ -26,9 +26,20 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173, pick a test-case preset (TC001 = document stop,
-TC004 = clean approval, TC010 = network-discount breakdown), submit, and read
-the decision + trace.
+Open http://localhost:5173. The submit form has two modes:
+
+- **Upload documents** (default) — attach real images/PDFs, as the assignment
+  describes. Leave each type on *Auto-detect* and GPT-4o vision classifies and
+  extracts them; declare a type instead and the system cross-checks your
+  declaration against what the document actually is. Sample files live in
+  `data/mock_documents/` (run `uv run python scripts/make_mock_docs.py`).
+- **Structured (eval cases)** — replays the assignment's 12 test cases, which
+  supply document contents as data rather than image files. Identical pipeline;
+  only the extraction stage differs, and the trace records that it was skipped.
+
+Either way, the decision, reasons, financial breakdown, and full trace appear
+on the right. Good starting presets: TC001 (document stop), TC004 (clean
+approval), TC010 (network-discount breakdown), TC011 (graceful degradation).
 
 ### Optional: LLM + knowledge/persistence stores
 
