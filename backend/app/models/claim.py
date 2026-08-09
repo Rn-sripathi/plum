@@ -78,6 +78,10 @@ class ClaimSubmission(BaseModel):
         default=None,
         description="Prior claims; payload value trusted over DB state.",
     )
+    pre_authorization_ref: str | None = Field(
+        default=None,
+        description="Insurer pre-authorization reference, when one was obtained.",
+    )
     simulate_component_failure: bool = Field(
         default=False,
         description="Test hook (TC011): force a non-critical component to fail.",
