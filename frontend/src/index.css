@@ -32,11 +32,12 @@
   width: auto;
   display: block;
   color: var(--plum-coral); /* glyphs fill with currentColor */
-  /* An SVG's baseline is its bottom edge, but the wordmark's own baseline sits
-     above that — the "p" descender occupies the last 13.9% of the viewBox
-     (30 − 25.83 units). Pulling the margin edge up by that much drops the
-     glyphs so their baseline meets the text's. 24px × 0.139 ≈ 3.4px. */
-  margin-bottom: -3.4px;
+  /* The wordmark's letters occupy only the top 86% of its viewBox — the "p"
+     descender fills the rest — so a centred box leaves the letters sitting
+     high. Nudge down by half that descender (24px × 0.139 ÷ 2 ≈ 1.7px) to
+     centre the glyphs rather than the box. `top` does not affect layout. */
+  position: relative;
+  top: 1.7px;
 }
 
 * { box-sizing: border-box; }
@@ -101,26 +102,32 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
 /* Title and nav are different sizes, so centring their boxes leaves the text
    off by a couple of pixels. Aligning on the shared text baseline is what
    actually lines them up; the group is then centred in the bar. */
+/* Everything on the bar is centred, and every box is sized exactly to its
+   text (line-height 1, no vertical padding) — otherwise centring the boxes
+   does not centre the glyphs. */
 .topbar-main {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 14px;
   min-width: 0;
 }
 .topbar-main .nav { margin-left: 12px; }
 .nav {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 28px;
   flex: none;
   white-space: nowrap;
 }
 .nav-link {
-  display: inline-block; /* plain inline flow, so the text baseline resolves */
+  display: inline-block;
   background: none;
   border: none;
   border-radius: 0;
-  padding: 6px 0; /* symmetric: keeps the hit area without shifting the centre */
+  /* Padding gives a comfortable hit area; the matching negative margin keeps
+     the laid-out box exactly text height, so centring lands on the glyphs. */
+  padding: 11px 0;
+  margin: -11px 0;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.1em;
