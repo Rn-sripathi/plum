@@ -133,6 +133,71 @@ tr.clickable:hover { background: #f4f5fb; }
 .step .detail { color: #3d4459; margin-top: 2px; line-height: 1.45; }
 .step .meta { color: var(--muted); font-size: 11.5px; margin-top: 3px; }
 
+.thumbs { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0 4px; }
+.thumb {
+  margin: 0;
+  width: 132px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fbfbfd;
+}
+.thumb img {
+  display: block;
+  width: 100%;
+  height: 96px;
+  object-fit: cover;
+  object-position: top;
+  cursor: zoom-in;
+  background: #fff;
+}
+.thumb-doc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96px;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--accent);
+  background: #f1f1fa;
+  text-decoration: none;
+}
+.thumb figcaption {
+  padding: 6px 8px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--muted);
+  word-break: break-all;
+  border-top: 1px solid var(--line);
+}
+.doc-type {
+  display: block;
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 18, 28, 0.82);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 50;
+  cursor: zoom-out;
+  padding: 28px;
+}
+.lightbox img {
+  max-width: 94vw;
+  max-height: 84vh;
+  background: #fff;
+  border-radius: 6px;
+}
+.lightbox-hint { color: #cfd3e2; font-size: 12.5px; }
+
 .dots::after {
   content: "";
   animation: dots 1.2s steps(4, end) infinite;

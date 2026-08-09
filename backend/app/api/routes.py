@@ -9,10 +9,11 @@ retry guidance.
 import json
 import queue
 import threading
+from pathlib import Path
 from uuid import uuid4
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import ValidationError
 
 from app.core.config import settings
@@ -69,6 +70,23 @@ def _submission_from_upload(
         raise HTTPException(422, json.loads(exc.json())) from exc
 
 
+def _document_summaries(submission: ClaimSubmission) -> list[dict]:
+    """What documents this claim carried, and which can be previewed.
+
+    Eval-case documents arrive as structured data with no file behind them,
+    so `previewable` tells the UI whether an image is fetchable.
+    """
+    return [
+        {
+            "file_id": d.file_id,
+            "file_name": d.file_name,
+            "doc_type": d.actual_type.value if d.actual_type else None,
+            "previewable": bool(d.storage_path),
+        }
+        for d in submission.documents
+    ]
+
+
 def _sse(event: str, data: object) -> str:
     return f"event: {event}\ndata: {json.dumps(data, default=str)}\n\n"
 
@@ -99,6 +117,7 @@ def _stream_claim(request: Request, submission: ClaimSubmission) -> StreamingRes
                 on_step=on_step,
             )
             payload = json.loads(result.model_dump_json())
+            payload["documents"] = _document_summaries(submission)
             try:
                 state.store.save(submission, result)
                 payload["persistence"] = "ok"
@@ -147,6 +166,7 @@ def _process_and_store(request: Request, submission: ClaimSubmission) -> dict:
         graph=state.graph,
     )
     payload = json.loads(result.model_dump_json())
+    payload["documents"] = _document_summaries(submission)
     try:
         state.store.save(submission, result)
         payload["persistence"] = "ok"
@@ -203,6 +223,35 @@ def get_claim(request: Request, claim_id: str) -> dict:
     if record is None:
         raise HTTPException(404, f"No claim '{claim_id}'.")
     return record
+
+
+@router.get("/claims/{claim_id}/documents/{file_id}")
+def get_claim_document(request: Request, claim_id: str, file_id: str) -> FileResponse:
+    """Serve one uploaded document so a reviewer can read it beside the decision.
+
+    Only files referenced by a stored claim are served, and the resolved path
+    must sit inside the upload directory — a stored path must never be able to
+    reach elsewhere on disk.
+    """
+    record = request.app.state.store.get(claim_id)
+    if record is None:
+        raise HTTPException(404, f"No claim '{claim_id}'.")
+    document = next(
+        (d for d in record["submission"]["documents"] if d.get("file_id") == file_id), None
+    )
+    if document is None:
+        raise HTTPException(404, f"Claim '{claim_id}' has no document '{file_id}'.")
+    stored = document.get("storage_path")
+    if not stored:
+        raise HTTPException(
+            404,
+            f"Document '{file_id}' was submitted as structured data, not an uploaded file.",
+        )
+    path = Path(stored).resolve()
+    root = settings.upload_path.resolve()
+    if not path.is_relative_to(root) or not path.is_file():
+        raise HTTPException(404, f"The file for document '{file_id}' is no longer available.")
+    return FileResponse(path, filename=document.get("file_name") or path.name)
 
 
 @router.get("/claims/{claim_id}/trace")

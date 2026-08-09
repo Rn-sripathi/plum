@@ -1,3 +1,4 @@
+import DocumentPreview from "./DocumentPreview";
 import TraceTimeline from "./TraceTimeline";
 
 const inr = (v) => `₹${Number(v).toLocaleString("en-IN")}`;
@@ -139,6 +140,7 @@ export default function ResultView({ result, liveSteps }) {
         )}
       </h2>
       {stopped ? <DocumentProblems result={result} /> : <Decision result={result} />}
+      <DocumentPreview claimId={result.claim_id} documents={result.documents} />
       <div className="section-gap">
         <h2>Processing trace — every check, in order</h2>
         <TraceTimeline trace={result.trace} />

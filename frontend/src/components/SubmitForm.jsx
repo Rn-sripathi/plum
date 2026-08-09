@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { FilePreviews } from "./DocumentPreview";
 
 const CATEGORIES = [
   "CONSULTATION", "DIAGNOSTIC", "PHARMACY", "DENTAL", "VISION", "ALTERNATIVE_MEDICINE",
@@ -157,6 +158,7 @@ export default function SubmitForm({ onResult, onStep, onStart }) {
             accept="image/*,application/pdf"
             onChange={(e) => pickFiles(e.target.files)}
           />
+          <FilePreviews files={files} />
           {files.length > 0 && (
             <table>
               <thead>
