@@ -75,7 +75,7 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
 }
 
 .status {
-  margin-left: auto;
+  flex: none;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -102,22 +102,23 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
 /* Title and nav are different sizes, so centring their boxes leaves the text
    off by a couple of pixels. Aligning on the shared text baseline is what
    actually lines them up; the group is then centred in the bar. */
-/* Everything on the bar is centred, and every box is sized exactly to its
-   text (line-height 1, no vertical padding) — otherwise centring the boxes
-   does not centre the glyphs. */
-.topbar-main {
+/* Brand left, status right, nav centred in whatever space is left between
+   them. Every box is sized exactly to its text (line-height 1, hit-area
+   padding cancelled by negative margin) so centring lands on the glyphs. */
+.brand {
   display: flex;
   align-items: center;
   gap: 14px;
-  min-width: 0;
+  flex: none;
 }
-.topbar-main .nav { margin-left: 12px; }
 .nav {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 28px;
-  flex: none;
+  justify-content: center;
+  gap: 34px;
   white-space: nowrap;
+  min-width: 0;
 }
 .nav-link {
   display: inline-block;
@@ -137,7 +138,9 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
   line-height: 1;
   transition: color 0.15s ease;
 }
-.nav-link:hover { background: none; color: var(--plum-coral); }
+/* :not(:disabled) is needed to outrank the global `button:hover` rule, which
+   would otherwise paint the primary coral fill behind a nav link. */
+.nav-link:hover:not(:disabled) { background: none; color: var(--plum-coral); }
 .nav-link.active { background: none; color: var(--plum-coral); font-weight: 700; }
 /* Fixed width so the label does not shift when + becomes −. */
 .nav-sign {
@@ -186,7 +189,7 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
   text-decoration: none;
   transition: color 0.15s ease, padding-left 0.15s ease;
 }
-.mega-list button:hover,
+.mega-list button:hover:not(:disabled),
 .mega-list a:hover {
   background: none;
   color: var(--plum-ink);

@@ -61,10 +61,10 @@ export default function App() {
   return (
     <div className="shell" onMouseLeave={() => setMenuOpen(false)}>
       <header className="topbar">
-        {/* Logo, title and nav all share one baseline; the group is centred. */}
-        <div className="topbar-main">
-        <Logo />
-        <h1>Claims Processing</h1>
+        <div className="brand">
+          <Logo />
+          <h1>Claims Processing</h1>
+        </div>
         <nav className="nav">
           <button
             type="button"
@@ -92,7 +92,6 @@ export default function App() {
             <span className="nav-sign">{menuOpen ? "−" : "+"}</span> Docs
           </button>
         </nav>
-        </div>
         <StatusChip health={health} />
       </header>
 
