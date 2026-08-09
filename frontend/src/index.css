@@ -262,32 +262,48 @@ tr.clickable:hover { background: #f4f5fb; }
   to { opacity: 1; transform: none; }
 }
 
-/* Mode switch reads as tabs, not actions: no fill, an underline marks the
-   current view, and the strip sits on the panel's own rule. */
+/* Segmented control: a coral thumb slides between the two modes. The thumb
+   is one element that translates, so the movement reads as the same object
+   moving rather than two panels crossfading. */
 .tabs {
+  position: relative;
   display: flex;
-  gap: 24px;
   margin: 0 0 20px;
-  border-bottom: 1px solid var(--line);
+  padding: 4px;
+  background: #f6eff2;
+  border-radius: 999px;
 }
+.tab-thumb {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  border-radius: 999px;
+  background: var(--plum-coral);
+  box-shadow: 0 1px 3px rgba(44, 10, 38, 0.18);
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tabs[data-active="1"] .tab-thumb { transform: translateX(100%); }
+
 .tab {
-  flex: 0 0 auto;
+  position: relative;
+  z-index: 1;
+  flex: 1;
   background: none;
   border: none;
-  border-radius: 0;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  padding: 0 2px 11px;
+  border-radius: 999px;
+  padding: 9px 12px;
   font-size: 13.5px;
   font-weight: 500;
   color: var(--muted);
-  transition: color 0.15s ease, border-color 0.15s ease;
+  transition: color 0.2s ease;
 }
-.tab:hover:not(:disabled) { background: none; color: var(--ink); }
-.tab.active {
-  color: var(--ink);
-  font-weight: 700;
-  border-bottom-color: var(--plum-coral);
+.tab:hover:not(.active):not(:disabled) { background: none; color: var(--ink); }
+.tab.active { color: #fff; font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-thumb { transition: none; }
 }
 
 input[type="file"] { padding: 7px; background: #fbfbfd; }

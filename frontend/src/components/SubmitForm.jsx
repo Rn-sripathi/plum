@@ -101,9 +101,12 @@ export default function SubmitForm({ onResult, onStep, onStart }) {
     <form className="panel" onSubmit={submit}>
       <h2>Submit a claim</h2>
 
-      <div className="tabs">
+      <div className="tabs" data-active={mode === "upload" ? 0 : 1} role="tablist">
+        <span className="tab-thumb" aria-hidden="true" />
         <button
           type="button"
+          role="tab"
+          aria-selected={mode === "upload"}
           className={mode === "upload" ? "tab active" : "tab"}
           onClick={() => setMode("upload")}
         >
@@ -111,6 +114,8 @@ export default function SubmitForm({ onResult, onStep, onStart }) {
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={mode === "structured"}
           className={mode === "structured" ? "tab active" : "tab"}
           onClick={() => setMode("structured")}
         >
