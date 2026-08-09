@@ -176,8 +176,13 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
   margin-left: -0.75px;
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
 }
-.nav-sign.open { transform: rotate(180deg); }
-.nav-sign.open i:last-child { transform: rotate(90deg); opacity: 0; }
+/* Docs folds to a minus while its menu is open; the other two do it on hover,
+   so every item animates the same way. (Rotation alone is invisible on a plus
+   — it is the vertical bar folding away that reads.) */
+.nav-sign.open,
+.nav-link:hover .nav-sign { transform: rotate(180deg); }
+.nav-sign.open i:last-child,
+.nav-link:hover .nav-sign i:last-child { transform: rotate(90deg); opacity: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .nav-sign, .nav-sign i { transition: none; }
