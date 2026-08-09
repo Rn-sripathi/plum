@@ -93,18 +93,24 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
 
 /* Flat uppercase nav in Plum's marketing style. No "+" prefixes: theirs mark
    expandable menus, and ours go straight to a view. */
+/* Title and nav are different sizes, so centring their boxes leaves the text
+   off by a couple of pixels. Aligning on the shared text baseline is what
+   actually lines them up; the group is then centred in the bar. */
+.topbar-main {
+  display: flex;
+  align-items: baseline;
+  gap: 26px;
+  min-width: 0;
+}
 .nav {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 28px;
-  margin-left: 26px;
   flex: none;
   white-space: nowrap;
 }
 .nav-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+  display: inline-block; /* plain inline flow, so the text baseline resolves */
   background: none;
   border: none;
   border-radius: 0;
@@ -122,11 +128,10 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
 .nav-link.active { background: none; color: var(--plum-coral); font-weight: 700; }
 /* Fixed width so the label does not shift when + becomes −. */
 .nav-sign {
-  display: inline-flex;
-  justify-content: center;
+  display: inline-block;
   width: 9px;
+  text-align: center;
   font-weight: 500;
-  line-height: 1;
 }
 
 /* Expanding menu panel */
