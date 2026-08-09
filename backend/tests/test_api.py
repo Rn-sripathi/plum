@@ -65,11 +65,9 @@ def test_unknown_claim_is_404(client):
 def test_upload_without_llm_returns_503_with_guidance(client, by_id, tmp_path):
     """Valid files that simply cannot be extracted (no LLM configured) are an
     infrastructure failure: 503 with retry guidance, not a member problem."""
-    from PIL import Image
+    from tests.helpers import legible_bytes
 
-    image = tmp_path / "page.jpg"
-    Image.new("RGB", (300, 400), "white").save(image)
-    payload = image.read_bytes()
+    payload = legible_bytes()
 
     meta = dict(by_id["TC004"])
     meta.pop("documents")

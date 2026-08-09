@@ -5,10 +5,9 @@ import json
 
 import pytest
 from fastapi.testclient import TestClient
-from PIL import Image
-
 from app.core.config import settings
 from app.main import create_app
+from tests.helpers import legible_page
 
 
 @pytest.fixture(scope="module")
@@ -22,8 +21,7 @@ def client(tmp_path_factory):
 def uploaded_claim(client, tmp_path_factory):
     """A claim submitted with real files. Extraction fails (no LLM in tests),
     so we submit a category needing one document and read the stored record."""
-    image = tmp_path_factory.mktemp("img") / "bill.jpg"
-    Image.new("RGB", (300, 400), "white").save(image)
+    image = legible_page(tmp_path_factory.mktemp("img") / "bill.jpg")
     metadata = {
         "member_id": "EMP002",
         "policy_id": "PLUM_GHI_2024",

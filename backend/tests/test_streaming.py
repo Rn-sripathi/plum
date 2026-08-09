@@ -81,10 +81,9 @@ def test_streamed_claim_is_persisted(client, by_id):
 
 def test_undecidable_failure_streams_error_event(client, by_id, tmp_path):
     """No LLM configured + real files -> terminal `error`, not a broken stream."""
-    from PIL import Image
+    from tests.helpers import legible_bytes
 
-    page = tmp_path / "page.jpg"
-    Image.new("RGB", (300, 400), "white").save(page)
+    payload = legible_bytes()
     meta = dict(by_id["TC004"])
     meta.pop("documents")
 
@@ -92,8 +91,8 @@ def test_undecidable_failure_streams_error_event(client, by_id, tmp_path):
         "/claims/upload/stream",
         data={"metadata": json.dumps(meta), "document_types": "PRESCRIPTION,HOSPITAL_BILL"},
         files=[
-            ("files", ("rx.jpg", page.read_bytes(), "image/jpeg")),
-            ("files", ("bill.jpg", page.read_bytes(), "image/jpeg")),
+            ("files", ("rx.jpg", payload, "image/jpeg")),
+            ("files", ("bill.jpg", payload, "image/jpeg")),
         ],
     )
     events = parse_sse(resp.text)

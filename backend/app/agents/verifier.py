@@ -13,7 +13,13 @@ slots in here in Phase 4 behind the same contract.
 import re
 from pathlib import Path
 
-from app.agents.llm import DocumentAI, is_decodable
+from app.agents.imaging import (
+    POOR_SHARPNESS,
+    UNREADABLE_SHARPNESS,
+    is_decodable,
+    measure_quality,
+)
+from app.agents.llm import DocumentAI
 from app.core.errors import ComponentUnavailable, DocumentVerificationStop
 from app.kb.snapshot import PolicySnapshot
 from app.models import (
@@ -60,10 +66,42 @@ def verify_documents(
     eff_quality: list[DocumentQuality | None] = []
     type_sources: list[str] = []
     damaged: set[str] = set()
+    illegible: set[str] = set()
     for doc in docs:
         eff, quality, source = doc.actual_type, doc.quality, "DECLARED"
 
-        # File integrity first — a damaged upload is the member's to fix, and
+        # Legibility is measured in code, not asked of the model: a heavily
+        # blurred bill came back classified PRESCRIPTION at 0.95 with quality
+        # GOOD, which turned "your bill is unreadable" into a false accusation
+        # that the member uploaded the wrong document. An illegible file is
+        # never classified — there is nothing there to classify.
+        if doc.storage_path and is_decodable(Path(doc.storage_path)):
+            measured, score = measure_quality(Path(doc.storage_path))
+            if measured is DocumentQuality.UNREADABLE:
+                quality = DocumentQuality.UNREADABLE
+                tb.step(
+                    "document_verifier", "image legibility", Outcome.FAIL,
+                    f"{doc.file_id} ('{doc.file_name or doc.file_id}') measured focus score "
+                    f"{score:.2f}, below the legibility floor of {UNREADABLE_SHARPNESS} — the "
+                    f"image carries no readable detail. Classification and extraction skipped; "
+                    f"nothing can be read from it.",
+                )
+                eff_types.append(eff)
+                eff_quality.append(DocumentQuality.UNREADABLE)
+                type_sources.append(source)
+                illegible.add(doc.file_id)
+                continue
+            if measured is DocumentQuality.POOR and quality is None:
+                quality = DocumentQuality.POOR
+                tb.step(
+                    "document_verifier", "image legibility", Outcome.DEGRADED,
+                    f"{doc.file_id} measured focus score {score:.2f} (sharp documents score "
+                    f"well above {POOR_SHARPNESS}); readable but degraded, so extracted "
+                    f"fields carry lower confidence.",
+                    confidence_delta=PENALTY_POOR_DOC,
+                )
+
+        # File integrity — a damaged upload is the member's to fix, and
         # checking locally avoids a vision call that would fail confusingly.
         if doc.storage_path and not is_decodable(Path(doc.storage_path)):
             damaged.add(doc.file_id)
@@ -175,7 +213,10 @@ def verify_documents(
         f"{t}{f' ({d.file_name})' if d.file_name else ''}"
         for d, t in zip(docs, submitted_types)
     )
-    missing = [t for t in required if t not in submitted_types]
+    # An unread document has no known type, so it cannot be judged missing or
+    # wrong — it might well be the very document required. Its own unreadable
+    # problem is the honest, actionable one; types are re-checked on re-upload.
+    missing = [] if illegible else [t for t in required if t not in submitted_types]
     if missing:
         allowed = set(required) | set(reqs.optional if reqs else [])
         surplus = [
@@ -213,6 +254,14 @@ def verify_documents(
             f"Missing required type(s): {', '.join(missing)}. Uploaded: {uploaded_desc}.",
             rule_ref=f"document_requirements.{category}",
         )
+    elif illegible:
+        tb.step(
+            "document_verifier", "required document types", Outcome.SKIPPED,
+            f"{len(illegible)} document(s) could not be read, so their type is unknown; "
+            f"the {category} requirement ({', '.join(required)}) is re-checked once a "
+            f"legible copy is uploaded.",
+            rule_ref=f"document_requirements.{category}",
+        )
     else:
         tb.step(
             "document_verifier", "required document types", Outcome.PASS,
@@ -228,27 +277,41 @@ def verify_documents(
             f" ('{doc.file_name}')" if doc.file_name else f" ({doc.file_id})"
         )
         if quality is DocumentQuality.UNREADABLE:
+            file_ref = doc.file_name or doc.file_id
+            others = [d for d in docs if d.file_id != doc.file_id]
+            others_note = (
+                f" Your other {'document is' if len(others) == 1 else 'documents are'} fine — "
+                f"only this one needs replacing."
+                if others
+                else ""
+            )
             problems.append(
                 DocumentProblem(
                     kind=DocumentProblemKind.UNREADABLE,
                     file_id=doc.file_id,
                     file_name=doc.file_name,
-                    found=f"unreadable {eff.value if eff else 'document'}",
-                    required="a readable copy of the same document",
+                    found="a document too blurred to read",
+                    required=(
+                        f"a legible copy (a {category} claim needs: {', '.join(required)})"
+                        if required
+                        else "a legible copy of the same document"
+                    ),
                     message=(
-                        f"Your {doc_label} could not be read — the image is too blurry or damaged "
-                        f"to extract any information. The claim itself is fine; only this one "
-                        f"document needs to be re-uploaded."
+                        f"'{file_ref}' is too blurred to read — no text could be recovered from "
+                        f"it, so we cannot tell what document it is or what it says. Your claim "
+                        f"has not been rejected and nothing else is wrong with it.{others_note}"
                     ),
                     action_needed=(
-                        f"Re-upload {doc_label} as a clear, well-lit photo or PDF "
-                        f"(all corners visible, no shadows) and resubmit."
+                        f"Re-upload '{file_ref}': photograph the original in good light with the "
+                        f"whole page flat in frame, hold steady until the camera focuses, and "
+                        f"check the text is readable before submitting. A scanned PDF works too."
                     ),
                 )
             )
             tb.step(
                 "document_verifier", "readability check", Outcome.FAIL,
-                f"{doc_label} is UNREADABLE; requesting re-upload of this document only.",
+                f"'{file_ref}' is unreadable. Claim not rejected; a re-upload of this one "
+                f"document is all that is required.",
             )
         elif quality is DocumentQuality.POOR:
             warnings.append(f"{doc_label} is poor quality; extracted fields carry lower confidence.")

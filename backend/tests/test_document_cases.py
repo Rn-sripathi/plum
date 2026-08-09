@@ -44,10 +44,11 @@ def test_tc002_asks_reupload_of_specific_document(reports):
     p = problems[0]
     assert p.kind is DocumentProblemKind.UNREADABLE
     assert p.file_name == "blurry_bill.jpg"
-    assert "could not be read" in p.message
+    assert "too blurred to read" in p.message
     assert "re-upload" in p.action_needed.lower()
-    # Not rejected outright: the type requirements themselves passed.
+    # Names the one file to replace, and says the claim itself is fine.
     assert "blurry_bill.jpg" in p.action_needed
+    assert "not been rejected" in p.message
 
 
 def test_tc003_surfaces_both_patient_names(reports):

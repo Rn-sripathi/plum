@@ -9,12 +9,10 @@ retries; on failure this raises `ComponentUnavailable` and callers degrade
 configured, `is_configured` is False and callers never attempt a call.
 """
 
-import base64
 import json
-import mimetypes
-from io import BytesIO
 from pathlib import Path
 
+from app.agents.imaging import MAX_PDF_PAGES, image_parts
 from app.core.config import Settings
 from app.core.errors import ComponentUnavailable
 from app.models import DocumentQuality, DocumentType
@@ -81,77 +79,6 @@ _EXTRACT_PROMPT = """You are extracting structured data from an Indian medical d
 partially illegible. Extract what you can read; NEVER guess. For each extracted field,
 give a 0..1 confidence in field_confidence. List every legibility problem in warnings.
 Expand Indian medical shorthand (HTN=Hypertension, T2DM=Type 2 Diabetes)."""
-
-
-MAX_PDF_PAGES = 5
-PDF_RENDER_SCALE = 2  # ~144 DPI — legible for handwriting without huge payloads
-
-
-def _data_uri(mime: str, payload: bytes) -> str:
-    return f"data:{mime};base64,{base64.b64encode(payload).decode()}"
-
-
-def _render_pdf(path: Path) -> list[str]:
-    """Render PDF pages to PNG data URIs.
-
-    Vision models take images, not PDFs, so multi-page scanned bills are
-    rasterized a page at a time and sent together — matching the guidance in
-    `sample_documents_guide.md` ("process each page separately; aggregate line
-    items"). Beyond MAX_PDF_PAGES the tail is dropped and the caller warns.
-    """
-    import pypdfium2 as pdfium
-
-    pdf = pdfium.PdfDocument(str(path))
-    try:
-        uris = []
-        for index in range(min(len(pdf), MAX_PDF_PAGES)):
-            image = pdf[index].render(scale=PDF_RENDER_SCALE).to_pil()
-            buffer = BytesIO()
-            image.save(buffer, format="PNG")
-            uris.append(_data_uri("image/png", buffer.getvalue()))
-        return uris
-    finally:
-        pdf.close()
-
-
-def is_decodable(path: Path) -> bool:
-    """Can this file be opened as an image or PDF at all?
-
-    Checked locally before any vision call so a damaged upload is reported as
-    a member-fixable document problem ("re-upload this file") instead of
-    masquerading as an infrastructure outage.
-    """
-    try:
-        if not path.exists() or path.stat().st_size == 0:
-            return False
-        if path.suffix.lower() == ".pdf":
-            import pypdfium2 as pdfium
-
-            pdf = pdfium.PdfDocument(str(path))
-            try:
-                return len(pdf) > 0
-            finally:
-                pdf.close()
-        from PIL import Image
-
-        with Image.open(path) as image:
-            image.verify()
-        return True
-    except Exception:
-        return False
-
-
-def image_parts(path: Path) -> tuple[list[str], int]:
-    """Data URIs for a document, plus its total page count (1 for images)."""
-    if path.suffix.lower() == ".pdf":
-        import pypdfium2 as pdfium
-
-        pdf = pdfium.PdfDocument(str(path))
-        pages = len(pdf)
-        pdf.close()
-        return _render_pdf(path), pages
-    mime = mimetypes.guess_type(path.name)[0] or "image/jpeg"
-    return [_data_uri(mime, path.read_bytes())], 1
 
 
 class DocumentAI:

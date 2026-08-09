@@ -77,6 +77,25 @@ PRESCRIPTION_FOLLOWUP = [
     "                       [Signed] Dr. Neha Kulkarni",
 ]
 
+PRESCRIPTION_SNEHA = [
+    "Dr. Arun Sharma, MBBS, MD (Internal Medicine)",
+    "Reg. No: KA/45678/2015",
+    "City Medical Centre, 12 MG Road, Bengaluru",
+    "-" * 60,
+    "Patient: Sneha Reddy           Date: 25-Oct-2024",
+    "Age: 32 years   Gender: F",
+    "-" * 60,
+    "Diagnosis: Acute Bronchitis",
+    "",
+    "Rx:",
+    "1. Tab Azithromycin 500mg - 1-0-0 x 3 days",
+    "2. Tab Paracetamol 650mg - 1-1-1 x 5 days",
+    "3. Cough Syrup - 10ml 1-1-1 x 5 days",
+    "4. Multivitamin - 0-1-0 x 30 days",
+    "",
+    "                       [Signed] Dr. Arun Sharma",
+]
+
 PHARMACY_BILL = [
     "HEALTH FIRST PHARMACY",
     "Drug Lic. No: KA-BLR-2291",
@@ -151,7 +170,8 @@ def main() -> None:
     # choose the same file twice, and TC001 needs two prescriptions.
     render(PRESCRIPTION_FOLLOWUP, OUT / "prescription_followup.jpg")
     render(HOSPITAL_BILL, OUT / "hospital_bill_city_clinic.jpg")
-    # TC002: a pharmacy bill, readable and unreadable.
+    # TC002: matching prescription plus a pharmacy bill, readable and not.
+    render(PRESCRIPTION_SNEHA, OUT / "prescription_sneha.jpg")
     render(PHARMACY_BILL, OUT / "pharmacy_bill.jpg")
     render(PHARMACY_BILL, OUT / "pharmacy_bill_unreadable.jpg", blur=7.0)
     # TC003: same treatment, different patient printed on the bill.

@@ -12,8 +12,9 @@ import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
-from app.agents.llm import MAX_PDF_PAGES, image_parts
+from app.agents.imaging import MAX_PDF_PAGES, image_parts
 from app.main import create_app
+from tests.helpers import legible_image
 
 
 @pytest.fixture(scope="module")
@@ -24,7 +25,8 @@ def client(tmp_path_factory):
 
 
 def _page(color: str = "white") -> Image.Image:
-    return Image.new("RGB", (400, 560), color)
+    """A page with real text — a blank page is legitimately unreadable."""
+    return legible_image()
 
 
 def test_image_upload_produces_one_part(tmp_path):
@@ -137,6 +139,58 @@ def test_truncated_pdf_is_reported_as_damaged(client, tmp_path):
     )
     assert resp.status_code == 200
     assert resp.json()["status"] == "DOCUMENTS_REQUIRED"
+
+
+def test_blurred_upload_is_unreadable_not_wrong_type(client, tmp_path):
+    """A blurred bill must be reported as unreadable — never as the member
+    having uploaded the wrong kind of document.
+
+    The vision model rated exactly this image "PRESCRIPTION, confidence 0.95,
+    quality GOOD", which produced a false 'you sent a prescription instead of
+    a pharmacy bill' accusation. Focus is now measured in code, so an
+    illegible file is never classified and never counted against the type
+    requirement.
+    """
+    from PIL import ImageFilter
+
+    from tests.helpers import legible_image
+
+    blurred = tmp_path / "pharmacy_bill.jpg"
+    legible_image().filter(ImageFilter.GaussianBlur(7.0)).save(blurred)
+    sharp = tmp_path / "prescription.jpg"
+    _page().save(sharp)
+
+    metadata = {
+        "member_id": "EMP004",
+        "policy_id": "PLUM_GHI_2024",
+        "claim_category": "PHARMACY",
+        "treatment_date": "2024-10-25",
+        "claimed_amount": 800,
+    }
+    resp = client.post(
+        "/claims/upload",
+        # Types declared: with no LLM in tests nothing can be auto-detected,
+        # and the point stands either way — a blurred file must not be
+        # re-typed or counted against the requirement.
+        data={"metadata": json.dumps(metadata), "document_types": "PRESCRIPTION,PHARMACY_BILL"},
+        files=[
+            ("files", ("prescription.jpg", sharp.read_bytes(), "image/jpeg")),
+            ("files", ("pharmacy_bill.jpg", blurred.read_bytes(), "image/jpeg")),
+        ],
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "DOCUMENTS_REQUIRED"
+
+    kinds = [p["kind"] for p in body["problems"]]
+    assert kinds == ["UNREADABLE"], f"expected only an unreadable problem, got {kinds}"
+    problem = body["problems"][0]
+    assert problem["file_name"] == "pharmacy_bill.jpg"
+    assert "not been rejected" in problem["message"]
+
+    # The objective measurement is in the trace, not just the verdict.
+    legibility = [s for s in body["trace"]["steps"] if s["action"] == "image legibility"]
+    assert legibility and "focus score" in legibility[0]["detail"]
 
 
 def test_upload_rejects_empty_document_set(client):
