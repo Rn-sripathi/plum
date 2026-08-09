@@ -22,7 +22,9 @@ def test_health(client):
     body = client.get("/health").json()
     assert body["status"] == "ok"
     assert body["policy"] == "PLUM_GHI_2024"
-    assert body["store"] == "healthy"
+    assert body["store"] == "sqlite: healthy"
+    assert "token matching" in body["semantic_index"]
+    assert body["policy_graph"] == "not configured (snapshot only)"
 
 
 def test_submit_and_fetch_decision(client, by_id):

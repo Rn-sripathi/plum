@@ -23,7 +23,13 @@ router = APIRouter()
 
 def _process_and_store(request: Request, submission: ClaimSubmission) -> dict:
     state = request.app.state
-    result = process_claim(submission, state.snapshot, doc_ai=state.doc_ai)
+    result = process_claim(
+        submission,
+        state.snapshot,
+        doc_ai=state.doc_ai,
+        semantic=state.semantic,
+        graph=state.graph,
+    )
     payload = json.loads(result.model_dump_json())
     try:
         state.store.save(submission, result)
@@ -122,12 +128,23 @@ def run_eval() -> dict:
 @router.get("/health")
 def health(request: Request) -> dict:
     state = request.app.state
+    store_kind = type(state.store).__name__.removesuffix("ClaimStore").lower()
+    if state.semantic.is_configured:
+        semantic_status = "ready" if state.semantic.healthy() else "configured, not ingested"
+    else:
+        semantic_status = "disabled (no OPENAI_API_KEY — token matching only)"
+    if state.graph.is_configured:
+        graph_status = "connected" if state.graph.healthy() else "configured, unreachable (snapshot fallback)"
+    else:
+        graph_status = "not configured (snapshot only)"
     return {
         "status": "ok",
         "policy": state.snapshot.terms.policy_id,
         "members": len(state.snapshot.terms.members),
-        "store": "healthy" if state.store.healthy() else "unavailable",
+        "store": f"{store_kind}: {'healthy' if state.store.healthy() else 'unavailable'}",
         "llm": "configured" if state.doc_ai.is_configured else "disabled (deterministic mode)",
+        "semantic_index": semantic_status,
+        "policy_graph": graph_status,
     }
 
 

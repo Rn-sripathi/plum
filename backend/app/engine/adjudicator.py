@@ -10,6 +10,7 @@ rejection reason sets the primary reason; later failures stay visible in
 from dataclasses import dataclass, field
 from decimal import Decimal
 
+from app.kb.semantic import SemanticHit
 from app.kb.snapshot import PolicySnapshot
 from app.models import (
     Adjudication,
@@ -65,6 +66,7 @@ def adjudicate(
     claim: ClaimSubmission,
     documents: list[ExtractedDocument],
     snapshot: PolicySnapshot,
+    semantic_hints: list[SemanticHit] | None = None,
 ) -> Adjudication:
     facts = gather_facts(claim, documents)
     member = snapshot.get_member(claim.member_id)
@@ -76,7 +78,7 @@ def adjudicate(
     all_checks += C.check_submission_rules(claim, snapshot)
 
     exclusion_check, exclusion_match = C.check_exclusions(
-        claim, facts.diagnosis, facts.treatment_text, snapshot
+        claim, facts.diagnosis, facts.treatment_text, snapshot, semantic_hints
     )
     all_checks.append(exclusion_check)
 

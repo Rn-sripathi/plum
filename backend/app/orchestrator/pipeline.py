@@ -13,10 +13,12 @@ from uuid import uuid4
 from app.agents.extraction import extract_documents
 from app.agents.llm import DocumentAI
 from app.agents.verifier import verify_documents
-from app.core.errors import DocumentVerificationStop
+from app.core.errors import ComponentUnavailable, DocumentVerificationStop
 from app.engine.adjudicator import adjudicate
 from app.engine.fraud import assess_fraud
 from app.engine.synthesizer import synthesize
+from app.kb.graph import PolicyGraph
+from app.kb.semantic import SemanticHit, SemanticPolicyIndex
 from app.kb.snapshot import PolicySnapshot
 from app.models import ClaimDecision, ClaimSubmission, FraudAssessment, Outcome
 from app.models.documents import DocumentProblemReport
@@ -24,6 +26,8 @@ from app.orchestrator.trace import TraceBuilder
 
 PENALTY_DEGRADED = -0.20
 PENALTY_UNITEMIZED = -0.05
+PENALTY_SEMANTIC_DOWN = -0.10
+PENALTY_GRAPH_DOWN = -0.05
 
 
 def process_claim(
@@ -31,6 +35,8 @@ def process_claim(
     snapshot: PolicySnapshot,
     claim_id: str | None = None,
     doc_ai: DocumentAI | None = None,
+    semantic: SemanticPolicyIndex | None = None,
+    graph: PolicyGraph | None = None,
 ) -> ClaimDecision | DocumentProblemReport:
     claim_id = claim_id or f"CLM_{uuid4().hex[:8].upper()}"
     tb = TraceBuilder(claim_id)
@@ -70,7 +76,75 @@ def process_claim(
 
     documents = extract_documents(verified.documents, doc_ai, tb, penalties)
 
-    adjudication = adjudicate(submission, documents, snapshot)
+    # --- Policy retriever: rule source + semantic concept candidates ---------
+    if graph is not None and graph.is_configured:
+        try:
+            graph_reqs = graph.document_requirements(
+                submission.policy_id, submission.claim_category.value
+            )
+            snap_reqs = snapshot.document_requirements(submission.claim_category)
+            consistent = sorted(graph_reqs) == sorted(snap_reqs.required if snap_reqs else [])
+            if consistent:
+                tb.step(
+                    "policy_retriever", "rule source", Outcome.PASS,
+                    f"Rules loaded from the Neo4j policy graph; document requirements "
+                    f"({', '.join(graph_reqs)}) consistent with the snapshot.",
+                    rule_ref="kb.graph",
+                )
+            else:
+                penalties.append(("policy graph inconsistent with snapshot", PENALTY_GRAPH_DOWN))
+                tb.step(
+                    "policy_retriever", "rule source", Outcome.DEGRADED,
+                    f"Graph/snapshot mismatch for {submission.claim_category.value}: graph "
+                    f"{graph_reqs or '(empty — run app.kb.ingest)'} vs snapshot "
+                    f"{snap_reqs.required if snap_reqs else []}. Snapshot takes precedence.",
+                    confidence_delta=PENALTY_GRAPH_DOWN, rule_ref="kb.graph",
+                )
+        except ComponentUnavailable as exc:
+            penalties.append(("policy graph unavailable; snapshot fallback", PENALTY_GRAPH_DOWN))
+            tb.step(
+                "policy_retriever", "rule source", Outcome.DEGRADED,
+                f"Policy graph unavailable ({exc.message}); in-memory snapshot fallback.",
+                confidence_delta=PENALTY_GRAPH_DOWN, rule_ref="kb.graph",
+            )
+    else:
+        tb.step(
+            "policy_retriever", "rule source", Outcome.PASS,
+            "In-memory policy snapshot (authoritative; no policy graph configured).",
+            rule_ref="kb.snapshot",
+        )
+
+    semantic_hints: list[SemanticHit] | None = None
+    if semantic is not None and semantic.is_configured:
+        texts: list[str] = []
+        for doc in documents:
+            content = doc.content
+            texts += [t for t in (content.diagnosis, content.treatment) if t]
+            texts += [item.description for item in (content.line_items or [])]
+        try:
+            best: dict[str, SemanticHit] = {}
+            for text in texts:
+                for hit in semantic.search(text, top_k=3, min_score=0.5):
+                    if hit.concept not in best or hit.score > best[hit.concept].score:
+                        best[hit.concept] = hit
+            semantic_hints = sorted(best.values(), key=lambda h: -h.score)
+            tb.step(
+                "policy_retriever", "semantic concept matching", Outcome.PASS,
+                f"Vector index returned {len(semantic_hints)} candidate concept(s) for "
+                f"{len(texts)} claim text(s): "
+                + (", ".join(f"'{h.concept}' ({h.score:.2f})" for h in semantic_hints[:3]) or "none")
+                + ". Candidates only — the deterministic engine decides.",
+                rule_ref="kb.semantic",
+            )
+        except ComponentUnavailable as exc:
+            penalties.append(("semantic index unavailable; token matching only", PENALTY_SEMANTIC_DOWN))
+            tb.step(
+                "policy_retriever", "semantic concept matching", Outcome.DEGRADED,
+                f"Vector index unavailable ({exc.message}); deterministic token matching only.",
+                confidence_delta=PENALTY_SEMANTIC_DOWN, rule_ref="kb.semantic",
+            )
+
+    adjudication = adjudicate(submission, documents, snapshot, semantic_hints)
     for check in adjudication.checks:
         tb.step(
             "adjudication_engine",

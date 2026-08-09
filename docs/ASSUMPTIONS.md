@@ -47,10 +47,11 @@ code with a pointer back here, and covered by tests where behavior-affecting.
    `hernia` waiting period; "Chronic Joint Pain" must not match
    `joint_replacement` (all distinctive tokens of a condition key required).
 
-10. **Qdrant/Neo4j were cut per the plan's cut line** (2–3 day timebox, cloud
-    provisioning friction). The deterministic matcher passes all 12 cases with
-    explainable matches; `engine/matching.py` is the seam where the embedding
-    tier plugs in. See ARCHITECTURE.md "considered and rejected".
+10. **All three stores (Neon Postgres, Qdrant, Neo4j) are integrated but
+    optional.** Each activates via env vars and falls back per the resilience
+    table; the 12-case eval intentionally runs on the deterministic tier so
+    it is reproducible with zero accounts. Semantic hits are candidates the
+    engine threshold-checks — the token tier wins whenever it matches.
 
 11. **TC011's simulated failure hits the fraud checker** — the least critical
     stage (its absence can only under-flag, never mis-pay). The degradation

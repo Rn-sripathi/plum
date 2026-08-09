@@ -12,7 +12,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.agents.llm import DocumentAI
 from app.api.routes import register_error_handlers, router
 from app.core.config import settings
-from app.core.store import SqliteClaimStore
+from app.core.store import SqliteClaimStore, make_store
+from app.kb.graph import PolicyGraph
+from app.kb.semantic import SemanticPolicyIndex
 from app.kb.snapshot import PolicySnapshot
 
 
@@ -20,9 +22,14 @@ def create_app(database_path: Path | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         app.state.snapshot = PolicySnapshot.from_file(settings.policy_terms_path)
-        app.state.store = SqliteClaimStore(database_path or settings.database_path)
+        app.state.store = (
+            SqliteClaimStore(database_path) if database_path else make_store(settings)
+        )
         app.state.doc_ai = DocumentAI(settings)
+        app.state.semantic = SemanticPolicyIndex(settings)
+        app.state.graph = PolicyGraph(settings)
         yield
+        app.state.graph.close()
 
     app = FastAPI(
         title="Plum Claims Processing",

@@ -35,3 +35,4 @@ scratch/
 # Runtime artifacts
 data/claims.db
 data/uploads/
+data/qdrant/

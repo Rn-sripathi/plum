@@ -9,6 +9,7 @@ import datetime as dt
 from decimal import Decimal
 
 from app.engine import matching
+from app.kb.semantic import SemanticHit
 from app.kb.snapshot import PolicySnapshot
 from app.models import (
     ClaimSubmission,
@@ -143,14 +144,23 @@ def check_submission_rules(claim: ClaimSubmission, snapshot: PolicySnapshot) -> 
     return checks
 
 
+SEMANTIC_EXCLUSION_THRESHOLD = 0.75
+
+
 def check_exclusions(
     claim: ClaimSubmission,
     diagnosis: str | None,
     treatment_text: str | None,
     snapshot: PolicySnapshot,
+    semantic_hints: list[SemanticHit] | None = None,
 ) -> tuple[RuleCheck, matching.ConceptMatch | None]:
     """Claim-level exclusion: diagnosis/treatment matched against the policy
-    exclusion clauses. A match rejects the whole claim (TC012)."""
+    exclusion clauses. A match rejects the whole claim (TC012).
+
+    Tiered: deterministic token match first; when it finds nothing, candidate
+    matches from the vector index (computed upstream, passed in — the engine
+    itself does no I/O) are accepted above SEMANTIC_EXCLUSION_THRESHOLD.
+    """
     clauses = snapshot.terms.exclusions.conditions
     searched = " ; ".join(t for t in (diagnosis, treatment_text) if t)
     if not searched:
@@ -164,6 +174,31 @@ def check_exclusions(
             None,
         )
     match = matching.match_exclusion(searched, clauses)
+    if match is None and semantic_hints:
+        best = max(
+            (
+                h
+                for h in semantic_hints
+                if h.concept_type == "exclusion" and h.score >= SEMANTIC_EXCLUSION_THRESHOLD
+            ),
+            key=lambda h: h.score,
+            default=None,
+        )
+        if best is not None:
+            return (
+                RuleCheck(
+                    rule_ref=best.rule_ref,
+                    name="exclusions.claim_level",
+                    outcome=Outcome.FAIL,
+                    detail=(
+                        f"'{searched}' semantically matches policy exclusion '{best.concept}' "
+                        f"(vector similarity {best.score:.2f}). This condition is not covered "
+                        f"under the policy at any time."
+                    ),
+                    rejection_reason=RejectionReason.EXCLUDED_CONDITION,
+                ),
+                matching.ConceptMatch(concept=best.concept, matched_tokens=set(), score=best.score),
+            )
     if match:
         return (
             RuleCheck(

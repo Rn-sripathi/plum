@@ -1,0 +1,20 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.1, pytest-9.1.1, pluggy-1.6.0 -- C:\dev\plum\backend\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\dev\plum\backend
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collecting ... collected 10 items
+
+tests/test_kb.py::TestSemanticIndex::test_search_finds_exclusion_concepts PASSED [ 10%]
+tests/test_kb.py::TestSemanticIndex::test_healthy_after_ingest PASSED    [ 20%]
+tests/test_kb.py::TestSemanticIndex::test_unconfigured_index_raises_component_unavailable PASSED [ 30%]
+tests/test_kb.py::TestSemanticExclusionTier::test_semantic_hint_used_when_tokens_miss PASSED [ 40%]
+tests/test_kb.py::TestSemanticExclusionTier::test_low_score_hint_ignored PASSED [ 50%]
+tests/test_kb.py::TestSemanticExclusionTier::test_token_tier_wins_over_hints PASSED [ 60%]
+tests/test_kb.py::TestGraphFallback::test_graph_outage_degrades_not_crashes PASSED [ 70%]
+tests/test_kb.py::TestGraphFallback::test_no_graph_means_snapshot_source_no_penalty PASSED [ 80%]
+tests/test_kb.py::test_postgres_store_roundtrip SKIPPED (DATABASE_UR...) [ 90%]
+tests/test_kb.py::test_neo4j_ingest_and_query SKIPPED (NEO4J_URI not...) [100%]
+
+======================== 8 passed, 2 skipped in 52.95s ========================

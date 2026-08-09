@@ -21,8 +21,28 @@ class Settings(BaseSettings):
     # pipeline runs deterministically on declared types + supplied content.
     openai_api_key: str | None = Field(default=None, validation_alias="OPENAI_API_KEY")
     openai_model: str = "gpt-4o"
+    embedding_model: str = "text-embedding-3-small"
     llm_timeout_seconds: float = 30.0
     llm_max_retries: int = 2
+
+    # Knowledge/persistence stores — each is optional and independently
+    # activated by its env var; absent = the documented fallback runs.
+    database_url: str | None = Field(
+        default=None, validation_alias="DATABASE_URL",
+        description="Postgres DSN (e.g. Neon). Absent -> SQLite.",
+    )
+    qdrant_url: str | None = Field(
+        default=None, validation_alias="QDRANT_URL",
+        description="Qdrant Cloud URL. Absent -> embedded local index.",
+    )
+    qdrant_api_key: str | None = Field(default=None, validation_alias="QDRANT_API_KEY")
+    qdrant_local_dir: Path | None = None
+    neo4j_uri: str | None = Field(
+        default=None, validation_alias="NEO4J_URI",
+        description="Neo4j AuraDB bolt/neo4j+s URI. Absent -> snapshot only.",
+    )
+    neo4j_username: str = Field(default="neo4j", validation_alias="NEO4J_USERNAME")
+    neo4j_password: str | None = Field(default=None, validation_alias="NEO4J_PASSWORD")
 
     upload_dir: Path | None = None
 
@@ -41,6 +61,10 @@ class Settings(BaseSettings):
     @property
     def upload_path(self) -> Path:
         return self.upload_dir or self.data_dir / "uploads"
+
+    @property
+    def qdrant_local_path(self) -> Path:
+        return self.qdrant_local_dir or self.data_dir / "qdrant"
 
 
 settings = Settings()

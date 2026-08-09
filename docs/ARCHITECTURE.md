@@ -88,10 +88,28 @@ the trace next to the step that caused it.
 | Considered | Rejected because |
 |---|---|
 | **LLM-driven adjudication** (hand the policy + claim to GPT and ask for a decision) | Unauditable, non-reproducible, and wrong on arithmetic ordering (TC010-style money math). The 12 decision cases pass with the LLM completely disabled — that's the property we wanted. |
-| **Qdrant + Neo4j knowledge stores** (embedding search for exclusion matching; policy-as-graph) | Planned (PLAN.md §5) and designed with fallbacks from day one; cut on the 2–3 day timebox exactly as the plan's cut line prescribed. The deterministic token matcher (`engine/matching.py`) passes all 12 cases with explainable matches (`matched on: obesity`); the matcher is an interface seam where an embedding tier slots in without touching the engine. |
-| **Postgres from day one** | Cloud provisioning friction for a reviewer running locally. `ClaimStore` is a protocol; SQLite implements it with zero setup, Postgres is a second implementation away. |
+| **Making the KB stores mandatory** (Qdrant/Neo4j/Postgres as hard dependencies) | Every store is env-activated with a tested fallback instead: Postgres (Neon) ↔ SQLite behind one protocol; Qdrant semantic tier ↔ deterministic token matcher; Neo4j policy graph ↔ in-memory snapshot. The eval must stay reproducible on a reviewer's laptop with zero accounts — and a live dependency you can kill mid-demo *is* the resilience story. |
+| **Letting the vector index decide exclusions** | Semantic hits are *candidates* only — computed in the pipeline, passed into the engine as data, and threshold-checked deterministically (`SEMANTIC_EXCLUSION_THRESHOLD`). The engine still does no I/O and the token tier always wins when it matches (keeps the eval deterministic). |
 | **Separate eval harness repo/scripts** | The eval runner lives in the app (`app/eval/runner.py`) and doubles as an API endpoint (`POST /eval/run`), so the report can never drift from the shipped pipeline. |
 | **Rejecting claims on fraud signals** | Signals route to `MANUAL_REVIEW` with named evidence instead — false-positive rejections are the most expensive mistake in claims UX. |
+
+## Knowledge & persistence stores
+
+Three stores, each independently env-activated, each with a documented and
+*tested* fallback. `uv run python -m app.kb.ingest` (re)builds the knowledge
+stores from `policy_terms.json` — a new policy is an ingestion run, not a
+code change.
+
+| Store | Activated by | Job | Fallback when absent/down |
+|---|---|---|---|
+| **Postgres (Neon)** — `core/store.py` | `DATABASE_URL` | System of record; traces as queryable JSONB | SQLite (absent); decision returned with `persistence: failed` (down) |
+| **Qdrant** — `kb/semantic.py` | `OPENAI_API_KEY` (embeddings); `QDRANT_URL` for cloud, else embedded local index | Semantic tier: one vector per policy concept; claim texts are nearest-neighbor matched into *candidate* exclusion hits | Deterministic token matcher, −0.10 confidence, trace notes the tier drop |
+| **Neo4j AuraDB** — `kb/graph.py` | `NEO4J_URI` + `NEO4J_PASSWORD` | Policy-as-graph (categories, rules, doc requirements, member/dependent edges) — the multi-policy scale story; runtime cross-checks graph vs snapshot in the trace | In-memory snapshot, −0.05 confidence, `DEGRADED` trace step |
+
+The matching hierarchy for free text → policy concept: **token match
+(deterministic, always on) → vector candidates above 0.75 similarity → LLM
+judgment (extraction only)**. Every tier's result lands in the trace with a
+score, and no tier but the deterministic one can fire without being visible.
 
 ## Known limitations, and the 10x plan
 

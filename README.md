@@ -30,15 +30,36 @@ Open http://localhost:5173, pick a test-case preset (TC001 = document stop,
 TC004 = clean approval, TC010 = network-discount breakdown), submit, and read
 the decision + trace.
 
-### Optional: real document extraction
+### Optional: LLM + knowledge/persistence stores
+
+Everything below is **optional and independently activated** — absent, the
+system runs fully deterministic with tested fallbacks (SQLite, token
+matching, in-memory policy snapshot) and the eval still passes 12/12.
 
 ```bash
-export OPENAI_API_KEY=sk-...   # enables GPT-4o classification/extraction
+# GPT-4o document classification/extraction + embeddings for the vector index
+export OPENAI_API_KEY=sk-...
+
+# Postgres system of record (Neon free tier: console.neon.tech -> copy DSN)
+export DATABASE_URL=postgresql://user:pass@host/db
+
+# Neo4j AuraDB policy graph (free tier: console.neo4j.io -> create instance)
+export NEO4J_URI=neo4j+s://xxxx.databases.neo4j.io
+export NEO4J_PASSWORD=...
+
+# Qdrant: runs EMBEDDED locally by default (no account needed).
+# For Qdrant Cloud instead: export QDRANT_URL=... and QDRANT_API_KEY=...
 ```
 
-Without a key the system runs fully deterministic (declared document types +
-pre-extracted content); with it, `POST /claims/upload` accepts real files.
-Generate demo documents with `uv run python scripts/make_mock_docs.py`.
+Then load the knowledge stores and restart the API:
+
+```bash
+uv run python -m app.kb.ingest    # policy_terms.json -> Qdrant + Neo4j
+```
+
+`GET /health` reports each store's live status (connected / fallback /
+disabled). Generate demo documents for the real-upload path with
+`uv run python scripts/make_mock_docs.py`.
 
 ## Tests & eval
 
