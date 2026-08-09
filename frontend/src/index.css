@@ -56,21 +56,45 @@ body { margin: 0; background: var(--bg); }
 }
 .topbar .badge { margin-left: auto; }
 
-.nav { display: flex; gap: 4px; margin-left: 18px; flex-wrap: wrap; }
+/* Flat uppercase nav in Plum's marketing style. No "+" prefixes: theirs mark
+   expandable menus, and ours go straight to a view. */
+.nav { display: flex; gap: 30px; margin-left: 28px; }
 .nav-link {
   background: none;
   border: none;
-  border-radius: 8px;
-  padding: 7px 12px;
+  border-radius: 0;
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  line-height: 1.2;
+  transition: color 0.15s ease;
+}
+.nav-link:hover:not(.active) { background: none; color: var(--ink); }
+.nav-link.active { background: none; color: var(--plum-coral); font-weight: 700; }
+
+.doc-tabs { display: flex; gap: 20px; margin-bottom: 18px; align-items: center; }
+.doc-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0 0 8px;
   font-size: 13px;
   font-weight: 500;
   color: var(--muted);
   text-decoration: none;
-  line-height: 1.2;
-  transition: background 0.15s ease, color 0.15s ease;
 }
-.nav-link:hover:not(.active) { background: #f6eff2; color: var(--ink); }
-.nav-link.active { background: #fdeaec; color: var(--plum-coral); font-weight: 700; }
+.doc-tab:hover:not(.active) { background: none; color: var(--ink); }
+.doc-tab.active {
+  background: none;
+  color: var(--ink);
+  font-weight: 700;
+  border-bottom-color: var(--plum-coral);
+}
 
 .doc-layout { max-width: 900px; margin: 0 auto; padding: 24px 28px; }
 .doc { line-height: 1.65; font-size: 14.5px; }

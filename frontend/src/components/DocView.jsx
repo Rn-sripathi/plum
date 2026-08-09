@@ -3,6 +3,37 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { api } from "../api";
 
+/** The project documents, with the eval report reachable from its own nav item. */
+const DOC_TABS = [
+  { slug: "architecture", label: "Architecture" },
+  { slug: "contracts", label: "Contracts" },
+  { slug: "assumptions", label: "Assumptions" },
+];
+
+export function DocsPage() {
+  const [slug, setSlug] = useState("architecture");
+  return (
+    <>
+      <div className="doc-tabs">
+        {DOC_TABS.map((tab) => (
+          <button
+            key={tab.slug}
+            type="button"
+            className={slug === tab.slug ? "doc-tab active" : "doc-tab"}
+            onClick={() => setSlug(tab.slug)}
+          >
+            {tab.label}
+          </button>
+        ))}
+        <a className="doc-tab" href={api.apiDocsUrl()} target="_blank" rel="noreferrer">
+          API reference ↗
+        </a>
+      </div>
+      <DocView slug={slug} />
+    </>
+  );
+}
+
 /** Renders a project document so the deployed URL carries its own evidence. */
 export default function DocView({ slug }) {
   const [doc, setDoc] = useState(null);

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import ClaimsList from "./components/ClaimsList";
-import DocView from "./components/DocView";
+import DocView, { DocsPage } from "./components/DocView";
 import Logo from "./components/Logo";
 import ResultView from "./components/ResultView";
 import SubmitForm from "./components/SubmitForm";
@@ -9,9 +9,7 @@ import SubmitForm from "./components/SubmitForm";
 const NAV = [
   { id: "console", label: "Console" },
   { id: "eval", label: "Eval report" },
-  { id: "architecture", label: "Architecture" },
-  { id: "contracts", label: "Contracts" },
-  { id: "assumptions", label: "Assumptions" },
+  { id: "docs", label: "Docs" },
 ];
 
 export default function App() {
@@ -61,9 +59,6 @@ export default function App() {
               {item.label}
             </button>
           ))}
-          <a className="nav-link" href={api.apiDocsUrl()} target="_blank" rel="noreferrer">
-            API ↗
-          </a>
         </nav>
         {health ? (
           <span className="badge ok" title="live component status">
@@ -87,7 +82,7 @@ export default function App() {
         </main>
       ) : (
         <main className="doc-layout">
-          <DocView slug={view} />
+          {view === "docs" ? <DocsPage /> : <DocView slug={view} />}
         </main>
       )}
     </>
