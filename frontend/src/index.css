@@ -60,6 +60,7 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 18px;
+  line-height: 1; /* box == text, so centring the box centres the text */
   letter-spacing: -0.01em;
   margin: 0;
   padding-left: 14px;
@@ -92,24 +93,41 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
 
 /* Flat uppercase nav in Plum's marketing style. No "+" prefixes: theirs mark
    expandable menus, and ours go straight to a view. */
-.nav { display: flex; gap: 28px; margin-left: 26px; flex: none; white-space: nowrap; }
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-left: 26px;
+  flex: none;
+  white-space: nowrap;
+}
 .nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   background: none;
   border: none;
   border-radius: 0;
-  padding: 6px 0;
+  padding: 6px 0; /* symmetric: keeps the hit area without shifting the centre */
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
   text-decoration: none;
-  line-height: 1.2;
+  line-height: 1;
   transition: color 0.15s ease;
 }
 .nav-link:hover:not(.active) { background: none; color: var(--ink); }
 .nav-link.active { background: none; color: var(--plum-coral); font-weight: 700; }
-.nav-sign { display: inline-block; width: 0.9em; font-weight: 500; }
+/* Fixed width so the label does not shift when + becomes −. */
+.nav-sign {
+  display: inline-flex;
+  justify-content: center;
+  width: 9px;
+  font-weight: 500;
+  line-height: 1;
+}
 
 /* Expanding menu panel */
 .mega {
