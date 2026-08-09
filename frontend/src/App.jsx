@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import ClaimsList from "./components/ClaimsList";
+import Logo from "./components/Logo";
 import ResultView from "./components/ResultView";
 import SubmitForm from "./components/SubmitForm";
 
@@ -37,7 +38,8 @@ export default function App() {
   return (
     <>
       <header className="topbar">
-        <h1>Plum · Claims Processing</h1>
+        <Logo />
+        <h1>Claims Processing</h1>
         {health ? (
           <span className="badge ok">
             {health.policy} · store {health.store} · llm {health.llm} · index{" "}
