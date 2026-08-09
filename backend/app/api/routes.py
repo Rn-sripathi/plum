@@ -94,6 +94,12 @@ def get_trace(request: Request, claim_id: str) -> dict:
     return record["result"]["trace"]
 
 
+@router.get("/eval/cases")
+def eval_cases() -> dict:
+    """The 12 assignment test cases — used by the UI as submission presets."""
+    return json.loads(settings.test_cases_path.read_text(encoding="utf-8"))
+
+
 @router.post("/eval/run")
 def run_eval() -> dict:
     results = run_all()
