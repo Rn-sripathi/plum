@@ -5,6 +5,7 @@ import DocView, { DocsPage } from "./components/DocView";
 import Logo from "./components/Logo";
 import NavMenu from "./components/NavMenu";
 import ResultView from "./components/ResultView";
+import StatusChip from "./components/StatusChip";
 import SubmitForm from "./components/SubmitForm";
 
 export default function App() {
@@ -89,16 +90,7 @@ export default function App() {
             <span className="nav-sign">{menuOpen ? "−" : "+"}</span> Docs
           </button>
         </nav>
-        {health ? (
-          <span className="badge ok" title="live component status">
-            {health.policy} · store {health.store} · llm {health.llm} · index{" "}
-            {health.semantic_index} · graph {health.policy_graph}
-          </span>
-        ) : (
-          <span className="badge REJECTED">
-            backend unreachable — start it with: uv run fastapi dev app/main.py
-          </span>
-        )}
+        <StatusChip health={health} />
       </header>
 
       <NavMenu open={menuOpen} onPick={openDoc} />

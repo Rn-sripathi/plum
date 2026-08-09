@@ -48,25 +48,51 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
 .topbar {
   background: var(--panel);
   border-bottom: 1px solid var(--line);
-  padding: 15px 28px;
+  padding: 0 28px;
+  height: 62px;
   display: flex;
   align-items: center;
   gap: 14px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 .topbar h1 {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 19px;
+  font-size: 18px;
   letter-spacing: -0.01em;
   margin: 0;
   padding-left: 14px;
   border-left: 1px solid var(--line);
+  white-space: nowrap;
 }
-.topbar .badge { margin-left: auto; }
+
+.status {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: default;
+  white-space: nowrap;
+}
+.status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+  background: currentColor;
+}
+.status.ok i { background: #16a34a; }
+.status.warn i { background: #d97706; }
+.status.down i { background: var(--red); }
+.status.down { color: var(--red); }
 
 /* Flat uppercase nav in Plum's marketing style. No "+" prefixes: theirs mark
    expandable menus, and ours go straight to a view. */
-.nav { display: flex; gap: 30px; margin-left: 28px; }
+.nav { display: flex; gap: 28px; margin-left: 26px; flex: none; white-space: nowrap; }
 .nav-link {
   background: none;
   border: none;
