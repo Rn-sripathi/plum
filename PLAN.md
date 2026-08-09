@@ -131,11 +131,14 @@ ALL checks still run and land in the trace (ops sees the complete picture):
 
 1. **Eligibility** — member in roster, policy period active, relationship covered
 2. **Submission rules** — ≤30 days from treatment, amount ≥ ₹500
-3. **Waiting periods** — initial 30d from `join_date`; condition-specific via
+3. **Exclusions** — diagnosis + treatment + line items semantically matched against
+   exclusion list (TC012: high confidence ≥0.90 expected). Checked **before** waiting
+   periods: an excluded condition is never covered, so it must win the primary reason
+   over a merely-time-bound rule (TC012's "Morbid Obesity" also matches the
+   `obesity_treatment` waiting period — exclusion is the truthful rejection)
+4. **Waiting periods** — initial 30d from `join_date`; condition-specific via
    diagnosis mapping (diabetes 90d…). Rejection message MUST state the eligibility
    date (TC005: joined 2024-09-01 + 90d → eligible 2024-11-30)
-4. **Exclusions** — diagnosis + each line item semantically matched against
-   exclusion list (TC012: high confidence ≥0.90 expected)
 5. **Pre-authorization** — MRI/CT > ₹10,000, PET, planned procedures (TC007).
    Checked **before** per-claim limit so TC007 reports `PRE_AUTH_MISSING`
 6. **Line-item adjudication** — per item: covered/excluded for category →
