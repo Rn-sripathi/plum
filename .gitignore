@@ -31,3 +31,7 @@ Thumbs.db
 *.log
 tmp/
 scratch/
+
+# Runtime artifacts
+data/claims.db
+data/uploads/
