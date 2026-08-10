@@ -81,7 +81,7 @@ descriptions and validation rules).
 
 | | |
 |---|---|
-| **Input** | `lookup_policy(path)`, `search_policy(text)`, `category_rules(category)`, `waiting_period(condition, member_id)`, `member(id, scope)`, `get_claim(id, scope)`, `find_claims(scope, …filters)`, `portfolio(scope)` |
+| **Input** | `lookup_policy(path)`, `search_policy(text)`, `search_docs(text)`, `category_rules(category)`, `waiting_period(condition, member_id)`, `member(id, scope)`, `get_claim(id, scope)`, `find_claims(scope, …filters)`, `portfolio(scope)` |
 | **Output** | Typed dicts, each carrying the `rule_ref` the engine stamps on decisions — so an answer's citations point at the same clauses a trace does |
 | **Raises** | `Unavailable(source, detail)` — an unknown path, a claim outside scope, or a store that could not be reached. Never an exception the caller must translate |
 | **Guarantees** | Exact lookups go to the snapshot (never a vector search); paraphrase search degrades Qdrant → token matcher; graph traversals degrade to the snapshot and say which source answered. `Scope` filters every claim read — a member scope refuses another member's claim with the same message as an unknown claim, so existence is not probeable. No method computes an amount or a verdict |
@@ -93,7 +93,7 @@ descriptions and validation rules).
 | **Input** | `answer(messages, KnowledgeBase, Scope, claim_id=None)` |
 | **Output** | `ChatAnswer{answer, citations, grounded, refusals, degraded_components, trace}` — the trace is a `DecisionTrace`, the same contract a claim's is |
 | **Raises** | Nothing. A model outage, an unreachable source or a rejected answer all degrade |
-| **Guarantees** | Answering is itself a tool call, so the reply is always structured. Two gates run before returning: every citation must be a reference retrieved *this turn*, and every rupee figure must have come from a tool or the user's own question. A gate failure returns retrieved material with `grounded: false` and the failed check named — never a generated answer presented as sourced. With no API key a deterministic router (claim id → store, else policy search) still answers |
+| **Guarantees** | Answering is itself a tool call, so the reply is always structured. Three gates run before returning: every citation must be a reference retrieved *this turn*; an answer must cite something when retrieval returned anything citable (an uncited answer is general knowledge, not a sourced one); and every rupee figure must have come from a tool or the user's own question. A gate failure returns retrieved material with `grounded: false` and the failed check named — never a generated answer presented as sourced. With no API key a deterministic router (claim id → store, else policy search) still answers |
 
 ## Claim Store — `core/store.py`
 

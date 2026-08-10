@@ -240,6 +240,31 @@ def test_a_portfolio_answer_has_something_to_cite(kb):
     assert result.refusals == []
 
 
+def test_an_answer_that_cites_nothing_is_not_grounded(kb):
+    """The citation check only validates citations that are present, so an
+    uncited answer slipped through as grounded — which is how "what architecture
+    does this use" came back as confident general knowledge from no source."""
+    assistant = Assistant(Settings(openai_api_key=None), chat_fn=scripted(
+        {"tool_calls": [{"id": "1", "name": "search_docs",
+                         "arguments": {"text": "architecture"}}]},
+        answer_round("It uses a tool-augmented architecture with specialised APIs.", []),
+    ))
+    result = ask(assistant, kb, "What architecture does this application use?")
+
+    assert result.grounded is False
+    assert any(r.startswith("no citation") for r in result.refusals)
+
+
+def test_the_project_documents_are_searchable_and_citable(kb):
+    """How the system behaves is written down; answering it from the model's own
+    knowledge sounds right and is sourced from nothing."""
+    found = kb.search_docs("how does extraction handle a blurred or unreadable bill")
+
+    assert found["sections"], "expected at least one matching doc section"
+    assert all(s["rule_ref"].startswith("docs/") for s in found["sections"])
+    assert any("#" in s["rule_ref"] for s in found["sections"])
+
+
 def test_quoting_an_amount_a_tool_did_return_is_allowed(kb):
     assistant = Assistant(Settings(openai_api_key=None), chat_fn=scripted(
         {"tool_calls": [{"id": "1", "name": "get_claim", "arguments": {"claim_id": "CLM_AAAA1111"}}]},

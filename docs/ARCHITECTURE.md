@@ -147,7 +147,7 @@ point: the stores add reach, never authority.
 
 ## Testing strategy
 
-144 tests, five layers: **unit** (matching rules, financial ordering and
+146 tests, five layers: **unit** (matching rules, financial ordering and
 rounding, fraud boundaries, snapshot lookups), **pipeline** (all 12 assignment
 cases end-to-end, asserting decisions, amounts, reason codes, message
 specificity, trace completeness), **upload path** (what the eval cases cannot
@@ -162,17 +162,26 @@ demand; `docs/EVAL_REPORT.md` is the committed snapshot.
 
 ## The assistant, and why it cannot decide
 
-`POST /assistant/chat` answers three kinds of question — why a claim was decided
-as it was, what the policy says, and what the portfolio looks like — over four
-sources, each used for what it is good at and each with a fallback: the snapshot
-for exact lookups, Qdrant for paraphrase recall (token matcher when embeddings
-are absent), Neo4j for traversals (snapshot when unreachable), Postgres for
-claims and portfolio.
+`POST /assistant/chat` answers four kinds of question — why a claim was decided
+as it was, what the policy says, what the portfolio looks like, and how this
+system itself works — over five sources, each used for what it is good at and
+each with a fallback: the snapshot for exact lookups, Qdrant for paraphrase
+recall (token matcher when embeddings are absent), Neo4j for traversals
+(snapshot when unreachable), Postgres for claims and portfolio, and these
+documents for questions about the system's own behaviour.
+
+That last source exists because of a failure worth recording: asked what
+architecture the application used, the assistant answered fluently from the
+model's general knowledge, cited nothing, and was reported as grounded. How the
+system behaves is written down, so it is now retrieved and cited by section
+(`docs/architecture#Design principles`) like any other source.
 
 It is a retrieval surface, not a second adjudicator, and that is enforced rather
-than requested. Answering is a tool call, so replies are always structured. Two
-gates then run: every citation must be a reference retrieved *in that turn*, and
-every rupee figure must have come from a tool or from the user's own question. A
+than requested. Answering is a tool call, so replies are always structured. Three
+gates then run: every citation must be a reference retrieved *in that turn*; an
+answer must cite something when retrieval returned anything citable — the check
+that the architecture question defeated; and every rupee figure must have come
+from a tool or from the user's own question. A
 gate failure returns the retrieved material with `grounded: false` and the failed
 check named. Asked "would a ₹9,000 dental claim be approved?", it explains what
 governs the answer and declines to predict one — the pipeline is the only thing

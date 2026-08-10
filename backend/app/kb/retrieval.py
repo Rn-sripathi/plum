@@ -22,6 +22,7 @@ from decimal import Decimal
 from typing import Any
 
 from app.core.analytics import summarize
+from app.core.config import REPO_ROOT
 from app.engine.matching import distinctive_tokens, tokens
 from app.kb.graph import PolicyGraph
 from app.kb.semantic import SemanticHit, SemanticPolicyIndex
@@ -29,6 +30,14 @@ from app.kb.snapshot import PolicySnapshot
 from app.models import ClaimCategory
 
 MAX_CLAIMS_WINDOW = 500
+# The documents the assistant may quote — the same allowlist the API serves, so
+# there is one answer to "which files are public".
+PUBLIC_DOCS = {
+    "architecture": "ARCHITECTURE.md",
+    "contracts": "CONTRACTS.md",
+    "assumptions": "ASSUMPTIONS.md",
+    "eval": "EVAL_REPORT.md",
+}
 
 
 @dataclass(frozen=True)
@@ -173,6 +182,53 @@ class KnowledgeBase:
         from app.kb.semantic import _concepts
 
         return _concepts(self.snapshot.terms)
+
+    def search_docs(self, text: str, top_k: int = 3) -> dict:
+        """Sections of the project documents closest to `text`.
+
+        How the system behaves is written down in `docs/` — the architecture,
+        the component contracts, the documented assumptions. Without this the
+        model answers "how does extraction handle a blurred bill" from its own
+        general knowledge, which sounds right and is sourced from nothing.
+
+        Split on headings so a citation points at a section a reader can find.
+        """
+        query = tokens(text)
+        scored: list[tuple[int, dict]] = []
+        for slug, filename in PUBLIC_DOCS.items():
+            path = REPO_ROOT / "docs" / filename
+            if not path.is_file():
+                continue
+            heading = filename
+            body: list[str] = []
+            for line in path.read_text(encoding="utf-8").splitlines():
+                if line.startswith("#"):
+                    if body:
+                        scored.append(self._doc_section(slug, heading, body, query))
+                    heading = line.lstrip("# ").strip()
+                    body = []
+                else:
+                    body.append(line)
+            if body:
+                scored.append(self._doc_section(slug, heading, body, query))
+        scored.sort(key=lambda pair: -pair[0])
+        return {
+            "source": "docs",
+            "sections": [section for overlap, section in scored[:top_k] if overlap > 0],
+        }
+
+    def _doc_section(self, slug: str, heading: str, body: list[str], query: set[str]) -> tuple:
+        text = "\n".join(body).strip()
+        overlap = len(distinctive_tokens(f"{heading} {text}") & query)
+        return (
+            overlap,
+            {
+                # Same key as a policy citation so the grounding gate sees it.
+                "rule_ref": f"docs/{slug}#{heading}",
+                "heading": heading,
+                "excerpt": text[:900],
+            },
+        )
 
     def category_rules(self, category: str) -> dict:
         """Everything that governs one treatment category.

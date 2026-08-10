@@ -60,7 +60,9 @@ apply and offer to run it through the pipeline, which is what actually decides.
 
 HOW TO WORK
 - Retrieve before answering. Prefer `lookup_policy` and `category_rules` for exact \
-questions; `search_policy` when the wording is a paraphrase of a clause.
+questions; `search_policy` when the wording is a paraphrase of a clause; `search_docs` \
+for anything about how the system itself works. Never describe this system from your \
+own knowledge — it is written down, so read it.
 - Then call `submit_answer` with your answer and a citation for every assertion.
 - If retrieval does not support an answer, say so in `submit_answer` and cite nothing.
 - Be specific and brief. Quote figures and dates exactly as retrieved."""
@@ -130,6 +132,15 @@ RETRIEVAL_TOOLS = [
         ["text"],
     ),
     _tool(
+        "search_docs",
+        "Sections of the project documents — architecture, component contracts, "
+        "documented assumptions, eval report. Use for how the SYSTEM works: how "
+        "documents are read, how failures degrade, why a design choice was made. "
+        "Never answer these from your own knowledge.",
+        {"text": {"type": "string"}},
+        ["text"],
+    ),
+    _tool(
         "category_rules",
         "Everything governing one treatment category: terms, required documents, and "
         "every exclusion that reaches it. Categories: CONSULTATION, DIAGNOSTIC, "
@@ -180,6 +191,7 @@ RETRIEVAL_TOOLS = [
 _DISPATCH: dict[str, bool] = {
     "lookup_policy": False,
     "search_policy": False,
+    "search_docs": False,
     "category_rules": False,
     "waiting_period": False,
     "member": True,
@@ -370,6 +382,13 @@ class Assistant:
         invented = [c.ref for c in citations if c.ref not in allowed_refs]
         if invented:
             refusals.append(f"citations not retrieved this turn: {', '.join(invented)}")
+        # An answer with no citations passes a check that only validates the
+        # citations present — which let the model answer "what architecture does
+        # this use" from its own general knowledge and be marked grounded. If
+        # retrieval returned something citable and the answer cites none of it,
+        # the answer is not coming from the sources.
+        if not citations and allowed_refs:
+            refusals.append("no citation, though retrieval returned sources to cite")
         unsourced = [
             figure
             for match in CURRENCY.finditer(answer)
@@ -438,6 +457,10 @@ _PREFACE = {
         "I couldn't ground that answer in what I retrieved, so I'm showing the source "
         "material instead of an explanation of it:"
     ),
+    "no citation": (
+        "I could not answer that from the sources rather than from general knowledge, so "
+        "here is what the retrieval actually found:"
+    ),
     "no_model_configured": (
         "No language model is configured, so I can retrieve but not explain. Here is what "
         "the policy and the claim records say:"
@@ -456,6 +479,8 @@ def _preface_for(refusals: list[str]) -> str:
             return _PREFACE["amounts"]
         if refusal.startswith("citations"):
             return _PREFACE["citations"]
+        if refusal.startswith("no citation"):
+            return _PREFACE["no citation"]
         if refusal in _PREFACE:
             return _PREFACE[refusal]
     return _PREFACE["no_answer_submitted"]
@@ -540,6 +565,11 @@ def _summarize_retrieved(retrieved: list[tuple[str, Any]]) -> str:
                 f"({payload['rule_ref']})"
                 + (f", eligible from {eligible}." if eligible else ".")
             )
+        elif name == "search_docs":
+            sections = payload.get("sections") or []
+            if sections:
+                lines.append("Closest sections of the project documents:")
+                lines += [f"  · {s['heading']} — {s['rule_ref']}" for s in sections]
         elif name == "portfolio":
             mix = ", ".join(f"{m['status']} {m['count']}" for m in payload["decision_mix"])
             slowest = (payload["timing"] or [{}])[0]
