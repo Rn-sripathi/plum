@@ -20,7 +20,9 @@ from app.core.analytics import summarize
 from app.core.config import REPO_ROOT, settings
 from app.core.errors import ComponentUnavailable, IntakeError
 from app.eval.runner import run_all
+from app.kb.retrieval import KnowledgeBase, Scope
 from app.models import ClaimSubmission, DocumentType
+from app.models.assistant import ChatRequest
 from app.models.claim import SubmittedDocument
 from app.orchestrator.pipeline import process_claim
 
@@ -216,6 +218,29 @@ def submit_claim_with_files(
 @router.get("/claims")
 def list_claims(request: Request, limit: int = 50) -> list[dict]:
     return request.app.state.store.list_recent(limit)
+
+
+@router.post("/assistant/chat")
+def assistant_chat(request: Request, body: ChatRequest) -> dict:
+    """Ask the assistant about a claim, the policy, or the portfolio.
+
+    Never 5xx on a retrieval problem: an unreachable source degrades to what the
+    others can answer, and a rejected answer comes back with `grounded: false`
+    and the failed check named. The only 400 is a scope violation the caller
+    asked for.
+    """
+    state = request.app.state
+    scope = Scope.member(body.member_id) if body.member_id else Scope.ops()
+    kb = KnowledgeBase(
+        snapshot=state.snapshot,
+        semantic=state.semantic,
+        graph=state.graph,
+        store=state.store,
+    )
+    answer = state.assistant.answer(body.messages, kb, scope, claim_id=body.claim_id)
+    payload = json.loads(answer.model_dump_json())
+    payload["assistant"] = "configured" if state.assistant.is_configured else "no model configured"
+    return payload
 
 
 @router.get("/analytics")

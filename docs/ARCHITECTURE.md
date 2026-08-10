@@ -147,12 +147,34 @@ point: the stores add reach, never authority.
 
 ## Testing strategy
 
-123 tests, four layers: **unit** (matching rules, financial ordering and
+144 tests, five layers: **unit** (matching rules, financial ordering and
 rounding, fraud boundaries, snapshot lookups), **pipeline** (all 12 assignment
 cases end-to-end, asserting decisions, amounts, reason codes, message
 specificity, trace completeness), **upload path** (what the eval cases cannot
 reach, because they arrive pre-typed: damaged files, multi-page PDFs carrying
-several documents, malformed model output), and **API** (HTTP contracts:
-200-with-problems for member-fixable stops, 503-with-guidance for undecidable
-infrastructure failure, persistence round-trips). `POST /eval/run` regenerates
-the eval verdict on demand; `docs/EVAL_REPORT.md` is the committed snapshot.
+several documents, malformed model output), **assistant** (scope isolation and
+the grounding gates, with the model injected as a scripted stub — what is tested
+is that an ungrounded answer cannot be passed off as a sourced one, not what a
+model happens to say), and **API** (HTTP contracts: 200-with-problems for
+member-fixable stops, 503-with-guidance for undecidable infrastructure failure,
+persistence round-trips). `POST /eval/run` regenerates the eval verdict on
+demand; `docs/EVAL_REPORT.md` is the committed snapshot.
+
+## The assistant, and why it cannot decide
+
+`POST /assistant/chat` answers three kinds of question — why a claim was decided
+as it was, what the policy says, and what the portfolio looks like — over four
+sources, each used for what it is good at and each with a fallback: the snapshot
+for exact lookups, Qdrant for paraphrase recall (token matcher when embeddings
+are absent), Neo4j for traversals (snapshot when unreachable), Postgres for
+claims and portfolio.
+
+It is a retrieval surface, not a second adjudicator, and that is enforced rather
+than requested. Answering is a tool call, so replies are always structured. Two
+gates then run: every citation must be a reference retrieved *in that turn*, and
+every rupee figure must have come from a tool or from the user's own question. A
+gate failure returns the retrieved material with `grounded: false` and the failed
+check named. Asked "would a ₹9,000 dental claim be approved?", it explains what
+governs the answer and declines to predict one — the pipeline is the only thing
+that decides money, and an assistant that guessed alongside it would undermine
+every number the trace justifies.

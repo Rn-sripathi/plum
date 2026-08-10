@@ -77,6 +77,24 @@ descriptions and validation rules).
 | **Raises** | `ComponentUnavailable` (undecidable extraction failure) — everything else is handled inside |
 | **Guarantees** | Exactly one writer of the trace (`TraceBuilder`); `simulate_component_failure` exercises the same degradation machinery as a real outage. |
 
+## Knowledge Base — `kb/retrieval.py`
+
+| | |
+|---|---|
+| **Input** | `lookup_policy(path)`, `search_policy(text)`, `category_rules(category)`, `waiting_period(condition, member_id)`, `member(id, scope)`, `get_claim(id, scope)`, `find_claims(scope, …filters)`, `portfolio(scope)` |
+| **Output** | Typed dicts, each carrying the `rule_ref` the engine stamps on decisions — so an answer's citations point at the same clauses a trace does |
+| **Raises** | `Unavailable(source, detail)` — an unknown path, a claim outside scope, or a store that could not be reached. Never an exception the caller must translate |
+| **Guarantees** | Exact lookups go to the snapshot (never a vector search); paraphrase search degrades Qdrant → token matcher; graph traversals degrade to the snapshot and say which source answered. `Scope` filters every claim read — a member scope refuses another member's claim with the same message as an unknown claim, so existence is not probeable. No method computes an amount or a verdict |
+
+## Assistant — `agents/assistant.py`
+
+| | |
+|---|---|
+| **Input** | `answer(messages, KnowledgeBase, Scope, claim_id=None)` |
+| **Output** | `ChatAnswer{answer, citations, grounded, refusals, degraded_components, trace}` — the trace is a `DecisionTrace`, the same contract a claim's is |
+| **Raises** | Nothing. A model outage, an unreachable source or a rejected answer all degrade |
+| **Guarantees** | Answering is itself a tool call, so the reply is always structured. Two gates run before returning: every citation must be a reference retrieved *this turn*, and every rupee figure must have come from a tool or the user's own question. A gate failure returns retrieved material with `grounded: false` and the failed check named — never a generated answer presented as sourced. With no API key a deterministic router (claim id → store, else policy search) still answers |
+
 ## Claim Store — `core/store.py`
 
 | | |
@@ -93,6 +111,7 @@ descriptions and validation rules).
 | `POST /claims` | `ClaimSubmission` JSON → 200 with `ClaimDecision` or `DocumentProblemReport` (+ `persistence` flag). 422 invalid payload, 400 `IntakeError`, 503 `ComponentUnavailable` with retry guidance |
 | `POST /claims/upload` | multipart: `metadata` JSON + `files` + `document_types` → same as above via the vision path |
 | `GET /claims` / `GET /claims/{id}` / `GET /claims/{id}/trace` | Stored records; 404 when unknown |
+| `POST /assistant/chat` | `{messages[], claim_id?, member_id?}` → `ChatAnswer`. Absent `member_id` = operations scope. Retrieval problems and ungrounded answers come back 200 with `grounded: false`; 422 on a malformed conversation |
 | `GET /analytics` | Portfolio figures over the most recent `limit` claims: decision mix, payout ratio, confidence distribution, stop reasons, per-stage time, degraded runs. A stopped claim counts toward volume and stop reasons, never toward money or confidence. Store outage → 200 with `available: false` and empty totals, never a 5xx (see `core/analytics.py` for the definitions) |
 | `GET /eval/cases` / `POST /eval/run` | The 12 assignment cases; run them and return per-case matched/mismatch |
 | `GET /health` | Component status: policy id, member count, store health, LLM mode |

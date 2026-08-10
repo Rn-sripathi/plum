@@ -151,6 +151,22 @@ class SemanticPolicyIndex:
             if p.score >= min_score
         ]
 
+    def warm(self) -> None:
+        """Pay the index's first-use cost before a user does.
+
+        The embedded local index loads its collection from disk on the first
+        query — measured at ~24s cold against ~0.7s warm. In the pipeline that
+        cost hid inside a claim that was already doing vision calls; the
+        assistant surfaces it as a 24-second first question, which is why this
+        is called at startup rather than left to the first caller.
+        """
+        if not self.is_configured:
+            return
+        try:
+            self.search("warm", top_k=1)
+        except Exception:  # a cold index that will not load is the search's problem
+            pass
+
     def healthy(self) -> bool:
         if not self.is_configured:
             return False

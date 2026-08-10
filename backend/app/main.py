@@ -3,12 +3,14 @@
 Run locally:  uv run fastapi dev app/main.py   (from backend/)
 """
 
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.agents.assistant import Assistant
 from app.agents.llm import DocumentAI
 from app.api.routes import register_error_handlers, router
 from app.core.config import settings
@@ -26,8 +28,12 @@ def create_app(database_path: Path | None = None) -> FastAPI:
             SqliteClaimStore(database_path) if database_path else make_store(settings)
         )
         app.state.doc_ai = DocumentAI(settings)
+        app.state.assistant = Assistant(settings)
         app.state.semantic = SemanticPolicyIndex(settings)
         app.state.graph = PolicyGraph(settings)
+        # Warm the vector index off the startup path: loading it costs ~24s the
+        # first time, and neither startup nor the first question should wear that.
+        threading.Thread(target=app.state.semantic.warm, daemon=True).start()
         yield
         app.state.graph.close()
 
