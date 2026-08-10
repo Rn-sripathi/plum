@@ -5,10 +5,21 @@ import { api } from "./api";
 import ClaimsList from "./components/ClaimsList";
 import DocView, { DocsPage } from "./components/DocView";
 import Logo from "./components/Logo";
+import MobileNav from "./components/MobileNav";
 import NavMenu from "./components/NavMenu";
 import ResultView from "./components/ResultView";
 import StatusChip from "./components/StatusChip";
 import SubmitForm from "./components/SubmitForm";
+
+/** The five destinations that are just views. Docs is deliberately not here: it
+ *  opens a menu rather than navigating, and both navs have to treat it as such. */
+const VIEWS = [
+  { id: "console", label: "Console" },
+  { id: "assistant", label: "Assistant" },
+  { id: "analytics", label: "Analytics" },
+  { id: "claims", label: "Recent claims" },
+  { id: "eval", label: "Eval report" },
+];
 
 /** Two bars, not a glyph swap — so + can rotate into − rather than blink. */
 function Sign({ open = false }) {
@@ -24,6 +35,7 @@ export default function App() {
   const [view, setView] = useState("console");
   const [docSlug, setDocSlug] = useState("architecture");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [result, setResult] = useState(null);
   const [liveSteps, setLiveSteps] = useState(null); // null = not streaming
   const [health, setHealth] = useState(null);
@@ -33,21 +45,23 @@ export default function App() {
     api.health().then(setHealth).catch(() => setHealth(null));
   }, [refreshKey]);
 
-  // The whole page washes warm while the menu is open, as on plumhr.com.
+  // The whole page washes warm while either menu is open, as on plumhr.com.
   useEffect(() => {
-    document.body.classList.toggle("menu-open", menuOpen);
+    document.body.classList.toggle("menu-open", menuOpen || drawerOpen);
     return () => document.body.classList.remove("menu-open");
-  }, [menuOpen]);
+  }, [menuOpen, drawerOpen]);
 
   function go(next) {
     setView(next);
     setMenuOpen(false);
+    setDrawerOpen(false);
   }
 
   function openDoc(slug) {
     setDocSlug(slug);
     setView("docs");
     setMenuOpen(false);
+    setDrawerOpen(false);
   }
 
   function handleStart() {
@@ -78,46 +92,17 @@ export default function App() {
           <h1>Claims Processing</h1>
         </div>
         <nav className="nav">
-          <button
-            type="button"
-            className={view === "console" ? "nav-link active" : "nav-link"}
-            onMouseEnter={() => setMenuOpen(false)}
-            onClick={() => go("console")}
-          >
-            <Sign /> Console
-          </button>
-          <button
-            type="button"
-            className={view === "assistant" ? "nav-link active" : "nav-link"}
-            onMouseEnter={() => setMenuOpen(false)}
-            onClick={() => go("assistant")}
-          >
-            <Sign /> Assistant
-          </button>
-          <button
-            type="button"
-            className={view === "analytics" ? "nav-link active" : "nav-link"}
-            onMouseEnter={() => setMenuOpen(false)}
-            onClick={() => go("analytics")}
-          >
-            <Sign /> Analytics
-          </button>
-          <button
-            type="button"
-            className={view === "claims" ? "nav-link active" : "nav-link"}
-            onMouseEnter={() => setMenuOpen(false)}
-            onClick={() => go("claims")}
-          >
-            <Sign /> Recent claims
-          </button>
-          <button
-            type="button"
-            className={view === "eval" ? "nav-link active" : "nav-link"}
-            onMouseEnter={() => setMenuOpen(false)}
-            onClick={() => go("eval")}
-          >
-            <Sign /> Eval report
-          </button>
+          {VIEWS.map((v) => (
+            <button
+              key={v.id}
+              type="button"
+              className={view === v.id ? "nav-link active" : "nav-link"}
+              onMouseEnter={() => setMenuOpen(false)}
+              onClick={() => go(v.id)}
+            >
+              <Sign /> {v.label}
+            </button>
+          ))}
           <button
             type="button"
             className={view === "docs" ? "nav-link active" : "nav-link"}
@@ -129,9 +114,33 @@ export default function App() {
           </button>
         </nav>
         <StatusChip health={health} />
+        {/* Below the width where the flat nav fits, the same destinations open
+            as a drawer instead. Hidden by CSS wherever the nav itself shows. */}
+        <button
+          type="button"
+          className={drawerOpen ? "burger open" : "burger"}
+          aria-label={drawerOpen ? "Close menu" : "Open menu"}
+          aria-expanded={drawerOpen}
+          onClick={() => {
+            setDrawerOpen((o) => !o);
+            setMenuOpen(false);
+          }}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
       </header>
 
       <NavMenu open={menuOpen} onPick={openDoc} />
+      <MobileNav
+        open={drawerOpen}
+        views={VIEWS}
+        view={view}
+        health={health}
+        onGo={go}
+        onPickDoc={openDoc}
+      />
 
       {view === "console" ? (
         <main className="layout">

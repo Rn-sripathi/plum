@@ -164,8 +164,10 @@ export default function SubmitForm({ onResult, onStep, onStart }) {
             onChange={(e) => pickFiles(e.target.files)}
           />
           <FilePreviews files={files} />
+          {/* Not a scrolling table: the second column is a control you have to
+              reach, so the file name breaks instead and both stay in view. */}
           {files.length > 0 && (
-            <table>
+            <table className="file-types">
               <thead>
                 <tr><th>File</th><th>Declared type</th></tr>
               </thead>

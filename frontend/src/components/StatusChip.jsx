@@ -11,7 +11,7 @@ export default function StatusChip({ health }) {
         className="status down"
         title="Start it with: uv run fastapi dev app/main.py (from backend/)"
       >
-        <i /> backend offline
+        <i /> <span className="status-label">backend offline</span>
       </span>
     );
   }
@@ -31,9 +31,11 @@ export default function StatusChip({ health }) {
       title={`${health.policy}\n\n${detail}`}
     >
       <i />
-      {degraded.length
-        ? `${degraded.map(([name]) => name).join(", ")} degraded`
-        : "all systems healthy"}
+      <span className="status-label">
+        {degraded.length
+          ? `${degraded.map(([name]) => name).join(", ")} degraded`
+          : "all systems healthy"}
+      </span>
     </span>
   );
 }

@@ -70,6 +70,16 @@ export default function DocView({ slug }) {
             }
             return <pre {...props}>{children}</pre>;
           },
+          /* The documents carry wide tables — the resilience matrix, the
+             component contracts. Each gets its own scroll box so a narrow
+             screen never pushes the whole page sideways. */
+          table({ children, ...props }) {
+            return (
+              <div className="table-wrap">
+                <table {...props}>{children}</table>
+              </div>
+            );
+          },
         }}
       >
         {doc.markdown}
