@@ -303,6 +303,9 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
 .doc a { color: var(--plum-coral); }
 .doc details { margin: 10px 0; }
 .doc summary { cursor: pointer; font-weight: 600; }
+/* The eval report is mostly traces, so these are how it is navigated. */
+.doc summary:hover { color: var(--plum-coral); }
+.doc details[open] summary { margin-bottom: 10px; }
 
 .layout {
   display: grid;

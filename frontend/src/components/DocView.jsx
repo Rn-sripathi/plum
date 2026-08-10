@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { api } from "../api";
 
@@ -49,7 +50,13 @@ export default function DocView({ slug }) {
 
   return (
     <div className="panel doc">
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{doc.markdown}</ReactMarkdown>
+      {/* rehype-raw so the eval report's <details> traces collapse rather than
+          printing their own tags. Raw HTML is only safe because the source is
+          fixed: the API serves a four-entry allowlist of files from this
+          repo's docs/, never an arbitrary path. */}
+      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+        {doc.markdown}
+      </ReactMarkdown>
     </div>
   );
 }
