@@ -142,20 +142,20 @@ export default function Assistant({ claimId = null }) {
           )}
         </p>
 
-        {turns.length === 0 && (
-          <div className="starters">
-            {STARTERS.map((s) => (
-              <button key={s} type="button" className="starter" onClick={() => send(s)}>
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="turns">
-          {turns.map((turn, i) => (
-            <Turn key={i} turn={turn} />
-          ))}
+        {/* With nothing asked yet the openers sit in the middle of the empty
+            conversation, so the space reads as waiting rather than missing. */}
+        <div className={turns.length ? "turns" : "turns empty"}>
+          {turns.length === 0 ? (
+            <div className="starters">
+              {STARTERS.map((s) => (
+                <button key={s} type="button" className="starter" onClick={() => send(s)}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          ) : (
+            turns.map((turn, i) => <Turn key={i} turn={turn} />)
+          )}
           <div ref={endRef} />
         </div>
 

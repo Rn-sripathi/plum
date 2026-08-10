@@ -748,8 +748,18 @@ input[type="file"] { padding: 7px; background: #fbfbfd; }
 /* --- Assistant --------------------------------------------------------------
    A reading column, not a chat bubble parade: answers carry citations and a
    trace, so they need width and quiet. */
-.assistant { max-width: 900px; margin: 0 auto; padding: 20px 28px; }
-.assistant-panel { display: flex; flex-direction: column; }
+/* Fills the viewport below the topbar (62px): the conversation scrolls inside
+   the panel and the composer stays put, rather than a short card floating in
+   dead space with the input wherever the last answer happened to end. */
+.assistant {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px 28px;
+  height: calc(100vh - 62px);
+  display: flex;
+}
+.assistant-panel { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.turns.empty { justify-content: center; }
 .starters { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
 .starter {
   background: #fbfbfd;
@@ -762,7 +772,18 @@ input[type="file"] { padding: 7px; background: #fbfbfd; }
 }
 .starter:hover:not(:disabled) { background: var(--plum-peach); color: var(--ink); }
 
-.turns { display: flex; flex-direction: column; gap: 16px; margin: 6px 0 4px; }
+/* The conversation is the part that grows and scrolls; min-height:0 is what
+   lets a flex child actually shrink enough to do so. */
+.turns {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 6px 0 4px;
+  padding-right: 6px;
+}
 .turn { font-size: 14px; line-height: 1.55; }
 /* The question is the quieter half: it is already known to the reader. */
 .turn.user {
