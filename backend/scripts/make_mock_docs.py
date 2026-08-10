@@ -200,6 +200,271 @@ HOSPITAL_BILL_OTHER_PATIENT = [
 ]
 
 
+PRESCRIPTION_SURESH_MRI = [
+    "Dr. Venkat Rao, MBBS, MS (Orthopaedics)",
+    "Reg. No: AP/67890/2017",
+    "Gachibowli Ortho Care, 5 Hitech City Road, Hyderabad",
+    "-" * 60,
+    "Patient: Suresh Patil          Date: 02-Nov-2024",
+    "Age: 48 years   Gender: M",
+    "Chief Complaint: Low back pain radiating to left leg, 6 weeks",
+    "-" * 60,
+    "Diagnosis: Suspected Lumbar Disc Herniation",
+    "",
+    "Investigations Advised:",
+    "1. MRI Lumbar Spine (plain)",
+    "",
+    "Rx:",
+    "1. Tab Etoricoxib 60mg - 0-1-0 x 7 days",
+    "",
+    "Review with MRI report",
+    "                       [Signed] Dr. Venkat Rao",
+]
+
+MRI_REPORT_SURESH = [
+    "GACHIBOWLI DIAGNOSTIC LABORATORY",
+    "5 Hitech City Road, Hyderabad - 500081",
+    "-" * 60,
+    "LAB REPORT",
+    "Report No: GDL/MRI/2024/4471   Date: 02-Nov-2024",
+    "-" * 60,
+    "Patient Name: Suresh Patil",
+    "Age/Gender: 48 / Male",
+    "Referred By: Dr. Venkat Rao",
+    "-" * 60,
+    "TEST NAME: MRI Lumbar Spine",
+    "",
+    "FINDINGS:",
+    "L4-L5: Posterocentral disc protrusion indenting thecal sac.",
+    "L5-S1: Mild diffuse disc bulge. No canal stenosis.",
+    "Vertebral body height and marrow signal preserved.",
+    "",
+    "IMPRESSION: L4-L5 disc herniation with left lateral recess",
+    "narrowing, correlating with the clinical picture.",
+    "-" * 60,
+    "                  [Signed] Dr. M. Reddy, MD (Radiodiagnosis)",
+]
+
+HOSPITAL_BILL_SURESH_MRI = [
+    "GACHIBOWLI DIAGNOSTIC LABORATORY",
+    "5 Hitech City Road, Hyderabad - 500081",
+    "GSTIN: 36GDLAB6712H1ZQ",
+    "-" * 60,
+    "BILL / RECEIPT",
+    "Bill No: GDL/2024/4471    Date: 02-Nov-2024",
+    "-" * 60,
+    "Patient Name: Suresh Patil",
+    "Age/Gender: 48 / Male",
+    "Referring Doctor: Dr. Venkat Rao",
+    "-" * 60,
+    "DESCRIPTION                  QTY   RATE     AMOUNT",
+    "MRI Lumbar Spine              1  15000.00 15000.00",
+    "",
+    "Total Amount:                        15000.00",
+    "-" * 60,
+    "Payment Mode: Card    Received by: Cashier",
+]
+
+PRESCRIPTION_AMIT_GASTRO = [
+    "Dr. R. Gupta, MBBS, MD (Gastroenterology)",
+    "Reg. No: DL/34567/2016",
+    "Rohini Care Clinic, 21 Sector 9, New Delhi",
+    "-" * 60,
+    "Patient: Amit Verma            Date: 20-Oct-2024",
+    "Age: 35 years   Gender: M",
+    "Chief Complaint: Loose stools and vomiting since 2 days",
+    "-" * 60,
+    "Diagnosis: Acute Gastroenteritis",
+    "",
+    "Rx:",
+    "1. Tab Ofloxacin 200mg - 1-0-1 x 5 days",
+    "2. Cap Probiotic - 1-0-1 x 7 days",
+    "3. ORS sachets - as needed",
+    "",
+    "Advice: Oral hydration, bland diet",
+    "                       [Signed] Dr. R. Gupta",
+]
+
+HOSPITAL_BILL_AMIT = [
+    "ROHINI CARE CLINIC",
+    "21 Sector 9, Rohini, New Delhi - 110085",
+    "GSTIN: 07RCCLI8890M1ZR",
+    "-" * 60,
+    "BILL / RECEIPT",
+    "Bill No: RCC/2024/2210    Date: 20-Oct-2024",
+    "-" * 60,
+    "Patient Name: Amit Verma",
+    "Age/Gender: 35 / Male",
+    "Consulting Doctor: Dr. R. Gupta",
+    "-" * 60,
+    "DESCRIPTION                  QTY   RATE     AMOUNT",
+    "Consultation Fee              1   2000.00  2000.00",
+    "Medicines                     1   5500.00  5500.00",
+    "",
+    "Total Amount:                         7500.00",
+    "-" * 60,
+    "Payment Mode: Card    Received by: Cashier",
+]
+
+PRESCRIPTION_RAVI_MIGRAINE = [
+    "Dr. S. Khan, MBBS, DM (Neurology)",
+    "Reg. No: KL/23456/2015",
+    "Marine Drive Neuro Clinic, 9 Marine Drive, Kochi",
+    "-" * 60,
+    "Patient: Ravi Menon            Date: 30-Oct-2024",
+    "Age: 37 years   Gender: M",
+    "Chief Complaint: Recurrent one-sided headache with photophobia",
+    "-" * 60,
+    "Diagnosis: Migraine without aura",
+    "",
+    "Rx:",
+    "1. Tab Sumatriptan 50mg - SOS, max 2/day",
+    "2. Tab Propranolol 20mg - 1-0-1 x 30 days",
+    "",
+    "Advice: Sleep hygiene, trigger diary",
+    "                       [Signed] Dr. S. Khan",
+]
+
+HOSPITAL_BILL_RAVI = [
+    "MARINE DRIVE NEURO CLINIC",
+    "9 Marine Drive, Kochi - 682031",
+    "-" * 60,
+    "BILL / RECEIPT",
+    "Bill No: MDNC/2024/0774   Date: 30-Oct-2024",
+    "-" * 60,
+    "Patient Name: Ravi Menon",
+    "Age/Gender: 37 / Male",
+    "Consulting Doctor: Dr. S. Khan",
+    "-" * 60,
+    "DESCRIPTION                  QTY   RATE     AMOUNT",
+    "Specialist Consultation       1   1800.00  1800.00",
+    "Medicines                     1   3000.00  3000.00",
+    "",
+    "Total Amount:                         4800.00",
+    "-" * 60,
+    "Payment Mode: UPI     Received by: Cashier",
+]
+
+PRESCRIPTION_DEEPAK_APOLLO = [
+    "Dr. S. Iyer, MBBS, MD (Pulmonology)",
+    "Reg. No: TN/56789/2013",
+    "Apollo Hospitals, 21 Greams Lane, Chennai",
+    "-" * 60,
+    "Patient: Deepak Shah           Date: 03-Nov-2024",
+    "Age: 44 years   Gender: M",
+    "Chief Complaint: Productive cough and wheeze, 5 days",
+    "-" * 60,
+    "Diagnosis: Acute Bronchitis",
+    "",
+    "Rx:",
+    "1. Tab Amoxicillin 500mg - 1-1-1 x 5 days",
+    "2. Salbutamol Inhaler - 2 puffs SOS",
+    "",
+    "Review: After 5 days if symptoms persist",
+    "                       [Signed] Dr. S. Iyer",
+]
+
+HOSPITAL_BILL_APOLLO_DEEPAK = [
+    "APOLLO HOSPITALS",
+    "21 Greams Lane, Off Greams Road, Chennai - 600006",
+    "GSTIN: 33APOLL1122A1ZK",
+    "-" * 60,
+    "BILL / RECEIPT",
+    "Bill No: AH/2024/55130    Date: 03-Nov-2024",
+    "-" * 60,
+    "Patient Name: Deepak Shah",
+    "Age/Gender: 44 / Male",
+    "Consulting Doctor: Dr. S. Iyer",
+    "-" * 60,
+    "DESCRIPTION                  QTY   RATE     AMOUNT",
+    "Consultation Fee              1   1500.00  1500.00",
+    "Medicines                     1   3000.00  3000.00",
+    "",
+    "Total Amount:                         4500.00",
+    "-" * 60,
+    "Payment Mode: Card    Received by: Cashier",
+]
+
+PRESCRIPTION_KAVITA_AYURVEDA = [
+    "Vaidya T. Krishnan, BAMS, MD (Ayurveda)",
+    "Reg. No: AYUR/KL/2345/2019",
+    "Ayur Wellness Centre, 14 Temple Road, Thrissur",
+    "-" * 60,
+    "Patient: Kavita Nair           Date: 28-Oct-2024",
+    "Age: 41 years   Gender: F",
+    "Chief Complaint: Chronic joint pain, both knees, 8 months",
+    "-" * 60,
+    "Diagnosis: Chronic Joint Pain (Sandhigata Vata)",
+    "",
+    "Treatment Advised:",
+    "1. Panchakarma Therapy - 5 sessions",
+    "2. Ksheerabala capsules - 1-0-1 x 30 days",
+    "",
+    "Advice: Warm oil application, gentle yoga",
+    "                       [Signed] Vaidya T. Krishnan",
+]
+
+HOSPITAL_BILL_AYUR_WELLNESS = [
+    "AYUR WELLNESS CENTRE",
+    "14 Temple Road, Thrissur - 680001",
+    "-" * 60,
+    "BILL / RECEIPT",
+    "Bill No: AWC/2024/0318    Date: 28-Oct-2024",
+    "-" * 60,
+    "Patient Name: Kavita Nair",
+    "Age/Gender: 41 / Female",
+    "Treating Physician: Vaidya T. Krishnan",
+    "-" * 60,
+    "DESCRIPTION                  QTY   RATE     AMOUNT",
+    "Panchakarma Therapy           5    600.00  3000.00",
+    "Consultation                  1   1000.00  1000.00",
+    "",
+    "Total Amount:                         4000.00",
+    "-" * 60,
+    "Payment Mode: UPI     Received by: Reception",
+]
+
+PRESCRIPTION_ANITA_BARIATRIC = [
+    "Dr. P. Banerjee, MBBS, MS (General Surgery)",
+    "Reg. No: WB/34567/2015",
+    "Salt Lake Metabolic Clinic, 3 Sector V, Kolkata",
+    "-" * 60,
+    "Patient: Anita Desai           Date: 18-Oct-2024",
+    "Age: 32 years   Gender: F",
+    "-" * 60,
+    "Diagnosis: Morbid Obesity - BMI 37",
+    "",
+    "Treatment Advised:",
+    "1. Bariatric Consultation",
+    "2. Customised Diet Plan / weight loss program",
+    "",
+    "Review: Monthly weight and BMI tracking",
+    "                       [Signed] Dr. P. Banerjee",
+]
+
+HOSPITAL_BILL_ANITA_BARIATRIC = [
+    "SALT LAKE METABOLIC CLINIC",
+    "3 Sector V, Salt Lake, Kolkata - 700091",
+    "GSTIN: 19SLMET7788B1ZW",
+    "-" * 60,
+    "BILL / RECEIPT",
+    "Bill No: SLM/2024/0906    Date: 18-Oct-2024",
+    "-" * 60,
+    "Patient Name: Anita Desai",
+    "Age/Gender: 32 / Female",
+    "Consulting Doctor: Dr. P. Banerjee",
+    "-" * 60,
+    "DESCRIPTION                  QTY   RATE     AMOUNT",
+    "Bariatric Consultation        1   3000.00  3000.00",
+    "Personalised Diet and         1   5000.00  5000.00",
+    "  Nutrition Program",
+    "",
+    "Total Amount:                         8000.00",
+    "-" * 60,
+    "Payment Mode: Card    Received by: Reception",
+]
+
+
 def render(lines: list[str], path: Path, blur: float = 0.0) -> None:
     img = Image.new("RGB", (720, 40 + 34 * len(lines)), "white")
     draw = ImageDraw.Draw(img)
@@ -246,6 +511,25 @@ def main() -> None:
     # Partially legible: vision reads it, but with low field confidence — the
     # case that exercises the amount-reconciliation guard.
     render(HOSPITAL_BILL, OUT / "smudged_bill.jpg", blur=1.6)
+    # TC007: MRI above the pre-authorization threshold, no pre-auth reference.
+    render(PRESCRIPTION_SURESH_MRI, OUT / "prescription_suresh_mri.jpg")
+    render(MRI_REPORT_SURESH, OUT / "lab_report_suresh_mri.jpg")
+    render(HOSPITAL_BILL_SURESH_MRI, OUT / "hospital_bill_suresh_mri.jpg")
+    # TC008: bill total above the per-claim limit.
+    render(PRESCRIPTION_AMIT_GASTRO, OUT / "prescription_amit_gastro.jpg")
+    render(HOSPITAL_BILL_AMIT, OUT / "hospital_bill_amit.jpg")
+    # TC009: the 4th same-day claim — the fraud velocity signal.
+    render(PRESCRIPTION_RAVI_MIGRAINE, OUT / "prescription_ravi_migraine.jpg")
+    render(HOSPITAL_BILL_RAVI, OUT / "hospital_bill_ravi.jpg")
+    # TC010: network hospital — discount applies before co-pay.
+    render(PRESCRIPTION_DEEPAK_APOLLO, OUT / "prescription_deepak_apollo.jpg")
+    render(HOSPITAL_BILL_APOLLO_DEEPAK, OUT / "hospital_bill_apollo_deepak.jpg")
+    # TC011: alternative medicine, used with the component-failure flag.
+    render(PRESCRIPTION_KAVITA_AYURVEDA, OUT / "prescription_kavita_ayurveda.jpg")
+    render(HOSPITAL_BILL_AYUR_WELLNESS, OUT / "hospital_bill_ayur_wellness.jpg")
+    # TC012: obesity / weight-loss program — an excluded condition.
+    render(PRESCRIPTION_ANITA_BARIATRIC, OUT / "prescription_anita_bariatric.jpg")
+    render(HOSPITAL_BILL_ANITA_BARIATRIC, OUT / "hospital_bill_anita_bariatric.jpg")
     # Not an image at all: must be reported as a damaged upload, never a 503.
     (OUT / "corrupt.jpg").write_bytes(b"this is not an image at all" * 20)
     print(f"wrote {OUT / 'corrupt.jpg'} (deliberately invalid)")
