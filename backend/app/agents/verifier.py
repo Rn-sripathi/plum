@@ -38,6 +38,29 @@ from app.orchestrator.trace import TraceBuilder
 PENALTY_POOR_DOC = -0.10
 PENALTY_UNVERIFIED_FIELD = -0.05
 
+# A requirement names the evidence the insurer needs, not the department that
+# produced it. `document_requirements.DIAGNOSTIC` asks for a LAB_REPORT, but an
+# MRI claim's report is radiology, which the classifier correctly labels
+# DIAGNOSTIC_REPORT. Without an equivalence, such a claim cannot satisfy its own
+# requirement by any route: auto-detect reports a missing LAB_REPORT, and
+# declaring one is contradicted by the classifier.
+_EQUIVALENT_TYPES = {
+    DocumentType.LAB_REPORT.value: {
+        DocumentType.LAB_REPORT.value,
+        DocumentType.DIAGNOSTIC_REPORT.value,
+    },
+    DocumentType.DIAGNOSTIC_REPORT.value: {
+        DocumentType.DIAGNOSTIC_REPORT.value,
+        DocumentType.LAB_REPORT.value,
+    },
+}
+
+
+def _accepts(doc_type: str) -> set[str]:
+    """Document types that satisfy a requirement for `doc_type`."""
+    return _EQUIVALENT_TYPES.get(doc_type, {doc_type})
+
+
 # State-format registration numbers per sample_documents_guide.md, plus the
 # national Ayurveda format (AYUR/<STATE>/NNNN/YYYY).
 _REG_RE = re.compile(r"^(?:[A-Z]{2}/\d{4,6}/(?:19|20)\d{2}|AYUR/[A-Z]{2}/\d{3,6}/(?:19|20)\d{2})$")
@@ -67,8 +90,12 @@ def verify_documents(
     type_sources: list[str] = []
     damaged: set[str] = set()
     illegible: set[str] = set()
+    # Types found on a file's later pages. A single PDF can carry a whole
+    # claim's paperwork, and those pages satisfy requirements too.
+    further_types: list[list[DocumentType]] = []
     for doc in docs:
         eff, quality, source = doc.actual_type, doc.quality, "DECLARED"
+        extra: list[DocumentType] = []
 
         # Legibility is measured in code, not asked of the model: a heavily
         # blurred bill came back classified PRESCRIPTION at 0.95 with quality
@@ -89,6 +116,7 @@ def verify_documents(
                 eff_types.append(eff)
                 eff_quality.append(DocumentQuality.UNREADABLE)
                 type_sources.append(source)
+                further_types.append([])
                 illegible.add(doc.file_id)
                 continue
             if measured is DocumentQuality.POOR and quality is None:
@@ -131,18 +159,43 @@ def verify_documents(
             eff_types.append(eff)
             eff_quality.append(DocumentQuality.UNREADABLE)
             type_sources.append(source)
+            further_types.append([])
             continue
 
         if doc_ai is not None and doc_ai.is_configured and doc.storage_path:
             try:
-                cls_type, conf, cls_quality = doc_ai.classify(Path(doc.storage_path))
+                pages = doc_ai.classify(Path(doc.storage_path))
+                cls_type, conf, cls_quality = pages[0]
                 quality = quality or cls_quality
+                # Later pages of the same upload can be different documents.
+                # Only confident readings count, and only ones the first page
+                # did not already provide.
+                for page in pages[1:]:
+                    if page.confidence >= 0.6 and page.doc_type not in {cls_type, *extra}:
+                        extra.append(page.doc_type)
+                if extra:
+                    tb.step(
+                        "document_verifier", "multi-page upload", Outcome.PASS,
+                        f"{doc.file_id} ('{doc.file_name or doc.file_id}') holds "
+                        f"{len(pages)} pages carrying more than one document: "
+                        f"{', '.join([cls_type.value, *(t.value for t in extra)])}. "
+                        f"Each counts toward the required types for this claim.",
+                    )
                 # A type read off an unreadable scan is a guess, not evidence:
                 # never accuse the member of the wrong document when the real
                 # problem is that we could not read it. The UNREADABLE check
                 # below owns this document's message.
                 unreadable = quality is DocumentQuality.UNREADABLE
-                if eff is not None and cls_type is not eff and conf >= 0.6 and not unreadable:
+                # An interchangeable label is not a wrong document: a member who
+                # declares LAB_REPORT for an imaging report is not mistaken.
+                equivalent = eff is not None and cls_type.value in _accepts(eff.value)
+                if (
+                    eff is not None
+                    and cls_type is not eff
+                    and not equivalent
+                    and conf >= 0.6
+                    and not unreadable
+                ):
                     problems.append(
                         DocumentProblem(
                             kind=DocumentProblemKind.WRONG_TYPE,
@@ -204,21 +257,32 @@ def verify_documents(
         eff_types.append(eff)
         eff_quality.append(quality)
         type_sources.append(source)
+        further_types.append(extra)
 
     # 1. Required document types ------------------------------------------------
     reqs = snapshot.document_requirements(claim.claim_category)
     required = list(reqs.required) if reqs else []
     submitted_types = [t.value if t else "UNKNOWN" for t in eff_types]
+    # What the upload supplied in total, counting every document found inside a
+    # multi-page file — the set a requirement is satisfied from.
+    supplied_types = submitted_types + [t.value for extra in further_types for t in extra]
     uploaded_desc = ", ".join(
-        f"{t}{f' ({d.file_name})' if d.file_name else ''}"
-        for d, t in zip(docs, submitted_types)
+        f"{' + '.join([t, *(x.value for x in extra)])}"
+        f"{f' ({d.file_name})' if d.file_name else ''}"
+        for d, t, extra in zip(docs, submitted_types, further_types)
     )
     # An unread document has no known type, so it cannot be judged missing or
     # wrong — it might well be the very document required. Its own unreadable
     # problem is the honest, actionable one; types are re-checked on re-upload.
-    missing = [] if illegible else [t for t in required if t not in submitted_types]
+    # This covers both ways a document can go unread: too blurred to classify,
+    # and a file that would not open at all. Reporting a damaged upload as the
+    # wrong type as well tells the member to replace a document we never saw.
+    unread = illegible | damaged
+    missing = (
+        [] if unread else [t for t in required if not _accepts(t) & set(supplied_types)]
+    )
     if missing:
-        allowed = set(required) | set(reqs.optional if reqs else [])
+        allowed = {a for t in required for a in _accepts(t)} | set(reqs.optional if reqs else [])
         surplus = [
             (d, t) for d, t in zip(docs, submitted_types)
             if t not in allowed or submitted_types.count(t) > 1
@@ -254,10 +318,10 @@ def verify_documents(
             f"Missing required type(s): {', '.join(missing)}. Uploaded: {uploaded_desc}.",
             rule_ref=f"document_requirements.{category}",
         )
-    elif illegible:
+    elif unread:
         tb.step(
             "document_verifier", "required document types", Outcome.SKIPPED,
-            f"{len(illegible)} document(s) could not be read, so their type is unknown; "
+            f"{len(unread)} document(s) could not be read, so their type is unknown; "
             f"the {category} requirement ({', '.join(required)}) is re-checked once a "
             f"legible copy is uploaded.",
             rule_ref=f"document_requirements.{category}",
