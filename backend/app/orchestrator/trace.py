@@ -28,6 +28,7 @@ class TraceBuilder:
         self.steps: list[TraceStep] = []
         self.degraded_components: list[str] = []
         self._on_step = on_step
+        self._last_at = self.started_at
 
     def step(
         self,
@@ -39,7 +40,16 @@ class TraceBuilder:
         input_summary: str | None = None,
         confidence_delta: float = 0.0,
         rule_ref: str | None = None,
+        duration_ms: float | None = None,
     ) -> None:
+        """Record one step.
+
+        `duration_ms` defaults to the time since the previous step, which is
+        the work this step represents. A component that does concurrent work
+        passes its own measurement instead, since wall-clock between steps
+        would misattribute it.
+        """
+        at = _now()
         step = TraceStep(
             seq=len(self.steps) + 1,
             component=component,
@@ -49,8 +59,14 @@ class TraceBuilder:
             detail=detail,
             confidence_delta=confidence_delta,
             rule_ref=rule_ref,
-            started_at=_now(),
+            started_at=at,
+            duration_ms=(
+                duration_ms
+                if duration_ms is not None
+                else round((at - self._last_at).total_seconds() * 1000, 1)
+            ),
         )
+        self._last_at = at
         self.steps.append(step)
         if self._on_step is not None:
             try:

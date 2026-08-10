@@ -9,7 +9,9 @@ guidance (`ComponentUnavailable`) — the one failure the pipeline cannot
 degrade around.
 """
 
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from time import perf_counter
 
 from app.agents.llm import DocumentAI
 from app.core.errors import ComponentUnavailable
@@ -19,6 +21,9 @@ from app.orchestrator.trace import TraceBuilder
 
 PENALTY_LOW_FIELD_CONFIDENCE = -0.10
 LOW_FIELD_THRESHOLD = 0.7
+# Documents per claim are few; the cap exists so a pathological upload cannot
+# open an unbounded number of connections to the vision API at once.
+MAX_PARALLEL_EXTRACTIONS = 4
 
 
 def from_verified(doc: VerifiedDocument) -> ExtractedDocument:
@@ -45,22 +50,30 @@ def extract_documents(
     tb: TraceBuilder,
     penalties: list[tuple[str, float]],
 ) -> list[ExtractedDocument]:
-    """Extract every verified document, choosing the mode per document."""
-    extracted: list[ExtractedDocument] = []
-    live, skipped = 0, 0
-    for doc in documents:
+    """Extract every verified document, choosing the mode per document.
+
+    Vision extraction is the pipeline's only slow stage — seconds per document,
+    and a claim carries several. The calls are independent, so they run
+    concurrently and the claim waits for the slowest rather than the sum. The
+    trace is written afterwards in document order: concurrency must not make
+    the record of a decision non-deterministic.
+    """
+    live_docs = [
+        (i, doc)
+        for i, doc in enumerate(documents)
         # Nothing to extract *from*: the submission supplied the document's
         # contents itself (eval cases), so pass them through unchanged.
-        if doc.content is not None or doc.storage_path is None:
-            extracted.append(from_verified(doc))
-            skipped += 1
-            continue
-        if doc_ai is None or not doc_ai.is_configured:
-            raise ComponentUnavailable(
-                "extraction_agent",
-                f"Document {doc.file_id} has no pre-extracted content and no vision "
-                f"extraction is available. Please retry later — the claim was not decided.",
-            )
+        if doc.content is None and doc.storage_path is not None
+    ]
+    if live_docs and (doc_ai is None or not doc_ai.is_configured):
+        raise ComponentUnavailable(
+            "extraction_agent",
+            f"Document {live_docs[0][1].file_id} has no pre-extracted content and no vision "
+            f"extraction is available. Please retry later — the claim was not decided.",
+        )
+
+    def read(doc: VerifiedDocument) -> tuple[DocumentContent, dict[str, float], list[str], float]:
+        started = perf_counter()
         try:
             content, confidence, warnings = doc_ai.extract(Path(doc.storage_path), doc.doc_type)
         except ComponentUnavailable as exc:
@@ -69,6 +82,23 @@ def extract_documents(
                 f"Extraction failed for document {doc.file_id} ({exc.message}). "
                 f"Please retry later — the claim was not decided.",
             ) from exc
+        return content, confidence, warnings, (perf_counter() - started) * 1000
+
+    reads: dict[int, tuple] = {}
+    if live_docs:
+        with ThreadPoolExecutor(max_workers=min(len(live_docs), MAX_PARALLEL_EXTRACTIONS)) as pool:
+            futures = {pool.submit(read, doc): i for i, doc in live_docs}
+            for future in futures:
+                reads[futures[future]] = future.result()
+
+    extracted: list[ExtractedDocument] = []
+    live, skipped = 0, 0
+    for i, doc in enumerate(documents):
+        if i not in reads:
+            extracted.append(from_verified(doc))
+            skipped += 1
+            continue
+        content, confidence, warnings, elapsed_ms = reads[i]
         extracted.append(
             ExtractedDocument(
                 file_id=doc.file_id,
@@ -81,7 +111,17 @@ def extract_documents(
             )
         )
         live += 1
-        low = [k for k, v in confidence.items() if v < LOW_FIELD_THRESHOLD]
+        # The model scores every field in the schema, and reports 0.0 for the
+        # ones that field simply is not on this kind of document — a
+        # prescription has no line_items or total. Only a field that was
+        # actually read can have been hard to read; a field it tried and failed
+        # to recover is reported in `warnings`, which is penalized either way.
+        present = content.model_dump()
+        low = [
+            k
+            for k, v in confidence.items()
+            if v < LOW_FIELD_THRESHOLD and present.get(k) is not None
+        ]
         if low or warnings:
             name = doc.file_name or doc.file_id
             detail = (
@@ -94,6 +134,7 @@ def extract_documents(
             tb.step(
                 "extraction_agent", "field confidence review", Outcome.DEGRADED, detail,
                 confidence_delta=PENALTY_LOW_FIELD_CONFIDENCE,
+                duration_ms=round(elapsed_ms, 1),
             )
     tb.step(
         "extraction_agent",
