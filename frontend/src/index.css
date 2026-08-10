@@ -745,61 +745,177 @@ input[type="file"] { padding: 7px; background: #fbfbfd; }
   .bar-row { grid-template-columns: minmax(0, 110px) 1fr 50px; }
 }
 
+
 /* --- Assistant --------------------------------------------------------------
-   A reading column, not a chat bubble parade: answers carry citations and a
-   trace, so they need width and quiet. */
-/* Fills the viewport below the topbar (62px): the conversation scrolls inside
-   the panel and the composer stays put, rather than a short card floating in
-   dead space with the input wherever the last answer happened to end. */
-.assistant {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 20px 28px;
+   Same shape as a modern chat surface, in Plum's light palette: a greeting and
+   the composer centred while the page is empty, then answers as plain text with
+   the composer docked at the foot. The controls live inside the composer, so
+   there is one object to aim at rather than a field and a button. */
+.chat {
   height: calc(100vh - 62px);
   display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
-.assistant-panel { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-.turns.empty { justify-content: center; }
-.starters { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+.chat-column { max-width: 780px; margin: 0 auto; width: 100%; }
+
+/* Empty state: the one thing you do here, in the middle of the page. */
+.chat-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  max-width: 780px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 28px 40px;
+  gap: 18px;
+}
+.chat-greeting {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 40px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-align: center;
+  color: var(--ink);
+  margin: 0 0 6px;
+}
+
+.chat-stream { flex: 1; min-height: 0; overflow-y: auto; padding: 26px 28px 8px; }
+.chat-foot { flex: none; padding: 8px 28px 18px; background: var(--bg); }
+
+/* The composer is one rounded object; the textarea grows with the text. */
+/* One line: a compact pill with the controls inline. More than one: the text
+   takes the top and the controls drop beneath it. */
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  padding: 8px 10px 8px 20px;
+  box-shadow: 0 1px 2px rgba(44, 10, 38, 0.04), 0 8px 24px rgba(44, 10, 38, 0.05);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.composer.tall { display: block; border-radius: 22px; padding: 12px 12px 8px 20px; }
+.composer.tall .composer-row { padding-top: 6px; }
+.composer:focus-within {
+  border-color: #f3c9d0;
+  box-shadow: 0 1px 2px rgba(44, 10, 38, 0.04), 0 10px 28px rgba(251, 74, 92, 0.09);
+}
+.composer textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  /* The global textarea rule sets min-height 170px for the eval-cases JSON
+     field; without resetting it the composer opens at full height empty. */
+  min-height: 0;
+  height: auto;
+  padding: 6px 0 2px;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: none;
+  max-height: 220px;
+}
+.composer textarea::placeholder { color: var(--muted); }
+.composer textarea { flex: 1; }
+.composer-row { flex: none; display: flex; align-items: center; gap: 10px; }
+/* Which brain is answering — the honest equivalent of a model badge. */
+.model {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: default;
+}
+.model i { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.model.ok i { background: #16a34a; }
+.model.degraded { color: var(--amber); }
+.model.degraded i { background: var(--amber); }
+.send {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--plum-coral);
+  color: #fff;
+}
+.send:hover:not(:disabled) { background: var(--plum-coral-dark); }
+.send:disabled { background: #f0dfe4; color: #b9a4ad; opacity: 1; }
+
+.chat-note {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.starters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .starter {
-  background: #fbfbfd;
+  background: var(--panel);
   color: #3d4459;
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 7px 14px;
+  padding: 8px 15px;
   font-size: 12.5px;
   font-weight: 500;
 }
 .starter:hover:not(:disabled) { background: var(--plum-peach); color: var(--ink); }
 
-/* The conversation is the part that grows and scrolls; min-height:0 is what
-   lets a flex child actually shrink enough to do so. */
-.turns {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin: 6px 0 4px;
-  padding-right: 6px;
-}
-.turn { font-size: 14px; line-height: 1.55; }
-/* The question is the quieter half: it is already known to the reader. */
-.turn.user {
-  align-self: flex-end;
-  max-width: 78%;
+/* Messages: the question is a bubble, the answer is just text — it is the
+   content, not a chat artefact, and it carries citations and a trace. */
+.msg { font-size: 15px; line-height: 1.6; }
+.msg + .msg { margin-top: 26px; }
+.msg.user {
+  max-width: 76%;
+  margin-left: auto;
+  width: fit-content;
   background: var(--plum-peach);
-  border-radius: 14px 14px 4px 14px;
-  padding: 10px 14px;
+  border-radius: 20px;
+  padding: 11px 17px;
   color: var(--ink);
   font-weight: 500;
 }
-.turn.assistant { border-left: 3px solid var(--plum-coral); padding-left: 15px; }
-.turn .said { white-space: pre-wrap; color: #34303a; }
-.thinking { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 8px; }
+.msg.assistant { color: #34303a; }
+.msg .said { white-space: pre-wrap; }
+.thinking { color: var(--muted); font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
 
-.cites { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.msg-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.msg-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.msg-actions button:hover:not(:disabled) { background: #f6eff2; color: var(--ink); }
+
+.cites { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .cite {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
@@ -815,17 +931,14 @@ input[type="file"] { padding: 7px; background: #fbfbfd; }
 .ungrounded {
   background: var(--amber-bg);
   color: var(--amber);
-  border-radius: 8px;
-  padding: 9px 13px;
-  margin-bottom: 10px;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
   font-size: 12.5px;
 }
 .ungrounded .why { color: #6b4a12; margin-top: 4px; font-size: 11.5px; }
 .degraded-note { margin-top: 8px; font-size: 11.5px; color: var(--amber); }
-.turn-trace { margin-top: 10px; }
-.turn-trace summary { cursor: pointer; font-size: 12px; color: var(--muted); font-weight: 600; }
-.turn-trace summary:hover { color: var(--plum-coral); }
-
-.ask { display: flex; gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
-.ask input { flex: 1; }
-.ask button { flex: none; }
+.msg-trace { margin-left: 4px; }
+.msg-trace summary { cursor: pointer; font-size: 12px; color: var(--muted); font-weight: 500; padding: 5px 5px; }
+.msg-trace summary:hover { color: var(--plum-coral); }
+.msg-trace[open] { width: 100%; margin-top: 6px; }
