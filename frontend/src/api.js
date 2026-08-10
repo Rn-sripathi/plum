@@ -111,6 +111,25 @@ export const api = {
   getClaim: (id) => request(`/claims/${id}`),
   listClaims: () => request("/claims"),
   analytics: () => request("/analytics"),
+
+  /** Streams retrieval steps, then resolves with the grounded answer. */
+  assistantChat: async (body, onStep) => {
+    const resp = await fetch(`${BASE}/assistant/chat/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    let answer = null;
+    let failure = null;
+    await readSSE(resp, (name, data) => {
+      if (name === "step") onStep?.(data);
+      else if (name === "answer") answer = data;
+      else if (name === "error") failure = data;
+    });
+    if (failure) throw Object.assign(new Error(failure.message), { body: failure });
+    if (!answer) throw new Error("The assistant closed without answering.");
+    return answer;
+  },
   evalCases: () => request("/eval/cases"),
   runEval: () => request("/eval/run", { method: "POST" }),
 };

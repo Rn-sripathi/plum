@@ -220,6 +220,65 @@ def list_claims(request: Request, limit: int = 50) -> list[dict]:
     return request.app.state.store.list_recent(limit)
 
 
+def _assistant_knowledge(state, body: ChatRequest) -> tuple[KnowledgeBase, Scope]:
+    scope = Scope.member(body.member_id) if body.member_id else Scope.ops()
+    return (
+        KnowledgeBase(
+            snapshot=state.snapshot,
+            semantic=state.semantic,
+            graph=state.graph,
+            store=state.store,
+        ),
+        scope,
+    )
+
+
+@router.post("/assistant/chat/stream")
+def assistant_chat_streaming(request: Request, body: ChatRequest) -> StreamingResponse:
+    """Same answer, streamed. Retrieval is the slow part — seconds when a
+    question needs the vector index — so each step lands as it happens rather
+    than the reader watching a spinner."""
+    state = request.app.state
+    kb, scope = _assistant_knowledge(state, body)
+    events: queue.Queue = queue.Queue()
+    done = object()
+
+    def run() -> None:
+        try:
+            answer = state.assistant.answer(
+                body.messages,
+                kb,
+                scope,
+                claim_id=body.claim_id,
+                on_step=lambda step: events.put(("step", json.loads(step.model_dump_json()))),
+            )
+            payload = json.loads(answer.model_dump_json())
+            payload["assistant"] = (
+                "configured" if state.assistant.is_configured else "no model configured"
+            )
+            events.put(("answer", payload))
+        except Exception as exc:  # the stream still closes cleanly
+            events.put(("error", {"error": "UNEXPECTED", "message": str(exc)}))
+        finally:
+            events.put(done)
+
+    threading.Thread(target=run, daemon=True).start()
+
+    def generate():
+        while True:
+            item = events.get()
+            if item is done:
+                return
+            event, data = item
+            yield _sse(event, data)
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
 @router.post("/assistant/chat")
 def assistant_chat(request: Request, body: ChatRequest) -> dict:
     """Ask the assistant about a claim, the policy, or the portfolio.
@@ -230,13 +289,7 @@ def assistant_chat(request: Request, body: ChatRequest) -> dict:
     asked for.
     """
     state = request.app.state
-    scope = Scope.member(body.member_id) if body.member_id else Scope.ops()
-    kb = KnowledgeBase(
-        snapshot=state.snapshot,
-        semantic=state.semantic,
-        graph=state.graph,
-        store=state.store,
-    )
+    kb, scope = _assistant_knowledge(state, body)
     answer = state.assistant.answer(body.messages, kb, scope, claim_id=body.claim_id)
     payload = json.loads(answer.model_dump_json())
     payload["assistant"] = "configured" if state.assistant.is_configured else "no model configured"

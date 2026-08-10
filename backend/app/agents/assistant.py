@@ -238,9 +238,14 @@ class Assistant:
         return self._chat is not None
 
     def answer(self, messages: list[ChatMessage], kb: KnowledgeBase, scope: Scope,
-               claim_id: str | None = None) -> ChatAnswer:
-        """Answer the latest turn, retrieving first and checking afterwards."""
-        tb = TraceBuilder("ASSISTANT")
+               claim_id: str | None = None,
+               on_step: Callable[[Any], None] | None = None) -> ChatAnswer:
+        """Answer the latest turn, retrieving first and checking afterwards.
+
+        `on_step` receives each trace step as it happens, so a caller can stream
+        the retrieval while it runs — the same hook the claim pipeline uses.
+        """
+        tb = TraceBuilder("ASSISTANT", on_step=on_step)
         question = messages[-1].content
         retrieved: list[tuple[str, Any]] = []
 
@@ -513,7 +518,12 @@ def _summarize_retrieved(retrieved: list[tuple[str, Any]]) -> str:
         elif name == "search_policy":
             hits = payload.get("hits") or []
             if hits:
-                lines.append(f"Closest policy clauses ({payload.get('source')} match):")
+                how = (
+                    "by vector similarity"
+                    if payload.get("source") == "vector"
+                    else "by token overlap"
+                )
+                lines.append(f"Closest policy clauses, matched {how}:")
                 lines += [f"  · {h['concept']} — {h['rule_ref']}" for h in hits]
         elif name == "lookup_policy":
             lines.append(f"{payload['rule_ref']} = {payload['value']}")

@@ -112,6 +112,7 @@ descriptions and validation rules).
 | `POST /claims/upload` | multipart: `metadata` JSON + `files` + `document_types` → same as above via the vision path |
 | `GET /claims` / `GET /claims/{id}` / `GET /claims/{id}/trace` | Stored records; 404 when unknown |
 | `POST /assistant/chat` | `{messages[], claim_id?, member_id?}` → `ChatAnswer`. Absent `member_id` = operations scope. Retrieval problems and ungrounded answers come back 200 with `grounded: false`; 422 on a malformed conversation |
+| `POST /assistant/chat/stream` | Same, as Server-Sent Events: a `step` per retrieval, then exactly one terminal `answer` or `error` |
 | `GET /analytics` | Portfolio figures over the most recent `limit` claims: decision mix, payout ratio, confidence distribution, stop reasons, per-stage time, degraded runs. A stopped claim counts toward volume and stop reasons, never toward money or confidence. Store outage → 200 with `available: false` and empty totals, never a 5xx (see `core/analytics.py` for the definitions) |
 | `GET /eval/cases` / `POST /eval/run` | The 12 assignment cases; run them and return per-case matched/mismatch |
 | `GET /health` | Component status: policy id, member count, store health, LLM mode |

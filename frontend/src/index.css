@@ -744,3 +744,67 @@ input[type="file"] { padding: 7px; background: #fbfbfd; }
 @media (max-width: 620px) {
   .bar-row { grid-template-columns: minmax(0, 110px) 1fr 50px; }
 }
+
+/* --- Assistant --------------------------------------------------------------
+   A reading column, not a chat bubble parade: answers carry citations and a
+   trace, so they need width and quiet. */
+.assistant { max-width: 900px; margin: 0 auto; padding: 20px 28px; }
+.assistant-panel { display: flex; flex-direction: column; }
+.starters { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+.starter {
+  background: #fbfbfd;
+  color: #3d4459;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.starter:hover:not(:disabled) { background: var(--plum-peach); color: var(--ink); }
+
+.turns { display: flex; flex-direction: column; gap: 16px; margin: 6px 0 4px; }
+.turn { font-size: 14px; line-height: 1.55; }
+/* The question is the quieter half: it is already known to the reader. */
+.turn.user {
+  align-self: flex-end;
+  max-width: 78%;
+  background: var(--plum-peach);
+  border-radius: 14px 14px 4px 14px;
+  padding: 10px 14px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.turn.assistant { border-left: 3px solid var(--plum-coral); padding-left: 15px; }
+.turn .said { white-space: pre-wrap; color: #34303a; }
+.thinking { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 8px; }
+
+.cites { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.cite {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  border-radius: 6px;
+  padding: 3px 8px;
+  background: #f4f5fb;
+  color: #4a4a68;
+  border: 1px solid var(--line);
+}
+.cite.claim { background: var(--green-bg); color: var(--green); border-color: #cfe9dd; }
+.cite.portfolio { background: var(--blue-bg); color: var(--blue); border-color: #ddd6fa; }
+
+.ungrounded {
+  background: var(--amber-bg);
+  color: var(--amber);
+  border-radius: 8px;
+  padding: 9px 13px;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+}
+.ungrounded .why { color: #6b4a12; margin-top: 4px; font-size: 11.5px; }
+.degraded-note { margin-top: 8px; font-size: 11.5px; color: var(--amber); }
+.turn-trace { margin-top: 10px; }
+.turn-trace summary { cursor: pointer; font-size: 12px; color: var(--muted); font-weight: 600; }
+.turn-trace summary:hover { color: var(--plum-coral); }
+
+.ask { display: flex; gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.ask input { flex: 1; }
+.ask button { flex: none; }

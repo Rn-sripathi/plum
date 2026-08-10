@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Analytics from "./components/Analytics";
+import Assistant from "./components/Assistant";
 import { api } from "./api";
 import ClaimsList from "./components/ClaimsList";
 import DocView, { DocsPage } from "./components/DocView";
@@ -87,6 +88,14 @@ export default function App() {
           </button>
           <button
             type="button"
+            className={view === "assistant" ? "nav-link active" : "nav-link"}
+            onMouseEnter={() => setMenuOpen(false)}
+            onClick={() => go("assistant")}
+          >
+            <Sign /> Assistant
+          </button>
+          <button
+            type="button"
             className={view === "analytics" ? "nav-link active" : "nav-link"}
             onMouseEnter={() => setMenuOpen(false)}
             onClick={() => go("analytics")}
@@ -128,6 +137,10 @@ export default function App() {
         <main className="layout">
           <SubmitForm onResult={handleResult} onStep={handleStep} onStart={handleStart} />
           <ResultView result={result} liveSteps={liveSteps} />
+        </main>
+      ) : view === "assistant" ? (
+        <main>
+          <Assistant />
         </main>
       ) : view === "analytics" ? (
         <main>
