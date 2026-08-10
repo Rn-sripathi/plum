@@ -314,6 +314,11 @@ body.menu-open .topbar { background: var(--plum-peach); border-bottom-color: tra
   margin: 0 auto;
 }
 @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+/* The claims table carries four unbreakable columns — a claim id, a category
+   as long as ALTERNATIVE_MEDICINE, and a status pill. The console's 420px
+   form column cannot hold them, so its own view gets the width it needs. */
+.claims-layout { grid-template-columns: minmax(0, 560px) 1fr; }
+@media (max-width: 980px) { .claims-layout { grid-template-columns: 1fr; } }
 
 .panel {
   background: var(--panel);
@@ -374,6 +379,9 @@ button:disabled { opacity: 0.5; cursor: default; }
   border-radius: 999px;
   padding: 4px 13px;
   letter-spacing: 0.01em;
+  /* A pill is one line by definition: a wrapped label breaks the capsule and
+     makes its row taller than its neighbours. Narrow columns scroll instead. */
+  white-space: nowrap;
 }
 .badge.APPROVED { background: var(--green-bg); color: var(--green); }
 .badge.PARTIAL { background: var(--amber-bg); color: var(--amber); }
@@ -402,6 +410,16 @@ th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line
 th { color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; }
 tr.clickable { cursor: pointer; }
 tr.clickable:hover { background: #f4f5fb; }
+
+/* A table is as wide as its widest unbreakable cell, which in the 420px
+   console column exceeds the card: a claim id, a category like
+   ALTERNATIVE_MEDICINE and a status pill cannot all shrink. Left alone the
+   row rules run out past the card's border. Scrolling keeps the table inside
+   its panel and every row the same height. */
+.table-wrap { overflow-x: auto; }
+.table-wrap table { margin: 0; }
+.claims th, .claims td { white-space: nowrap; }
+.claims code { font-size: 12px; }
 
 .problem {
   border: 1px solid #f2d9a4;

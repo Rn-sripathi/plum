@@ -102,7 +102,7 @@ function Decision({ result }) {
   );
 }
 
-export default function ResultView({ result, liveSteps }) {
+export default function ResultView({ result, liveSteps, emptyHint }) {
   if (!result && liveSteps) {
     return (
       <div className="panel">
@@ -123,9 +123,13 @@ export default function ResultView({ result, liveSteps }) {
       <div className="panel">
         <h2>Decision review</h2>
         <p className="hint">
-          Submit a claim (or load a preset like TC001 for a document stop, TC004 for a clean
-          approval, TC010 for the network-discount breakdown) and the decision, reasons, and
-          full processing trace will appear here.
+          {emptyHint || (
+            <>
+              Submit a claim (or load a preset like TC001 for a document stop, TC004 for a clean
+              approval, TC010 for the network-discount breakdown) and the decision, reasons, and
+              full processing trace will appear here.
+            </>
+          )}
         </p>
       </div>
     );

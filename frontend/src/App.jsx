@@ -86,6 +86,14 @@ export default function App() {
           </button>
           <button
             type="button"
+            className={view === "claims" ? "nav-link active" : "nav-link"}
+            onMouseEnter={() => setMenuOpen(false)}
+            onClick={() => go("claims")}
+          >
+            <Sign /> Recent claims
+          </button>
+          <button
+            type="button"
             className={view === "eval" ? "nav-link active" : "nav-link"}
             onMouseEnter={() => setMenuOpen(false)}
             onClick={() => go("eval")}
@@ -109,11 +117,17 @@ export default function App() {
 
       {view === "console" ? (
         <main className="layout">
-          <div>
-            <SubmitForm onResult={handleResult} onStep={handleStep} onStart={handleStart} />
-            <ClaimsList onSelect={handleSelect} refreshKey={refreshKey} />
-          </div>
+          <SubmitForm onResult={handleResult} onStep={handleStep} onStart={handleStart} />
           <ResultView result={result} liveSteps={liveSteps} />
+        </main>
+      ) : view === "claims" ? (
+        <main className="layout claims-layout">
+          <ClaimsList onSelect={handleSelect} refreshKey={refreshKey} showEmpty />
+          <ResultView
+            result={result}
+            liveSteps={null}
+            emptyHint="Pick a claim on the left to read its decision, documents, and full processing trace."
+          />
         </main>
       ) : (
         <main className="doc-layout">
