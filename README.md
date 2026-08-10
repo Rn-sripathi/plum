@@ -81,6 +81,7 @@ cd backend
 uv run pytest                                    # 146 tests (148 with store credentials set)
 uv run python -m app.eval.runner                 # regenerates docs/EVAL_REPORT.md (12/12)
 uv run python -m app.eval.runner --with-uploads  # adds the vision run (needs OPENAI_API_KEY)
+uv run python -m app.eval.retrieval              # assistant retrieval recall (needs OPENAI_API_KEY)
 ```
 
 The eval passes **12/12 on every path**: the deterministic tier (no accounts,

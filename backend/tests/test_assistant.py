@@ -6,6 +6,8 @@ ungrounded answer as a sourced one, and that a member scope cannot read another
 member's claim.
 """
 
+import os
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -253,6 +255,33 @@ def test_an_answer_that_cites_nothing_is_not_grounded(kb):
 
     assert result.grounded is False
     assert any(r.startswith("no citation") for r in result.refusals)
+
+
+needs_openai = pytest.mark.skipif(
+    not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set"
+)
+
+
+@needs_openai
+def test_policy_search_finds_the_clause_a_paraphrase_is_asking_about():
+    """Recall on the golden set, and silence on questions the policy never
+    covers — nearest-neighbour search always returns something, and the
+    grounding gate checks that a citation was retrieved, not that it was
+    relevant, so a weak hit would be citable as though it answered."""
+    from app.core.config import Settings
+    from app.eval.retrieval import run
+    from app.kb.semantic import SemanticPolicyIndex
+
+    live = Settings(openai_api_key=os.environ["OPENAI_API_KEY"])
+    if not SemanticPolicyIndex(live).healthy():
+        pytest.skip("vector index not ingested")
+
+    report = run()
+    assert report["tier"] == "vector"
+    assert report["recall_at_3"] == 1.0, report["misses"]
+    assert report["recall_at_1"] >= 0.85, report["misses"]
+    # Every question the policy does not answer returns nothing at all.
+    assert report["top_score"]["negative"]["n"] == 0
 
 
 def test_doc_anchors_are_reproducible_from_ascii(kb):

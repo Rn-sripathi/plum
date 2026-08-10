@@ -170,6 +170,18 @@ recall (token matcher when embeddings are absent), Neo4j for traversals
 (snapshot when unreachable), Postgres for claims and portfolio, and these
 documents for questions about the system's own behaviour.
 
+**Retrieval quality is measured, not assumed.** `app/eval/retrieval.py` holds a
+24-case golden set — every question phrased the way someone would actually ask,
+never in the clause's own words — and reports recall: **0.905 @1, 1.0 @3**. Three
+cases are deliberate negatives (physiotherapy, dialysis, the wifi password),
+because nearest-neighbour search always returns *something*, and the assistant's
+grounding gate checks that a citation was retrieved, not that it was relevant.
+The negatives are what set the floor: the worst correct top hit scores 0.416, the
+best hit for a question the policy does not cover scores 0.380, so
+`SEARCH_MIN_SCORE = 0.40` sits in the gap and every negative now returns nothing
+at all. The margin is thin and the set is small, so the number is only as good as
+the next run of the eval.
+
 That last source exists because of a failure worth recording: asked what
 architecture the application used, the assistant answered fluently from the
 model's general knowledge, cited nothing, and was reported as grounded. How the

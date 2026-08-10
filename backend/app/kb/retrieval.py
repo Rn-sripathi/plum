@@ -30,6 +30,13 @@ from app.kb.snapshot import PolicySnapshot
 from app.models import ClaimCategory
 
 MAX_CLAIMS_WINDOW = 500
+# Cosine floor for a policy concept to count as an answer to a question.
+# Measured, not chosen: over the 24-case golden set in `app/eval/retrieval.py`
+# the worst *correct* top hit scores 0.416 and the best hit for a question the
+# policy does not cover scores 0.380. 0.40 sits in that gap — it keeps
+# recall@3 at 1.0 and drops every true negative. The margin is thin and the set
+# is small, so re-run the eval before trusting a different number.
+SEARCH_MIN_SCORE = 0.40
 # The documents the assistant may quote — the same allowlist the API serves, so
 # there is one answer to "which files are public".
 PUBLIC_DOCS = {
@@ -147,16 +154,26 @@ class KnowledgeBase:
             raise Unavailable("policy", f"No policy clause at '{path}'.") from exc
         return {"rule_ref": path, "value": value}
 
-    def search_policy(self, text: str, top_k: int = 4) -> dict:
+    def search_policy(self, text: str, top_k: int = 4, min_score: float | None = None) -> dict:
         """Concepts close in meaning to `text` — the paraphrase channel.
 
         Qdrant when embeddings are configured, otherwise the same token matcher
-        the engine falls back to, so 'is physio covered' still finds something
+        the engine falls back to, so a paraphrased question still finds something
         with no API key at all.
+
+        Filtered at `SEARCH_MIN_SCORE`, because nearest-neighbour search always
+        returns *something*: asked about physiotherapy, which the policy never
+        mentions, it offered naturopathy and a waiting period. The assistant's
+        grounding gate checks that a citation was retrieved, not that it was
+        relevant, so an unfiltered weak hit is citable as though it answered.
         """
         if self.semantic is not None and self.semantic.is_configured:
             try:
-                hits = self.semantic.search(text, top_k=top_k)
+                hits = self.semantic.search(
+                    text,
+                    top_k=top_k,
+                    min_score=SEARCH_MIN_SCORE if min_score is None else min_score,
+                )
                 return {
                     "source": "vector",
                     "hits": [
