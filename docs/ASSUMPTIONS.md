@@ -58,7 +58,26 @@ code with a pointer back here, and covered by tests where behavior-affecting.
     machinery (skip, trace, −0.20 confidence, review recommendation) is the
     same code path a real outage takes.
 
-12. **Sub-limit/annual caps beyond the 12 cases** (e.g. consultation fee above
+12. **Member details are resolved from the roster, not collected at intake.**
+    A submission carries `member_id`; name, join date and dependents come from
+    `policy_terms.json`, which the spec names as authoritative. Re-collecting
+    them on the form would duplicate the roster and create a conflict with no
+    correct resolution when the two disagree. The details do real work once
+    resolved: `join_date` drives every waiting-period date (TC005's eligibility
+    date is computed, never supplied), and the roster name plus registered
+    dependents are the set the patient name read off the documents is checked
+    against — identity is verified against evidence rather than against a field
+    the claimant types.
+
+13. **A claim cannot declare which covered person it is for.** The patient is
+    inferred from the names on the documents, which is why a claim for a
+    dependent must carry that dependent's name throughout (TC003's guidance
+    says so explicitly). Adequate for per-member rules; per-person logic
+    (dependent sub-limits, age-based rules) would need a declared `patient_id`
+    validated against `eligible_patients()`. No assignment case claims for a
+    dependent, so the field is deliberately not built.
+
+14. **Sub-limit/annual caps beyond the 12 cases** (e.g. consultation fee above
     ₹2,000 combined with discounts) follow the documented order
     (discount → co-pay → sub-limit → annual) with the excess scaled by the
     discount/co-pay factors; unit-tested, though no assignment case exercises

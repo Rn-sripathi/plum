@@ -143,13 +143,16 @@ point: the stores add reach, never authority.
 | Vision extraction is per-document, sequential | Batch/parallel extraction (`asyncio.gather` over documents), response caching keyed by file hash |
 | No auth | Member-scoped tokens; ops console behind SSO; PII encryption at rest |
 | Fraud checker sees only payload-supplied history | Claims history from the store (same member/provider velocity across submissions), plus `DOCUMENT_ALTERATION` signals from extraction |
+| A claim names the member, not the patient: a dependent's claim is inferred from the names on its documents | Declared `patient_id` validated against `eligible_patients()`, unlocking per-person rules (dependent sub-limits, age-based cover) that per-member terms cannot express |
 
 ## Testing strategy
 
-75 tests, three layers: **unit** (matching rules, financial ordering and
+115 tests, four layers: **unit** (matching rules, financial ordering and
 rounding, fraud boundaries, snapshot lookups), **pipeline** (all 12 assignment
 cases end-to-end, asserting decisions, amounts, reason codes, message
-specificity, trace completeness), **API** (HTTP contracts: 200-with-problems
-for member-fixable stops, 503-with-guidance for undecidable infrastructure
-failure, persistence round-trips). `POST /eval/run` regenerates the eval
-verdict on demand; `docs/EVAL_REPORT.md` is the committed snapshot.
+specificity, trace completeness), **upload path** (what the eval cases cannot
+reach, because they arrive pre-typed: damaged files, multi-page PDFs carrying
+several documents, malformed model output), and **API** (HTTP contracts:
+200-with-problems for member-fixable stops, 503-with-guidance for undecidable
+infrastructure failure, persistence round-trips). `POST /eval/run` regenerates
+the eval verdict on demand; `docs/EVAL_REPORT.md` is the committed snapshot.
