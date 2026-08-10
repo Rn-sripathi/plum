@@ -357,11 +357,9 @@ def get_trace(request: Request, claim_id: str) -> dict:
 
 # Only these are readable — never an arbitrary path under docs/.
 _PUBLIC_DOCS = {
-    "review": ("REVIEW_GUIDE.md", "Review Guide"),
     "architecture": ("ARCHITECTURE.md", "Architecture"),
     "contracts": ("CONTRACTS.md", "Component Contracts"),
     "assumptions": ("ASSUMPTIONS.md", "Assumptions & Trade-offs"),
-    "defects": ("DEFECTS.md", "What Running It Found"),
     "eval": ("EVAL_REPORT.md", "Eval Report"),
 }
 

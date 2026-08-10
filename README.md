@@ -4,14 +4,10 @@ Automated OPD claim adjudication: document verification → extraction → polic
 rules → `APPROVED / PARTIAL / REJECTED / MANUAL_REVIEW`, with specific reasons,
 a confidence score, and a complete decision trace for every claim.
 
-**Start here:** [Review guide](docs/REVIEW_GUIDE.md) — a twenty-minute path
-through the system where every claim has a command behind it.
-
-**Then:** [Architecture](docs/ARCHITECTURE.md) ·
+**Docs:** [Architecture](docs/ARCHITECTURE.md) ·
 [Component Contracts](docs/CONTRACTS.md) ·
 [Eval Report — 12/12 structured, 12/12 uploaded](docs/EVAL_REPORT.md) ·
 [Assumptions](docs/ASSUMPTIONS.md) ·
-[What running it found](docs/DEFECTS.md) ·
 [Demo Script](docs/DEMO_SCRIPT.md)
 
 ## Quick start

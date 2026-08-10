@@ -91,7 +91,9 @@ fields its documents do not have, and a damaged file accused of being the wrong
 document. Passing tests were measuring the wrong path. Given more time I would
 have built the dual-path eval on day one rather than last, and I would extend the
 same treatment to the browser layer, which is still the one place I assert rather
-than verify. `docs/DEFECTS.md` records each one and the test that now pins it.
+than verify. Each of those defects is pinned by a test now —
+`tests/test_upload_verification.py` covers what the eval cases structurally
+cannot reach.
 
 *(If asked what else you would change: retrieval for the assistant is measured —
 recall 0.905@1 over 24 paraphrased cases — but on a 24-case set and one policy.
@@ -100,8 +102,8 @@ confidence.)*
 
 ## Close (30s)
 
-- `docs/REVIEW_GUIDE.md` on screen: every claim in the docs has a command behind
-  it.
+- Repo layout on screen: `engine` / `agents` / `orchestrator` / `models`, with a
+  contract per component in `docs/CONTRACTS.md`, and `uv run pytest` → 146 green.
 - "At 10x": queue-backed async processing, materialised analytics columns,
   per-policy concept indexes, member-scoped auth — the seam is already threaded
   through every claim lookup. Details in ARCHITECTURE.md.

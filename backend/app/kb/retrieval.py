@@ -40,11 +40,9 @@ SEARCH_MIN_SCORE = 0.40
 # The documents the assistant may quote — the same allowlist the API serves, so
 # there is one answer to "which files are public".
 PUBLIC_DOCS = {
-    "review": "REVIEW_GUIDE.md",
     "architecture": "ARCHITECTURE.md",
     "contracts": "CONTRACTS.md",
     "assumptions": "ASSUMPTIONS.md",
-    "defects": "DEFECTS.md",
     "eval": "EVAL_REPORT.md",
 }
 
