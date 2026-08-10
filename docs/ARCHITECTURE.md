@@ -27,21 +27,41 @@ specific reasons, a confidence score, and a **complete decision trace**.
 
 ## Component map
 
+Two paths through one system. **Deciding** a claim is deterministic and writes a
+trace. **Asking about** what was decided only reads — it can reach every store,
+and it can produce no decision.
+
 ```mermaid
 flowchart TD
-    UI[React UI\nsubmit · review · trace] --> API[FastAPI\napi/routes.py]
-    API --> P[Pipeline\norchestrator/pipeline.py\nowns TraceBuilder]
+    UI[React console\nsubmit · review · analytics · assistant] --> API[FastAPI\napi/routes.py]
+
+    API -->|POST /claims· /claims/upload| P[Pipeline\norchestrator/pipeline.py\nowns TraceBuilder]
     P --> V[Document Verifier\nagents/verifier.py]
     V -->|member-fixable problem| STOP[DocumentProblemReport\nno decision, specific actions]
-    V --> X[Extraction Agent\nagents/extraction.py\ntest mode / GPT-4o vision]
+    V --> X[Extraction Agent\nagents/extraction.py\nconcurrent · test mode or GPT-4o vision]
     X --> A[Adjudication Engine\nengine/* — deterministic, zero LLM]
     A --> F[Fraud Checker\nengine/fraud.py]
     F --> S[Decision Synthesizer\nengine/synthesizer.py\nconfidence rollup]
     S --> OUT[ClaimDecision\namount · reasons · confidence · trace]
-    A -.reads.-> KB[(PolicySnapshot\nkb/snapshot.py)]
+
+    API -->|POST /assistant/chat| AS[Assistant\nagents/assistant.py\ntool loop + grounding gates]
+    AS <-->|typed tools, read-only| RKB[Knowledge Base\nkb/retrieval.py\nScope-filtered]
+    AS --> ANS[ChatAnswer\ncitations · grounded · trace]
+    API -->|GET /analytics| AN[Portfolio aggregation\ncore/analytics.py]
+
+    A -.reads.-> SNAP[(PolicySnapshot\nkb/snapshot.py)]
     X -.calls.-> LLM[DocumentAI\nagents/llm.py\nGPT-4o, optional]
-    P -.persists.-> DB[(ClaimStore\ncore/store.py — SQLite,\nPostgres seam)]
+    P -.persists.-> DB[(ClaimStore\ncore/store.py\nPostgres or SQLite)]
+    RKB -.-> SNAP
+    RKB -.-> VEC[(Qdrant\nkb/semantic.py)]
+    RKB -.-> GR[(Neo4j\nkb/graph.py)]
+    RKB -.-> DB
+    RKB -.-> DOCS[(docs/*.md)]
+    AN -.reads.-> DB
 ```
+
+The assistant has no edge into the engine, by design: it explains decisions and
+cites clauses, and the pipeline stays the only thing that decides money.
 
 ### Pipeline stages
 

@@ -4,10 +4,14 @@ Automated OPD claim adjudication: document verification → extraction → polic
 rules → `APPROVED / PARTIAL / REJECTED / MANUAL_REVIEW`, with specific reasons,
 a confidence score, and a complete decision trace for every claim.
 
-**Docs:** [Architecture](docs/ARCHITECTURE.md) ·
+**Start here:** [Review guide](docs/REVIEW_GUIDE.md) — a twenty-minute path
+through the system where every claim has a command behind it.
+
+**Then:** [Architecture](docs/ARCHITECTURE.md) ·
 [Component Contracts](docs/CONTRACTS.md) ·
-[Assumptions](docs/ASSUMPTIONS.md) ·
 [Eval Report — 12/12 structured, 12/12 uploaded](docs/EVAL_REPORT.md) ·
+[Assumptions](docs/ASSUMPTIONS.md) ·
+[What running it found](docs/DEFECTS.md) ·
 [Demo Script](docs/DEMO_SCRIPT.md)
 
 ## Quick start
@@ -96,20 +100,35 @@ are handed the answers.
 ```
 backend/
   app/
-    api/           # FastAPI routes (POST /claims, /eval/run, /health, …)
+    api/           # FastAPI routes (claims, assistant, analytics, eval, health)
     orchestrator/  # pipeline + TraceBuilder (single writer of the trace)
-    agents/        # document verifier, extraction, GPT-4o wrapper
+    agents/        # verifier, extraction, GPT-4o wrapper, assistant
     engine/        # deterministic core: checks, financial, fraud, synthesizer
-    kb/            # policy snapshot (typed lookups over policy_terms.json)
+    kb/            # snapshot (typed policy lookups), semantic (Qdrant),
+                   #   graph (Neo4j), retrieval (the assistant's knowledge base)
     models/        # Pydantic contracts for every boundary
-    core/          # config, typed errors, claim store (SQLite; Postgres seam)
-    eval/          # eval runner → docs/EVAL_REPORT.md
+    core/          # config, typed errors, claim store, portfolio analytics
+    eval/          # runner → docs/EVAL_REPORT.md; retrieval recall eval
   scripts/         # mock medical document generator
   tests/
-frontend/          # React console: submit, decision review, trace timeline
+frontend/          # React console — see the views below
 data/              # policy_terms.json, test_cases.json, mock documents
-docs/              # architecture, contracts, assumptions, eval report
+docs/              # review guide, architecture, contracts, assumptions,
+                   #   eval report, defect record, demo script
 ```
+
+## The console
+
+Six views, all served by the running app:
+
+| View | What it is |
+|---|---|
+| **Console** | Submit a claim — real files through vision, or an eval case as structured data — and read the decision, financial breakdown and streaming trace |
+| **Assistant** | Ask why a claim was decided as it was, what the policy says, how the portfolio looks, or how the system works. Cites the clause behind every answer and refuses to predict a decision |
+| **Analytics** | Portfolio figures over recorded decisions: decision mix, payout ratio, confidence distribution, why claims stop, where a claim's time goes |
+| **Recent claims** | Every stored claim; pick one to re-read its decision and trace |
+| **Eval report** | All 12 assignment cases on both paths, with full traces |
+| **Docs** | Architecture, contracts, assumptions — rendered in-app, so the deployed URL carries its own evidence |
 
 ## Key properties
 

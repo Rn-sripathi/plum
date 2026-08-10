@@ -6,9 +6,11 @@ import { api } from "../api";
 
 /** The project documents, also listed in the nav's Docs menu. */
 export const DOC_TABS = [
+  { slug: "review", label: "Review guide" },
   { slug: "architecture", label: "Architecture" },
   { slug: "contracts", label: "Contracts" },
   { slug: "assumptions", label: "Assumptions" },
+  { slug: "defects", label: "What running it found" },
 ];
 
 export function DocsPage({ slug, onSelect }) {

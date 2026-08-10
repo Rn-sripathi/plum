@@ -165,7 +165,7 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 | 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
 | 4 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Vikram Joshi'. |
 | 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | 1ms | — | Member EMP005 (Vikram Joshi, SELF) found in roster. |
+| 6 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP005 (Vikram Joshi, SELF) found in roster. |
 | 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-15. |
 | 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
 | 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹3,000 meets the ₹500 minimum. |
@@ -212,7 +212,7 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 | 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
 | 4 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Priya Singh'. |
 | 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | 2ms | — | Member EMP002 (Priya Singh, SELF) found in roster. |
+| 6 | adjudication_engine | eligibility.member | PASS | 4ms | — | Member EMP002 (Priya Singh, SELF) found in roster. |
 | 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-15. |
 | 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
 | 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹12,000 meets the ₹500 minimum. |
@@ -257,7 +257,7 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 | 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
 | 4 | document_verifier | patient consistency | SKIPPED | <1ms | — | No patient name could be read from any document; nothing to cross-check. |
 | 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | 1ms | — | Member EMP007 (Suresh Patil, SELF) found in roster. |
+| 6 | adjudication_engine | eligibility.member | PASS | 3ms | — | Member EMP007 (Suresh Patil, SELF) found in roster. |
 | 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-11-02. |
 | 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
 | 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹15,000 meets the ₹500 minimum. |
@@ -302,7 +302,7 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 | 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
 | 4 | document_verifier | patient consistency | SKIPPED | <1ms | — | No patient name could be read from any document; nothing to cross-check. |
 | 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | 2ms | — | Member EMP003 (Amit Verma, SELF) found in roster. |
+| 6 | adjudication_engine | eligibility.member | PASS | 3ms | — | Member EMP003 (Amit Verma, SELF) found in roster. |
 | 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-20. |
 | 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
 | 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹7,500 meets the ₹500 minimum. |
@@ -398,11 +398,11 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 | # | Component | Action | Outcome | Took | Δ conf | Detail |
 |---|-----------|--------|---------|------|--------|--------|
 | 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP010 for CONSULTATION, treatment 2024-11-03, amount ₹4500, 2 document(s). |
-| 2 | document_verifier | required document types | PASS | 3ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
+| 2 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
 | 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
 | 4 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Deepak Shah'. |
 | 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP010 (Deepak Shah, SELF) found in roster. |
+| 6 | adjudication_engine | eligibility.member | PASS | 4ms | — | Member EMP010 (Deepak Shah, SELF) found in roster. |
 | 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-11-03. |
 | 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
 | 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹4,500 meets the ₹500 minimum. |
@@ -450,10 +450,10 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 |---|-----------|--------|---------|------|--------|--------|
 | 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP006 for ALTERNATIVE_MEDICINE, treatment 2024-10-28, amount ₹4000, 2 document(s). |
 | 2 | document_verifier | required document types | PASS | <1ms | — | All required types for ALTERNATIVE_MEDICINE present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
-| 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
+| 3 | extraction_agent | extract structured data from documents | SKIPPED | 1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
 | 4 | document_verifier | patient consistency | SKIPPED | <1ms | — | No patient name could be read from any document; nothing to cross-check. |
 | 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | 3ms | — | Member EMP006 (Kavita Nair, SELF) found in roster. |
+| 6 | adjudication_engine | eligibility.member | PASS | 1ms | — | Member EMP006 (Kavita Nair, SELF) found in roster. |
 | 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-28. |
 | 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
 | 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹4,000 meets the ₹500 minimum. |
@@ -497,7 +497,7 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 | 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
 | 4 | document_verifier | patient consistency | SKIPPED | <1ms | — | No patient name could be read from any document; nothing to cross-check. |
 | 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | 1ms | — | Member EMP009 (Anita Desai, SELF) found in roster. |
+| 6 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP009 (Anita Desai, SELF) found in roster. |
 | 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-18. |
 | 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
 | 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹8,000 meets the ₹500 minimum. |
@@ -538,8 +538,8 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 | # | Component | Action | Outcome | Took | Δ conf | Detail |
 |---|-----------|--------|---------|------|--------|--------|
 | 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | 8.4s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | 1.4s | — | F002: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
+| 2 | document_verifier | document classification | PASS | 8.8s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.8s | — | F002: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
 | 4 | document_verifier | required document types | FAIL | <1ms | — | Missing required type(s): HOSPITAL_BILL. Uploaded: PRESCRIPTION (prescription_rajesh.jpg), PRESCRIPTION (prescription_followup.jpg). |
 | 5 | document_verifier | verification stopped | FAIL | <1ms | — | 1 document problem(s) found; processing stopped before any decision. The claim is returned to the member with instructions. |
 
@@ -562,8 +562,8 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 | # | Component | Action | Outcome | Took | Δ conf | Detail |
 |---|-----------|--------|---------|------|--------|--------|
 | 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP004 for PHARMACY, treatment 2024-10-25, amount ₹800, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | 1.3s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
-| 3 | document_verifier | image legibility | FAIL | 66ms | — | F002 ('pharmacy_bill_unreadable.jpg') measured focus score 0.42, below the legibility floor of 2.0 — the image carries no readable detail. Classification and extraction skipped; nothing can be read from it. |
+| 2 | document_verifier | document classification | PASS | 1.8s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
+| 3 | document_verifier | image legibility | FAIL | 51ms | — | F002 ('pharmacy_bill_unreadable.jpg') measured focus score 0.42, below the legibility floor of 2.0 — the image carries no readable detail. Classification and extraction skipped; nothing can be read from it. |
 | 4 | document_verifier | required document types | SKIPPED | <1ms | — | 1 document(s) could not be read, so their type is unknown; the PHARMACY requirement (PRESCRIPTION, PHARMACY_BILL) is re-checked once a legible copy is uploaded. |
 | 5 | document_verifier | readability check | FAIL | <1ms | — | 'pharmacy_bill_unreadable.jpg' is unreadable. Claim not rejected; a re-upload of this one document is all that is required. |
 | 6 | document_verifier | verification stopped | FAIL | <1ms | — | 1 document problem(s) found; processing stopped before any decision. The claim is returned to the member with instructions. |
@@ -587,10 +587,10 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 | # | Component | Action | Outcome | Took | Δ conf | Detail |
 |---|-----------|--------|---------|------|--------|--------|
 | 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | 1.9s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | 1.3s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 2 | document_verifier | document classification | PASS | 2.0s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.7s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
 | 4 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_rajesh.jpg), HOSPITAL_BILL (hospital_bill_arjun_mehta.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 3.1s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 3.8s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
 | 6 | document_verifier | patient consistency | FAIL | <1ms | — | Documents name different patients: PRESCRIPTION ('prescription_rajesh.jpg') is for Rajesh Kumar; HOSPITAL_BILL ('hospital_bill_arjun_mehta.jpg') is for Arjun Mehta. |
 | 7 | document_verifier | verification stopped | FAIL | <1ms | — | 1 document problem(s) found after reading the documents; processing stopped before any decision. |
 
@@ -619,13 +619,13 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 | # | Component | Action | Outcome | Took | Δ conf | Detail |
 |---|-----------|--------|---------|------|--------|--------|
 | 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | 1.2s | — | F001: classified as PRESCRIPTION (conf 0.98), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | 1.5s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 2 | document_verifier | document classification | PASS | 1.8s | — | F001: classified as PRESCRIPTION (conf 0.98), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 2.6s | — | F002: classified as HOSPITAL_BILL (conf 0.98), quality GOOD. |
 | 4 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_rajesh.jpg), HOSPITAL_BILL (hospital_bill_city_clinic.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 2.5s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 2.9s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
 | 6 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Rajesh Kumar'. |
 | 7 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 8 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP001 (Rajesh Kumar, SELF) found in roster. |
+| 8 | adjudication_engine | eligibility.member | PASS | 1ms | — | Member EMP001 (Rajesh Kumar, SELF) found in roster. |
 | 9 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-11-01. |
 | 10 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
 | 11 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹1,500 meets the ₹500 minimum. |
@@ -669,13 +669,13 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 | # | Component | Action | Outcome | Took | Δ conf | Detail |
 |---|-----------|--------|---------|------|--------|--------|
 | 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP005 for CONSULTATION, treatment 2024-10-15, amount ₹3000, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | 1.2s | — | F001: classified as PRESCRIPTION (conf 0.98), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | 1.4s | — | F002: classified as HOSPITAL_BILL (conf 0.98), quality GOOD. |
+| 2 | document_verifier | document classification | PASS | 2.3s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.9s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
 | 4 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_vikram_diabetes.jpg), HOSPITAL_BILL (hospital_bill_vikram.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 2.0s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 3.7s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
 | 6 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Vikram Joshi'. |
 | 7 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 8 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP005 (Vikram Joshi, SELF) found in roster. |
+| 8 | adjudication_engine | eligibility.member | PASS | 1ms | — | Member EMP005 (Vikram Joshi, SELF) found in roster. |
 | 9 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-15. |
 | 10 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
 | 11 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹3,000 meets the ₹500 minimum. |
@@ -718,9 +718,9 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 | # | Component | Action | Outcome | Took | Δ conf | Detail |
 |---|-----------|--------|---------|------|--------|--------|
 | 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP002 for DENTAL, treatment 2024-10-15, amount ₹12000, 1 document(s). |
-| 2 | document_verifier | document classification | PASS | 1.3s | — | F001: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 2 | document_verifier | document classification | PASS | 1.9s | — | F001: classified as HOSPITAL_BILL (conf 0.98), quality GOOD. |
 | 3 | document_verifier | required document types | PASS | <1ms | — | All required types for DENTAL present (HOSPITAL_BILL). Uploaded: HOSPITAL_BILL (dental_bill_priya.jpg). |
-| 4 | extraction_agent | extract structured data from documents | PASS | 1.9s | — | 1 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 4 | extraction_agent | extract structured data from documents | PASS | 3.2s | — | 1 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
 | 5 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Priya Singh'. |
 | 6 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
 | 7 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP002 (Priya Singh, SELF) found in roster. |
@@ -766,11 +766,11 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 | # | Component | Action | Outcome | Took | Δ conf | Detail |
 |---|-----------|--------|---------|------|--------|--------|
 | 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP007 for DIAGNOSTIC, treatment 2024-11-02, amount ₹15000, 3 document(s). |
-| 2 | document_verifier | document classification | PASS | 1.4s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | 1.3s | — | F002: classified as DIAGNOSTIC_REPORT (conf 0.95), quality GOOD. |
-| 4 | document_verifier | document classification | PASS | 1.4s | — | F003: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 2 | document_verifier | document classification | PASS | 1.6s | — | F001: classified as PRESCRIPTION (conf 0.95), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.5s | — | F002: classified as DIAGNOSTIC_REPORT (conf 0.95), quality GOOD. |
+| 4 | document_verifier | document classification | PASS | 1.8s | — | F003: classified as HOSPITAL_BILL (conf 0.98), quality GOOD. |
 | 5 | document_verifier | required document types | PASS | <1ms | — | All required types for DIAGNOSTIC present (PRESCRIPTION, LAB_REPORT, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_suresh_mri.jpg), DIAGNOSTIC_REPORT (lab_report_suresh_mri.jpg), HOSPITAL_BILL (hospital_bill_suresh_mri.jpg). |
-| 6 | extraction_agent | extract structured data from documents | PASS | 2.3s | — | 3 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 6 | extraction_agent | extract structured data from documents | PASS | 3.1s | — | 3 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
 | 7 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Suresh Patil'. |
 | 8 | document_verifier | registration format | DEGRADED | <1ms | -0.05 | Registration 'AP67890/2017' on F001 does not match known state formats; unverified. |
 | 9 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
@@ -815,10 +815,10 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 | # | Component | Action | Outcome | Took | Δ conf | Detail |
 |---|-----------|--------|---------|------|--------|--------|
 | 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP003 for CONSULTATION, treatment 2024-10-20, amount ₹7500, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | 1.6s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | 1.5s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 2 | document_verifier | document classification | PASS | 2.9s | — | F001: classified as PRESCRIPTION (conf 0.96), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 2.4s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
 | 4 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_amit_gastro.jpg), HOSPITAL_BILL (hospital_bill_amit.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 2.0s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 3.7s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
 | 6 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Amit Verma'. |
 | 7 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
 | 8 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP003 (Amit Verma, SELF) found in roster. |
@@ -868,13 +868,13 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 | # | Component | Action | Outcome | Took | Δ conf | Detail |
 |---|-----------|--------|---------|------|--------|--------|
 | 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP008 for CONSULTATION, treatment 2024-10-30, amount ₹4800, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | 1.1s | — | F001: classified as PRESCRIPTION (conf 0.98), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | 1.3s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 2 | document_verifier | document classification | PASS | 1.4s | — | F001: classified as PRESCRIPTION (conf 0.98), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 2.7s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
 | 4 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_ravi_migraine.jpg), HOSPITAL_BILL (hospital_bill_ravi.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 2.1s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 3.8s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
 | 6 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Ravi Menon'. |
 | 7 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 8 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP008 (Ravi Menon, SELF) found in roster. |
+| 8 | adjudication_engine | eligibility.member | PASS | 1ms | — | Member EMP008 (Ravi Menon, SELF) found in roster. |
 | 9 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-30. |
 | 10 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
 | 11 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹4,800 meets the ₹500 minimum. |
@@ -918,13 +918,13 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 | # | Component | Action | Outcome | Took | Δ conf | Detail |
 |---|-----------|--------|---------|------|--------|--------|
 | 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP010 for CONSULTATION, treatment 2024-11-03, amount ₹4500, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | 1.3s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | 1.3s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 2 | document_verifier | document classification | PASS | 2.8s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 3.6s | — | F002: classified as HOSPITAL_BILL (conf 0.98), quality GOOD. |
 | 4 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_deepak_apollo.jpg), HOSPITAL_BILL (hospital_bill_apollo_deepak.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 2.4s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 4.8s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
 | 6 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Deepak Shah'. |
 | 7 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 8 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP010 (Deepak Shah, SELF) found in roster. |
+| 8 | adjudication_engine | eligibility.member | PASS | 1ms | — | Member EMP010 (Deepak Shah, SELF) found in roster. |
 | 9 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-11-03. |
 | 10 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
 | 11 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹4,500 meets the ₹500 minimum. |
@@ -971,10 +971,10 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 | # | Component | Action | Outcome | Took | Δ conf | Detail |
 |---|-----------|--------|---------|------|--------|--------|
 | 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP006 for ALTERNATIVE_MEDICINE, treatment 2024-10-28, amount ₹4000, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | 1.4s | — | F001: classified as PRESCRIPTION (conf 0.98), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | 1.2s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 2 | document_verifier | document classification | PASS | 2.9s | — | F001: classified as PRESCRIPTION (conf 0.95), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 2.7s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
 | 4 | document_verifier | required document types | PASS | <1ms | — | All required types for ALTERNATIVE_MEDICINE present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_kavita_ayurveda.jpg), HOSPITAL_BILL (hospital_bill_ayur_wellness.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 2.0s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 3.5s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
 | 6 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Kavita Nair'. |
 | 7 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
 | 8 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP006 (Kavita Nair, SELF) found in roster. |
@@ -1017,10 +1017,10 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 | # | Component | Action | Outcome | Took | Δ conf | Detail |
 |---|-----------|--------|---------|------|--------|--------|
 | 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP009 for CONSULTATION, treatment 2024-10-18, amount ₹8000, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | 1.4s | — | F001: classified as PRESCRIPTION (conf 0.90), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | 1.5s | — | F002: classified as HOSPITAL_BILL (conf 0.98), quality GOOD. |
+| 2 | document_verifier | document classification | PASS | 2.1s | — | F001: classified as PRESCRIPTION (conf 0.95), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.6s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
 | 4 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_anita_bariatric.jpg), HOSPITAL_BILL (hospital_bill_anita_bariatric.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 2.0s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 3.9s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
 | 6 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Anita Desai'. |
 | 7 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
 | 8 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP009 (Anita Desai, SELF) found in roster. |
