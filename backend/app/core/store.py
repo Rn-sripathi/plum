@@ -39,6 +39,7 @@ class ClaimStore(Protocol):
     def save(self, submission: ClaimSubmission, result: ClaimDecision | DocumentProblemReport) -> None: ...
     def get(self, claim_id: str) -> dict | None: ...
     def list_recent(self, limit: int = 50) -> list[dict]: ...
+    def list_full(self, limit: int = 500) -> list[dict]: ...
     def healthy(self) -> bool: ...
 
 
@@ -93,6 +94,20 @@ class SqliteClaimStore:
                 (limit,),
             ).fetchall()
         return [dict(r) for r in rows]
+
+    def list_full(self, limit: int = 500) -> list[dict]:
+        """Recent claims with their decisions, for aggregation.
+
+        Reading the results in one query is the point: the alternative is a
+        `get` per claim, and portfolio figures should not cost N round-trips.
+        """
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT claim_id, submitted_at, member_id, category, status, result "
+                "FROM claims ORDER BY submitted_at DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [{**dict(r), "result": json.loads(r["result"])} for r in rows]
 
     def healthy(self) -> bool:
         try:
@@ -187,6 +202,26 @@ class PostgresClaimStore:
                 "member_id": r[2],
                 "category": r[3],
                 "status": r[4],
+            }
+            for r in rows
+        ]
+
+    def list_full(self, limit: int = 500) -> list[dict]:
+        """Recent claims with their decisions, for aggregation (see SQLite)."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT claim_id, submitted_at, member_id, category, status, result "
+                "FROM claims ORDER BY submitted_at DESC LIMIT %s",
+                (limit,),
+            ).fetchall()
+        return [
+            {
+                "claim_id": r[0],
+                "submitted_at": r[1].isoformat(),
+                "member_id": r[2],
+                "category": r[3],
+                "status": r[4],
+                "result": r[5],  # JSONB comes back parsed
             }
             for r in rows
         ]

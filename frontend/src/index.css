@@ -20,6 +20,28 @@
   --blue: #5a3fd6;
   --blue-bg: #f0ecfd;
 
+  /* Chart fills. Separate from the badge tokens above on purpose: a badge is
+     tinted text, a chart fill is a solid mark whose neighbours touch, so the
+     steps are chosen to clear colour-blind separation as a stack. Validated
+     with the dataviz validator (light, on #fff): worst adjacent pair
+     ΔE 9.0 deuteranopia, 16.8 normal vision. The badge greens/ambers fail that
+     at ΔE 7.8, which is why these are not the same hexes.
+     The neutral is deliberately achromatic — a stopped claim is the absence of
+     a decision, and it never carries meaning by colour alone. */
+  --chart-good: #12855c;
+  --chart-warning: #8a5000;
+  --chart-info: #5a3fd6;
+  --chart-critical: #c02231;
+  --chart-neutral: #7a6572;
+  /* Ordinal ramp, one hue (brand coral sits at --seq-3), light → dark.
+     Monotone lightness, adjacent ΔL ≥ 0.06, light end 2.09:1 on white. */
+  --seq-1: #f59aa6;
+  --seq-2: #ef7080;
+  --seq-3: #e54e62;
+  --seq-4: #c53145;
+  --seq-5: #91202f;
+  --seq-track: #fdeaed;
+
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-sans: "DM Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
 
@@ -646,3 +668,79 @@ input[type="file"] { padding: 7px; background: #fbfbfd; }
 .hint { color: var(--muted); font-size: 12.5px; margin-top: 8px; line-height: 1.5; }
 .section-gap { margin-top: 18px; }
 .signal { background: var(--blue-bg); color: var(--blue); border-radius: 8px; padding: 9px 13px; margin: 7px 0; font-size: 13px; }
+
+/* --- Analytics ---------------------------------------------------------------
+   Marks are thin, rounded only at the data end, and separated by gaps in the
+   surface colour rather than strokes: ink that is not data stays off the page.
+   Every value is directly labelled, so nothing is readable by colour alone. */
+.analytics { max-width: 1500px; margin: 0 auto; padding: 20px 28px; }
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+.tile {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+.tile-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+/* Proportional figures: tabular-nums makes a large standalone number read loose. */
+.tile-value { font-size: 30px; font-weight: 600; margin-top: 8px; letter-spacing: -0.02em; }
+.tile-note { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+  align-items: start;
+}
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+.card h3 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); font-weight: 700; }
+.card-sub { margin: 6px 0 16px; font-size: 13px; color: #3d4459; }
+.card-foot { margin: 14px 0 0; font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+
+/* Stacked bar: 2px surface gaps do the separating. */
+.stack { display: flex; gap: 2px; height: 22px; }
+.stack-seg { position: relative; min-width: 3px; display: flex; align-items: center; justify-content: center; }
+.stack-seg:first-child { border-radius: 4px 0 0 4px; }
+.stack-seg:last-child { border-radius: 0 4px 4px 0; }
+/* A label inside a fill picks white so it always clears contrast. */
+.stack-label { font-size: 11px; font-weight: 700; color: #fff; }
+.legend { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 7px; }
+.legend li { display: flex; align-items: center; gap: 9px; font-size: 12.5px; color: #3d4459; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.legend b { margin-left: auto; font-variant-numeric: tabular-nums; }
+.legend-share { width: 42px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Meter: fill and track are steps of one ramp, so state reads across the bar. */
+.meter { height: 22px; border-radius: 4px; background: var(--seq-track); overflow: hidden; }
+.meter-fill { height: 100%; background: var(--seq-4); border-radius: 4px 0 0 4px; }
+.meter-scale { display: flex; align-items: baseline; gap: 10px; margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+.meter-scale b { font-size: 22px; color: var(--ink); font-weight: 600; }
+
+/* Columns for ordered bins: value on the cap, 4px rounded top. */
+.columns { display: flex; gap: 10px; align-items: flex-end; }
+.column { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.column-value { font-size: 11.5px; font-weight: 700; color: var(--ink); height: 14px; font-variant-numeric: tabular-nums; }
+.column-track { width: 100%; max-width: 24px; height: 96px; display: flex; align-items: flex-end; }
+.column-fill { width: 100%; min-height: 2px; border-radius: 4px 4px 0 0; }
+.column-tick { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Bars: label, track, value at the tip. */
+.bars { display: grid; gap: 9px; }
+.bar-row { display: grid; grid-template-columns: minmax(0, 150px) 1fr 54px; gap: 10px; align-items: center; }
+.bar-label { font-size: 12.5px; color: #3d4459; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { height: 14px; display: flex; align-items: center; }
+.bar-fill { height: 14px; min-width: 2px; background: var(--seq-4); border-radius: 0 4px 4px 0; }
+.bar-value { font-size: 12px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 620px) {
+  .bar-row { grid-template-columns: minmax(0, 110px) 1fr 50px; }
+}

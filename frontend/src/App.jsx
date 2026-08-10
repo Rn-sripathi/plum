@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Analytics from "./components/Analytics";
 import { api } from "./api";
 import ClaimsList from "./components/ClaimsList";
 import DocView, { DocsPage } from "./components/DocView";
@@ -86,6 +87,14 @@ export default function App() {
           </button>
           <button
             type="button"
+            className={view === "analytics" ? "nav-link active" : "nav-link"}
+            onMouseEnter={() => setMenuOpen(false)}
+            onClick={() => go("analytics")}
+          >
+            <Sign /> Analytics
+          </button>
+          <button
+            type="button"
             className={view === "claims" ? "nav-link active" : "nav-link"}
             onMouseEnter={() => setMenuOpen(false)}
             onClick={() => go("claims")}
@@ -119,6 +128,10 @@ export default function App() {
         <main className="layout">
           <SubmitForm onResult={handleResult} onStep={handleStep} onStart={handleStart} />
           <ResultView result={result} liveSteps={liveSteps} />
+        </main>
+      ) : view === "analytics" ? (
+        <main>
+          <Analytics />
         </main>
       ) : view === "claims" ? (
         <main className="layout claims-layout">

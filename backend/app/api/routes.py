@@ -16,6 +16,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import ValidationError
 
+from app.core.analytics import summarize
 from app.core.config import REPO_ROOT, settings
 from app.core.errors import ComponentUnavailable, IntakeError
 from app.eval.runner import run_all
@@ -215,6 +216,20 @@ def submit_claim_with_files(
 @router.get("/claims")
 def list_claims(request: Request, limit: int = 50) -> list[dict]:
     return request.app.state.store.list_recent(limit)
+
+
+@router.get("/analytics")
+def analytics(request: Request, limit: int = 500) -> dict:
+    """Portfolio figures over recent decisions.
+
+    A store outage is not a reason to fail the page: it returns empty totals so
+    the view can say the store is unreachable rather than erroring.
+    """
+    try:
+        records = request.app.state.store.list_full(limit)
+    except Exception as exc:
+        return {"available": False, "reason": str(exc), **summarize([])}
+    return {"available": True, "window": limit, **summarize(records)}
 
 
 @router.get("/claims/{claim_id}")

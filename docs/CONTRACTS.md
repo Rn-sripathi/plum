@@ -81,8 +81,8 @@ descriptions and validation rules).
 
 | | |
 |---|---|
-| **Input** | `save(ClaimSubmission, result)`, `get(claim_id)`, `list_recent(limit)`, `healthy()` |
-| **Output** | Stored record: `{claim_id, submitted_at, member_id, category, status, submission, result}` (result includes the full trace) |
+| **Input** | `save(ClaimSubmission, result)`, `get(claim_id)`, `list_recent(limit)`, `list_full(limit)`, `healthy()` |
+| **Output** | Stored record: `{claim_id, submitted_at, member_id, category, status, submission, result}` (result includes the full trace). `list_recent` returns the index columns only; `list_full` adds `result` in one query, so aggregation never costs a round-trip per claim |
 | **Raises** | `sqlite3.Error` — callers treat persistence failure as a warning on the response, never a crash |
 | **Guarantees** | `ClaimStore` is a `Protocol`; SQLite is the zero-setup default, Postgres is a drop-in second implementation. |
 
@@ -93,5 +93,6 @@ descriptions and validation rules).
 | `POST /claims` | `ClaimSubmission` JSON → 200 with `ClaimDecision` or `DocumentProblemReport` (+ `persistence` flag). 422 invalid payload, 400 `IntakeError`, 503 `ComponentUnavailable` with retry guidance |
 | `POST /claims/upload` | multipart: `metadata` JSON + `files` + `document_types` → same as above via the vision path |
 | `GET /claims` / `GET /claims/{id}` / `GET /claims/{id}/trace` | Stored records; 404 when unknown |
+| `GET /analytics` | Portfolio figures over the most recent `limit` claims: decision mix, payout ratio, confidence distribution, stop reasons, per-stage time, degraded runs. A stopped claim counts toward volume and stop reasons, never toward money or confidence. Store outage → 200 with `available: false` and empty totals, never a 5xx (see `core/analytics.py` for the definitions) |
 | `GET /eval/cases` / `POST /eval/run` | The 12 assignment cases; run them and return per-case matched/mismatch |
 | `GET /health` | Component status: policy id, member count, store health, LLM mode |

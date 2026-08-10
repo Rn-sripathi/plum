@@ -110,6 +110,7 @@ export const api = {
   },
   getClaim: (id) => request(`/claims/${id}`),
   listClaims: () => request("/claims"),
+  analytics: () => request("/analytics"),
   evalCases: () => request("/eval/cases"),
   runEval: () => request("/eval/run", { method: "POST" }),
 };

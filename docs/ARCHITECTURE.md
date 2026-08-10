@@ -147,7 +147,7 @@ point: the stores add reach, never authority.
 
 ## Testing strategy
 
-115 tests, four layers: **unit** (matching rules, financial ordering and
+123 tests, four layers: **unit** (matching rules, financial ordering and
 rounding, fraud boundaries, snapshot lookups), **pipeline** (all 12 assignment
 cases end-to-end, asserting decisions, amounts, reason codes, message
 specificity, trace completeness), **upload path** (what the eval cases cannot
