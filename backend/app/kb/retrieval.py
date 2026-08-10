@@ -77,6 +77,19 @@ class Unavailable(Exception):
         self.detail = detail
 
 
+def anchor(heading: str) -> str:
+    """A citable anchor for a document heading.
+
+    Headings in the eval report carry status emoji ("## TC002 — Unreadable
+    Document ✅"), and a model asked to quote such a reference back mangles the
+    emoji — which failed the grounding gate on a citation that was correct. An
+    anchor a model can reproduce from ASCII is the fix, and it matches how
+    markdown renderers slug headings anyway.
+    """
+    kept = [c if c.isalnum() else " " for c in heading.lower()]
+    return "-".join("".join(kept).split())
+
+
 def _walk(data: Any, path: str) -> Any:
     """Resolve a dotted `rule_ref` path (with `[i]` indexes) through plain data.
 
@@ -224,7 +237,7 @@ class KnowledgeBase:
             overlap,
             {
                 # Same key as a policy citation so the grounding gate sees it.
-                "rule_ref": f"docs/{slug}#{heading}",
+                "rule_ref": f"docs/{slug}#{anchor(heading)}",
                 "heading": heading,
                 "excerpt": text[:900],
             },

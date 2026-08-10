@@ -255,6 +255,33 @@ def test_an_answer_that_cites_nothing_is_not_grounded(kb):
     assert any(r.startswith("no citation") for r in result.refusals)
 
 
+def test_doc_anchors_are_reproducible_from_ascii(kb):
+    """Eval-report headings carry status emoji, and a model asked to quote one
+    back mangles it — which failed the gate on a citation that was correct."""
+    from app.kb.retrieval import anchor
+
+    assert anchor("TC002 — Unreadable Document ✅") == "tc002-unreadable-document"
+    assert anchor("Adjudication rule order (deterministic)") == "adjudication-rule-order-deterministic"
+    found = kb.search_docs("unreadable blurred document re-upload")
+    assert all(r.isascii() for r in [s["rule_ref"] for s in found["sections"]])
+
+
+def test_a_citation_differing_only_in_decoration_still_counts(kb):
+    """Rejecting a citation over case or punctuation teaches the reader to
+    distrust a banner that fired on a typo."""
+    assistant = Assistant(Settings(openai_api_key=None), chat_fn=scripted(
+        {"tool_calls": [{"id": "1", "name": "lookup_policy",
+                         "arguments": {"path": "coverage.per_claim_limit"}}]},
+        answer_round("The per-claim limit is 5000.",
+                     [{"kind": "policy", "ref": "Coverage.Per_Claim_Limit"}]),
+    ))
+    result = ask(assistant, kb, "What is the per-claim limit?")
+
+    assert result.grounded is True
+    # Quoted back the way the source spells it, not the way the model typed it.
+    assert [c.ref for c in result.citations] == ["coverage.per_claim_limit"]
+
+
 def test_the_project_documents_are_searchable_and_citable(kb):
     """How the system behaves is written down; answering it from the model's own
     knowledge sounds right and is sourced from nothing."""

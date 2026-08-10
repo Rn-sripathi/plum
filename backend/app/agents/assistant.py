@@ -236,6 +236,11 @@ def _openai_chat(settings: Settings) -> ChatFn:
     return chat
 
 
+def _norm_ref(ref: str) -> str:
+    """A reference stripped to what identifies it: letters and digits, folded."""
+    return "".join(c for c in ref.lower() if c.isalnum())
+
+
 def _digits(text: str) -> str:
     return text.replace(",", "").rstrip("0").rstrip(".") if "." in text else text.replace(",", "")
 
@@ -379,7 +384,17 @@ class Assistant:
         }
 
         refusals: list[str] = []
-        invented = [c.ref for c in citations if c.ref not in allowed_refs]
+        # Compared on a normalised form: a citation that differs from the
+        # retrieved reference only in case, punctuation or decoration is the same
+        # reference, and rejecting it teaches the reader to distrust a banner
+        # that fired on a typo. Normalising cannot make a *different* clause
+        # match, so the check keeps its teeth.
+        retrieved_by_norm = {_norm_ref(ref): ref for ref in allowed_refs}
+        invented = [c.ref for c in citations if _norm_ref(c.ref) not in retrieved_by_norm]
+        for citation in citations:
+            canonical = retrieved_by_norm.get(_norm_ref(citation.ref))
+            if canonical:
+                citation.ref = canonical  # quote it back as the source spells it
         if invented:
             refusals.append(f"citations not retrieved this turn: {', '.join(invented)}")
         # An answer with no citations passes a check that only validates the
