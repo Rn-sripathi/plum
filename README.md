@@ -7,7 +7,7 @@ a confidence score, and a complete decision trace for every claim.
 **Docs:** [Architecture](docs/ARCHITECTURE.md) ·
 [Component Contracts](docs/CONTRACTS.md) ·
 [Assumptions](docs/ASSUMPTIONS.md) ·
-[Eval Report — 12/12](docs/EVAL_REPORT.md) ·
+[Eval Report — 12/12 structured, 12/12 uploaded](docs/EVAL_REPORT.md) ·
 [Demo Script](docs/DEMO_SCRIPT.md)
 
 ## Quick start
@@ -78,13 +78,17 @@ disabled). Generate demo documents for the real-upload path with
 
 ```bash
 cd backend
-uv run pytest                      # 83 tests (85 with store credentials set)
-uv run python -m app.eval.runner   # regenerates docs/EVAL_REPORT.md (12/12)
+uv run pytest                                    # 113 tests (115 with store credentials set)
+uv run python -m app.eval.runner                 # regenerates docs/EVAL_REPORT.md (12/12)
+uv run python -m app.eval.runner --with-uploads  # adds the vision run (needs OPENAI_API_KEY)
 ```
 
-The eval passes **12/12 both ways**: on the deterministic tier (no accounts,
-no API key — reproducible anywhere) and routed through the live knowledge
-stores (`--with-kb`).
+The eval passes **12/12 on every path**: the deterministic tier (no accounts,
+no API key — reproducible anywhere), routed through the live knowledge stores
+(`--with-kb`), and as real document uploads classified and read by GPT-4o
+vision (`--with-uploads`). The last of those is the only one that can catch a
+fault in *reading* a document — the structured cases arrive pre-typed, so they
+are handed the answers.
 
 ## Repo layout
 
