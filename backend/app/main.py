@@ -9,11 +9,12 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.agents.assistant import Assistant
 from app.agents.llm import DocumentAI
 from app.api.routes import register_error_handlers, router
-from app.core.config import settings
+from app.core.config import REPO_ROOT, settings
 from app.core.store import SqliteClaimStore, make_store
 from app.kb.graph import PolicyGraph
 from app.kb.semantic import SemanticPolicyIndex
@@ -51,6 +52,15 @@ def create_app(database_path: Path | None = None) -> FastAPI:
     )
     app.include_router(router)
     register_error_handlers(app)
+
+    # Serve the built console from the same origin when it exists, so a
+    # deployment is one service and one URL — no CORS to configure and no API
+    # address to bake into the bundle. Mounted last: the API routes are matched
+    # first, and `html=True` sends index.html for anything else.
+    console = REPO_ROOT / "frontend" / "dist"
+    if (console / "index.html").is_file():
+        app.mount("/", StaticFiles(directory=console, html=True), name="console")
+
     return app
 
 

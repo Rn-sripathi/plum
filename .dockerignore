@@ -1,0 +1,12 @@
+# Keep the build context small and the image free of local state.
+**/node_modules
+**/dist
+**/.venv
+**/__pycache__
+**/*.pyc
+.git
+.pytest_cache
+data/uploads
+data/qdrant
+data/claims.db
+backend/.env

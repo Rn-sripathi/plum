@@ -1,4 +1,13 @@
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+/**
+ * Where the API lives.
+ *
+ * `??` rather than `||` on purpose: the deployed build sets VITE_API_URL to the
+ * empty string, meaning "same origin as this page", because one service serves
+ * both the API and this bundle. An empty string is falsy, so `||` would fall
+ * through to localhost and the deployed app would call the reviewer's machine.
+ * Unset (local dev, two servers) still defaults to the backend's own port.
+ */
+const BASE = (import.meta.env.VITE_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 async function request(path, options = {}) {
   const resp = await fetch(`${BASE}${path}`, {

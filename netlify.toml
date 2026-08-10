@@ -1,0 +1,23 @@
+# Netlify serves the console only. The API is a long-lived process — SSE
+# streaming, a ~10s cold start, native imaging deps, a writable uploads
+# directory — so it runs on a process host and this build points at it.
+#
+# Set VITE_API_URL in Netlify → Site configuration → Environment variables to
+# the deployed API's base URL, e.g. https://plum-claims.onrender.com
+# (no trailing slash; api.js strips one if present).
+
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# The console keeps its views in state rather than in the URL, so there are no
+# deep links to rewrite — but a reviewer who refreshes on any path should still
+# get the app rather than a 404.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -74,6 +74,47 @@ uv run python -m app.eval.runner --with-kb # 12/12 through the live stores
 disabled). Generate demo documents for the real-upload path with
 `uv run python scripts/make_mock_docs.py`.
 
+## Deploying
+
+The console is a static bundle; the API is a long-lived process — Server-Sent
+Events for the streaming trace, a ~10s cold start, native imaging dependencies,
+and a writable uploads directory. So they deploy differently, and the API cannot
+go on a static or serverless host.
+
+**Console — Vercel or Netlify** (pick one; both are free and zero-config)
+
+| | Vercel | Netlify |
+|---|---|---|
+| Setup | Import the repo, set **Root Directory** to `frontend`; Vite is auto-detected | `netlify.toml` in this repo already sets base/command/publish |
+| Required env var | `VITE_API_URL` = the API's base URL, no trailing slash | same |
+
+`VITE_API_URL` is read with `??`, not `||`, so the empty string means *same
+origin* — that is what the single-service Docker path uses.
+
+**API — Render** (native Python, no container)
+
+`render.yaml` is a blueprint: Render → New → Blueprint → this repo. Then set the
+secrets it marks `sync: false`. Alternatively, `Dockerfile` at the repo root
+builds console and API into one image that serves both from one origin — use it
+for Fly, Koyeb, or any container host, which also removes the `VITE_API_URL` and
+CORS coordination.
+
+**Everything optional is optional.** With no secrets set at all the deployment
+still runs and the 12-case eval still passes: documents are trusted by their
+declared type, the assistant retrieves clauses without explaining them, and the
+stores fall back per the table in [ARCHITECTURE.md](docs/ARCHITECTURE.md). Set
+`OPENAI_API_KEY`, `DATABASE_URL` and the `NEO4J_*` trio to light up vision, the
+assistant, Postgres and the policy graph.
+
+> **Before exposing a public URL with `OPENAI_API_KEY` set:** there is no
+> authentication, so the API is an open proxy to that key. Set a hard monthly
+> spend limit in the OpenAI dashboard — the worst case should be a dead key, not
+> a bill.
+
+Free tiers sleep. Render wakes in ~10s plus Neon's own cold start, during which
+the console loads instantly and then waits on its first request — worth a
+scheduled ping to `/health` if you are demoing on a link.
+
 ## Tests & eval
 
 ```bash

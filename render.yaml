@@ -1,0 +1,50 @@
+# The API as a native Python service — no container needed.
+#
+# Deploy: Render dashboard → New → Blueprint → point at this repo. Then set the
+# secrets marked `sync: false` below; everything absent falls back per the
+# resilience table in docs/ARCHITECTURE.md, and the 12-case eval passes either
+# way.
+#
+# Note on the free plan: instances sleep after ~15 minutes idle, and this app
+# takes ~10s to start (Neon's own cold start is most of it). A reviewer's first
+# request after a quiet period waits for both. Upgrade the plan, or keep it warm
+# with a scheduled ping to /health, if that matters for a demo.
+
+services:
+  - type: web
+    name: plum-claims-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install uv && uv sync --frozen --no-dev
+    startCommand: uv run --no-dev uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      # Uploaded documents and the embedded vector index need a writable path.
+      # Render's disk is ephemeral on the free plan: documents are readable for
+      # the life of the instance, and the vector index rebuilds on boot. Attach
+      # a disk on a paid plan to make both persist.
+      - key: PLUM_UPLOAD_DIR
+        value: /tmp/plum/uploads
+      - key: PLUM_QDRANT_LOCAL_DIR
+        value: /tmp/plum/qdrant
+      - key: PLUM_DATABASE_FILE
+        value: /tmp/plum/claims.db
+
+      # --- secrets: set these in the dashboard, not in this file -------------
+      # Absent: documents are trusted by declared type, the assistant retrieves
+      # but does not explain, and the semantic tier degrades to token matching.
+      - key: OPENAI_API_KEY
+        sync: false
+      # Absent: SQLite at PLUM_DATABASE_FILE.
+      - key: DATABASE_URL
+        sync: false
+      # Absent: the policy graph is skipped and the snapshot answers.
+      - key: NEO4J_URI
+        sync: false
+      - key: NEO4J_USERNAME
+        sync: false
+      - key: NEO4J_PASSWORD
+        sync: false
