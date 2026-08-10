@@ -11,6 +11,7 @@ configured, `is_configured` is False and callers never attempt a call.
 
 import json
 from pathlib import Path
+from typing import NamedTuple
 
 from app.agents.imaging import MAX_PDF_PAGES, image_parts
 from app.core.config import Settings
@@ -23,15 +24,34 @@ _CLASSIFY_SCHEMA = {
     "schema": {
         "type": "object",
         "properties": {
-            "doc_type": {"type": "string", "enum": [t.value for t in DocumentType]},
-            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
-            "quality": {"type": "string", "enum": [q.value for q in DocumentQuality]},
-            "reason": {"type": "string"},
+            "pages": {
+                "type": "array",
+                "description": "One entry per page supplied, in the same order.",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "doc_type": {"type": "string", "enum": [t.value for t in DocumentType]},
+                        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                        "quality": {"type": "string", "enum": [q.value for q in DocumentQuality]},
+                        "reason": {"type": "string"},
+                    },
+                    "required": ["doc_type", "confidence", "quality", "reason"],
+                    "additionalProperties": False,
+                },
+            }
         },
-        "required": ["doc_type", "confidence", "quality", "reason"],
+        "required": ["pages"],
         "additionalProperties": False,
     },
 }
+
+
+class PageClassification(NamedTuple):
+    """What one page of an uploaded file turned out to be."""
+
+    doc_type: DocumentType
+    confidence: float
+    quality: DocumentQuality
 
 _EXTRACT_SCHEMA = {
     "name": "document_extraction",
@@ -74,9 +94,14 @@ _EXTRACT_SCHEMA = {
     },
 }
 
-_CLASSIFY_PROMPT = """Classify this Indian medical document into exactly one type, using
+_CLASSIFY_PROMPT = """Classify each page of this Indian medical document upload, using
 these definitions. The types are an insurer's categories, not everyday language, so follow
 the definitions even when a document's specialty suggests otherwise.
+
+The images are the pages of ONE uploaded file, in order. Members routinely scan several
+different documents into a single PDF, so classify EVERY page on its own evidence — a
+prescription on page 1 does not make page 2 a prescription. Return one entry per page
+supplied, in order.
 
 DECIDING RULE: if the document's purpose is to charge money — it lists amounts and a total
 payable — it is a BILL, whichever kind of clinic issued it. A dental clinic's invoice is a
@@ -124,16 +149,12 @@ class DocumentAI:
     def is_configured(self) -> bool:
         return self._client is not None
 
-    def _vision_call(
-        self, system: str, image_path: Path, schema: dict, first_page_only: bool = False
-    ) -> tuple[dict, int]:
+    def _vision_call(self, system: str, image_path: Path, schema: dict) -> tuple[dict, int]:
         """Returns the parsed response and the document's page count."""
         if self._client is None:
             raise ComponentUnavailable("llm", "No LLM configured (OPENAI_API_KEY not set).")
         try:
             uris, pages = image_parts(image_path)
-            if first_page_only:
-                uris = uris[:1]
             response = self._client.chat.completions.create(
                 model=self._settings.openai_model,
                 response_format={"type": "json_schema", "json_schema": schema},
@@ -153,16 +174,27 @@ class DocumentAI:
         except Exception as exc:  # SDK/timeouts/network — degrade, never crash the pipeline
             raise ComponentUnavailable("llm", f"LLM call failed after retries: {exc}") from exc
 
-    def classify(self, image_path: Path) -> tuple[DocumentType, float, DocumentQuality]:
-        """Identify a document's type and readability. PDFs classify off page 1."""
-        data, _ = self._vision_call(
-            _CLASSIFY_PROMPT, image_path, _CLASSIFY_SCHEMA, first_page_only=True
-        )
-        return (
-            DocumentType(data["doc_type"]),
-            float(data["confidence"]),
-            DocumentQuality(data["quality"]),
-        )
+    def classify(self, image_path: Path) -> list[PageClassification]:
+        """Identify what each page of an upload is, and how readable it is.
+
+        One entry per page, page 1 first — an image yields exactly one. A PDF
+        is classified page by page in a single call, because a member who
+        scans a prescription and a bill into one file has supplied both
+        documents, and typing the file by its first page would report the
+        second as missing.
+        """
+        data, _ = self._vision_call(_CLASSIFY_PROMPT, image_path, _CLASSIFY_SCHEMA)
+        pages = [
+            PageClassification(
+                DocumentType(page["doc_type"]),
+                float(page["confidence"]) if isinstance(page.get("confidence"), int | float) else 0.0,
+                DocumentQuality(page["quality"]),
+            )
+            for page in (data.get("pages") or [])
+        ]
+        if not pages:
+            raise ComponentUnavailable("llm", "Classifier returned no page classifications.")
+        return pages
 
     def extract(self, image_path: Path, doc_type: DocumentType) -> tuple[DocumentContent, dict[str, float], list[str]]:
         """Extract structured fields with per-field confidence and warnings.
@@ -173,8 +205,15 @@ class DocumentAI:
         data, pages = self._vision_call(
             _EXTRACT_PROMPT.format(doc_type=doc_type.value), image_path, _EXTRACT_SCHEMA
         )
-        confidence = {k: float(v) for k, v in data.pop("field_confidence", {}).items()}
-        warnings = list(data.pop("warnings", []))
+        # A schema constrains the model, it does not guarantee it: gpt-4o
+        # intermittently returns null for a field's score despite the schema
+        # declaring a number. An absent score means "none stated", which reads
+        # the same as no confidence — never a crashed claim.
+        confidence = {
+            k: (float(v) if isinstance(v, int | float) else 0.0)
+            for k, v in (data.pop("field_confidence", None) or {}).items()
+        }
+        warnings = [str(w) for w in (data.pop("warnings", None) or [])]
         if pages > MAX_PDF_PAGES:
             warnings.append(
                 f"Document has {pages} pages; only the first {MAX_PDF_PAGES} were read. "
