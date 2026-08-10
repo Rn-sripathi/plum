@@ -35,11 +35,11 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 
 <details><summary><b>Full trace</b> (3 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
-| 2 | document_verifier | required document types | FAIL | Missing required type(s): HOSPITAL_BILL. Uploaded: PRESCRIPTION (dr_sharma_prescription.jpg), PRESCRIPTION (another_prescription.jpg). |
-| 3 | document_verifier | verification stopped | FAIL | 1 document problem(s) found; processing stopped before any decision. The claim is returned to the member with instructions. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
+| 2 | document_verifier | required document types | FAIL | <1ms | — | Missing required type(s): HOSPITAL_BILL. Uploaded: PRESCRIPTION (dr_sharma_prescription.jpg), PRESCRIPTION (another_prescription.jpg). |
+| 3 | document_verifier | verification stopped | FAIL | <1ms | — | 1 document problem(s) found; processing stopped before any decision. The claim is returned to the member with instructions. |
 
 </details>
 
@@ -57,12 +57,12 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 
 <details><summary><b>Full trace</b> (4 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP004 for PHARMACY, treatment 2024-10-25, amount ₹800, 2 document(s). |
-| 2 | document_verifier | required document types | PASS | All required types for PHARMACY present (PRESCRIPTION, PHARMACY_BILL). Uploaded: PRESCRIPTION (prescription.jpg), PHARMACY_BILL (blurry_bill.jpg). |
-| 3 | document_verifier | readability check | FAIL | 'blurry_bill.jpg' is unreadable. Claim not rejected; a re-upload of this one document is all that is required. |
-| 4 | document_verifier | verification stopped | FAIL | 1 document problem(s) found; processing stopped before any decision. The claim is returned to the member with instructions. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP004 for PHARMACY, treatment 2024-10-25, amount ₹800, 2 document(s). |
+| 2 | document_verifier | required document types | PASS | <1ms | — | All required types for PHARMACY present (PRESCRIPTION, PHARMACY_BILL). Uploaded: PRESCRIPTION (prescription.jpg), PHARMACY_BILL (blurry_bill.jpg). |
+| 3 | document_verifier | readability check | FAIL | <1ms | — | 'blurry_bill.jpg' is unreadable. Claim not rejected; a re-upload of this one document is all that is required. |
+| 4 | document_verifier | verification stopped | FAIL | <1ms | — | 1 document problem(s) found; processing stopped before any decision. The claim is returned to the member with instructions. |
 
 </details>
 
@@ -80,13 +80,13 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 
 <details><summary><b>Full trace</b> (5 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
-| 2 | document_verifier | required document types | PASS | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_rajesh.jpg), HOSPITAL_BILL (bill_arjun.jpg). |
-| 3 | extraction_agent | extract structured data from documents | SKIPPED | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
-| 4 | document_verifier | patient consistency | FAIL | Documents name different patients: PRESCRIPTION ('prescription_rajesh.jpg') is for Rajesh Kumar; HOSPITAL_BILL ('bill_arjun.jpg') is for Arjun Mehta. |
-| 5 | document_verifier | verification stopped | FAIL | 1 document problem(s) found after reading the documents; processing stopped before any decision. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
+| 2 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_rajesh.jpg), HOSPITAL_BILL (bill_arjun.jpg). |
+| 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
+| 4 | document_verifier | patient consistency | FAIL | <1ms | — | Documents name different patients: PRESCRIPTION ('prescription_rajesh.jpg') is for Rajesh Kumar; HOSPITAL_BILL ('bill_arjun.jpg') is for Arjun Mehta. |
+| 5 | document_verifier | verification stopped | FAIL | <1ms | — | 1 document problem(s) found after reading the documents; processing stopped before any decision. |
 
 </details>
 
@@ -110,28 +110,28 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 
 <details><summary><b>Full trace</b> (20 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
-| 2 | document_verifier | required document types | PASS | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
-| 3 | extraction_agent | extract structured data from documents | SKIPPED | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
-| 4 | document_verifier | patient consistency | PASS | All named documents agree on patient 'Rajesh Kumar'. |
-| 5 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | Member EMP001 (Rajesh Kumar, SELF) found in roster. |
-| 7 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-11-01. |
-| 8 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 9 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹1,500 meets the ₹500 minimum. |
-| 10 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹1,500 matches the documented ₹1,500 (itemized line items). |
-| 11 | adjudication_engine | exclusions.claim_level | PASS | Diagnosis/treatment ('Viral Fever') matches no policy exclusion. |
-| 12 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 13 | adjudication_engine | waiting_period.condition_specific | PASS | Diagnosis 'Viral Fever' matches no condition-specific waiting period. |
-| 14 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to CONSULTATION claims. |
-| 15 | adjudication_engine | line_items | PASS | All 3 line item(s) covered under consultation. |
-| 16 | adjudication_engine | per_claim_limit | PASS | Eligible amount ₹1,500 is within the ₹5,000 per-claim limit. |
-| 17 | adjudication_engine | financial computation | PASS | eligible_base ₹1500.00 → network_discount ₹1500.00 → copay ₹1350.00 → sub_limit_cap ₹1350.00 → annual_limit_cap ₹1350.00 |
-| 18 | fraud_checker | velocity and threshold rules | PASS | No fraud signals: same-day, monthly, and high-value checks all within limits. |
-| 19 | decision_synthesizer | confidence rollup | PASS | Confidence 0.98 = base 0.98; no penalties. |
-| 20 | decision_synthesizer | final decision | PASS | APPROVED; approved amount ₹1,350; confidence 0.98. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
+| 2 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
+| 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
+| 4 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Rajesh Kumar'. |
+| 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 6 | adjudication_engine | eligibility.member | PASS | 1ms | — | Member EMP001 (Rajesh Kumar, SELF) found in roster. |
+| 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-11-01. |
+| 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹1,500 meets the ₹500 minimum. |
+| 10 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹1,500 matches the documented ₹1,500 (itemized line items). |
+| 11 | adjudication_engine | exclusions.claim_level | PASS | <1ms | — | Diagnosis/treatment ('Viral Fever') matches no policy exclusion. |
+| 12 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 13 | adjudication_engine | waiting_period.condition_specific | PASS | <1ms | — | Diagnosis 'Viral Fever' matches no condition-specific waiting period. |
+| 14 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to CONSULTATION claims. |
+| 15 | adjudication_engine | line_items | PASS | <1ms | — | All 3 line item(s) covered under consultation. |
+| 16 | adjudication_engine | per_claim_limit | PASS | <1ms | — | Eligible amount ₹1,500 is within the ₹5,000 per-claim limit. |
+| 17 | adjudication_engine | financial computation | PASS | <1ms | — | eligible_base ₹1500.00 → network_discount ₹1500.00 → copay ₹1350.00 → sub_limit_cap ₹1350.00 → annual_limit_cap ₹1350.00 |
+| 18 | fraud_checker | velocity and threshold rules | PASS | <1ms | — | No fraud signals: same-day, monthly, and high-value checks all within limits. |
+| 19 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.98 = base 0.98; no penalties. |
+| 20 | decision_synthesizer | final decision | PASS | <1ms | — | APPROVED; approved amount ₹1,350; confidence 0.98. |
 
 </details>
 
@@ -158,27 +158,27 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 
 <details><summary><b>Full trace</b> (19 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP005 for CONSULTATION, treatment 2024-10-15, amount ₹3000, 2 document(s). |
-| 2 | document_verifier | required document types | PASS | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
-| 3 | extraction_agent | extract structured data from documents | SKIPPED | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
-| 4 | document_verifier | patient consistency | PASS | All named documents agree on patient 'Vikram Joshi'. |
-| 5 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | Member EMP005 (Vikram Joshi, SELF) found in roster. |
-| 7 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-10-15. |
-| 8 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 9 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹3,000 meets the ₹500 minimum. |
-| 10 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹3,000 matches the documented ₹3,000 (billed total). |
-| 11 | adjudication_engine | exclusions.claim_level | PASS | Diagnosis/treatment ('Type 2 Diabetes Mellitus') matches no policy exclusion. |
-| 12 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-09-01). |
-| 13 | adjudication_engine | waiting_period.diabetes | FAIL | Diagnosis 'Type 2 Diabetes Mellitus' falls under the 90-day waiting period for diabetes (member joined 2024-09-01). Treatment on 2024-10-15 is inside this period. The member is eligible for diabetes-related claims from 2024-11-30. |
-| 14 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to CONSULTATION claims. |
-| 15 | adjudication_engine | line_items | PASS | All 1 line item(s) covered under consultation. |
-| 16 | adjudication_engine | per_claim_limit | PASS | Eligible amount ₹3,000 is within the ₹5,000 per-claim limit. |
-| 17 | fraud_checker | velocity and threshold rules | PASS | No fraud signals: same-day, monthly, and high-value checks all within limits. |
-| 18 | decision_synthesizer | confidence rollup | PASS | Confidence 0.93 = base 0.98 -0.05 (bill not itemized; adjudicated on billed total) |
-| 19 | decision_synthesizer | final decision | FAIL | REJECTED; approved amount ₹0; confidence 0.93. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP005 for CONSULTATION, treatment 2024-10-15, amount ₹3000, 2 document(s). |
+| 2 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
+| 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
+| 4 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Vikram Joshi'. |
+| 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 6 | adjudication_engine | eligibility.member | PASS | 1ms | — | Member EMP005 (Vikram Joshi, SELF) found in roster. |
+| 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-15. |
+| 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹3,000 meets the ₹500 minimum. |
+| 10 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹3,000 matches the documented ₹3,000 (billed total). |
+| 11 | adjudication_engine | exclusions.claim_level | PASS | <1ms | — | Diagnosis/treatment ('Type 2 Diabetes Mellitus') matches no policy exclusion. |
+| 12 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-09-01). |
+| 13 | adjudication_engine | waiting_period.diabetes | FAIL | <1ms | — | Diagnosis 'Type 2 Diabetes Mellitus' falls under the 90-day waiting period for diabetes (member joined 2024-09-01). Treatment on 2024-10-15 is inside this period. The member is eligible for diabetes-related claims from 2024-11-30. |
+| 14 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to CONSULTATION claims. |
+| 15 | adjudication_engine | line_items | PASS | <1ms | — | All 1 line item(s) covered under consultation. |
+| 16 | adjudication_engine | per_claim_limit | PASS | <1ms | — | Eligible amount ₹3,000 is within the ₹5,000 per-claim limit. |
+| 17 | fraud_checker | velocity and threshold rules | PASS | <1ms | — | No fraud signals: same-day, monthly, and high-value checks all within limits. |
+| 18 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.93 = base 0.98 -0.05 (bill not itemized; adjudicated on billed total) |
+| 19 | decision_synthesizer | final decision | FAIL | <1ms | — | REJECTED; approved amount ₹0; confidence 0.93. |
 
 </details>
 
@@ -205,27 +205,27 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 
 <details><summary><b>Full trace</b> (19 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP002 for DENTAL, treatment 2024-10-15, amount ₹12000, 1 document(s). |
-| 2 | document_verifier | required document types | PASS | All required types for DENTAL present (HOSPITAL_BILL). Uploaded: HOSPITAL_BILL. |
-| 3 | extraction_agent | extract structured data from documents | SKIPPED | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
-| 4 | document_verifier | patient consistency | PASS | All named documents agree on patient 'Priya Singh'. |
-| 5 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | Member EMP002 (Priya Singh, SELF) found in roster. |
-| 7 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-10-15. |
-| 8 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 9 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹12,000 meets the ₹500 minimum. |
-| 10 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹12,000 matches the documented ₹12,000 (itemized line items). |
-| 11 | adjudication_engine | exclusions.claim_level | SKIPPED | No diagnosis or treatment text available to screen against exclusions. |
-| 12 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 13 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to DENTAL claims. |
-| 14 | adjudication_engine | line_items | FAIL | 1 of 2 line item(s) approved; 'Teeth Whitening' rejected: 'Teeth Whitening' is an excluded procedure under the dental category ('Teeth Whitening'). |
-| 15 | adjudication_engine | per_claim_limit | PASS | Eligible amount ₹8,000 is within the ₹10,000 per-claim limit. |
-| 16 | adjudication_engine | financial computation | PASS | eligible_base ₹8000.00 → network_discount ₹8000.00 → copay ₹8000.00 → sub_limit_cap ₹8000.00 → annual_limit_cap ₹8000.00 |
-| 17 | fraud_checker | velocity and threshold rules | PASS | No fraud signals: same-day, monthly, and high-value checks all within limits. |
-| 18 | decision_synthesizer | confidence rollup | PASS | Confidence 0.98 = base 0.98; no penalties. |
-| 19 | decision_synthesizer | final decision | PASS | PARTIAL; approved amount ₹8,000; confidence 0.98. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP002 for DENTAL, treatment 2024-10-15, amount ₹12000, 1 document(s). |
+| 2 | document_verifier | required document types | PASS | <1ms | — | All required types for DENTAL present (HOSPITAL_BILL). Uploaded: HOSPITAL_BILL. |
+| 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
+| 4 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Priya Singh'. |
+| 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 6 | adjudication_engine | eligibility.member | PASS | 2ms | — | Member EMP002 (Priya Singh, SELF) found in roster. |
+| 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-15. |
+| 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹12,000 meets the ₹500 minimum. |
+| 10 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹12,000 matches the documented ₹12,000 (itemized line items). |
+| 11 | adjudication_engine | exclusions.claim_level | SKIPPED | <1ms | — | No diagnosis or treatment text available to screen against exclusions. |
+| 12 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 13 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to DENTAL claims. |
+| 14 | adjudication_engine | line_items | FAIL | <1ms | — | 1 of 2 line item(s) approved; 'Teeth Whitening' rejected: 'Teeth Whitening' is an excluded procedure under the dental category ('Teeth Whitening'). |
+| 15 | adjudication_engine | per_claim_limit | PASS | <1ms | — | Eligible amount ₹8,000 is within the ₹10,000 per-claim limit. |
+| 16 | adjudication_engine | financial computation | PASS | <1ms | — | eligible_base ₹8000.00 → network_discount ₹8000.00 → copay ₹8000.00 → sub_limit_cap ₹8000.00 → annual_limit_cap ₹8000.00 |
+| 17 | fraud_checker | velocity and threshold rules | PASS | <1ms | — | No fraud signals: same-day, monthly, and high-value checks all within limits. |
+| 18 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.98 = base 0.98; no penalties. |
+| 19 | decision_synthesizer | final decision | PASS | <1ms | — | PARTIAL; approved amount ₹8,000; confidence 0.98. |
 
 </details>
 
@@ -250,27 +250,27 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 
 <details><summary><b>Full trace</b> (19 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP007 for DIAGNOSTIC, treatment 2024-11-02, amount ₹15000, 3 document(s). |
-| 2 | document_verifier | required document types | PASS | All required types for DIAGNOSTIC present (PRESCRIPTION, LAB_REPORT, HOSPITAL_BILL). Uploaded: PRESCRIPTION, LAB_REPORT, HOSPITAL_BILL. |
-| 3 | extraction_agent | extract structured data from documents | SKIPPED | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
-| 4 | document_verifier | patient consistency | SKIPPED | No patient name could be read from any document; nothing to cross-check. |
-| 5 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | Member EMP007 (Suresh Patil, SELF) found in roster. |
-| 7 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-11-02. |
-| 8 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 9 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹15,000 meets the ₹500 minimum. |
-| 10 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹15,000 matches the documented ₹15,000 (itemized line items). |
-| 11 | adjudication_engine | exclusions.claim_level | PASS | Diagnosis/treatment ('Suspected Lumbar Disc Herniation') matches no policy exclusion. |
-| 12 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 13 | adjudication_engine | waiting_period.condition_specific | PASS | Diagnosis 'Suspected Lumbar Disc Herniation' matches no condition-specific waiting period. |
-| 14 | adjudication_engine | pre_authorization | FAIL | 'MRI Lumbar Spine' (₹15,000) requires pre-authorization because MRI above ₹10,000 must be pre-approved, and no authorization was obtained. To resubmit: request pre-authorization from the insurer for this procedure and attach the approval reference (valid 30 days from issue). |
-| 15 | adjudication_engine | line_items | PASS | All 1 line item(s) covered under diagnostic. |
-| 16 | adjudication_engine | per_claim_limit | FAIL | Claimed amount ₹15,000 (eligible ₹15,000) exceeds the per-claim limit of ₹10,000 for DIAGNOSTIC claims. Claims above this limit are not payable. |
-| 17 | fraud_checker | velocity and threshold rules | PASS | No fraud signals: same-day, monthly, and high-value checks all within limits. |
-| 18 | decision_synthesizer | confidence rollup | PASS | Confidence 0.98 = base 0.98; no penalties. |
-| 19 | decision_synthesizer | final decision | FAIL | REJECTED; approved amount ₹0; confidence 0.98. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP007 for DIAGNOSTIC, treatment 2024-11-02, amount ₹15000, 3 document(s). |
+| 2 | document_verifier | required document types | PASS | <1ms | — | All required types for DIAGNOSTIC present (PRESCRIPTION, LAB_REPORT, HOSPITAL_BILL). Uploaded: PRESCRIPTION, LAB_REPORT, HOSPITAL_BILL. |
+| 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
+| 4 | document_verifier | patient consistency | SKIPPED | <1ms | — | No patient name could be read from any document; nothing to cross-check. |
+| 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 6 | adjudication_engine | eligibility.member | PASS | 1ms | — | Member EMP007 (Suresh Patil, SELF) found in roster. |
+| 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-11-02. |
+| 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹15,000 meets the ₹500 minimum. |
+| 10 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹15,000 matches the documented ₹15,000 (itemized line items). |
+| 11 | adjudication_engine | exclusions.claim_level | PASS | <1ms | — | Diagnosis/treatment ('Suspected Lumbar Disc Herniation') matches no policy exclusion. |
+| 12 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 13 | adjudication_engine | waiting_period.condition_specific | PASS | <1ms | — | Diagnosis 'Suspected Lumbar Disc Herniation' matches no condition-specific waiting period. |
+| 14 | adjudication_engine | pre_authorization | FAIL | <1ms | — | 'MRI Lumbar Spine' (₹15,000) requires pre-authorization because MRI above ₹10,000 must be pre-approved, and no authorization was obtained. To resubmit: request pre-authorization from the insurer for this procedure and attach the approval reference (valid 30 days from issue). |
+| 15 | adjudication_engine | line_items | PASS | <1ms | — | All 1 line item(s) covered under diagnostic. |
+| 16 | adjudication_engine | per_claim_limit | FAIL | <1ms | — | Claimed amount ₹15,000 (eligible ₹15,000) exceeds the per-claim limit of ₹10,000 for DIAGNOSTIC claims. Claims above this limit are not payable. |
+| 17 | fraud_checker | velocity and threshold rules | PASS | <1ms | — | No fraud signals: same-day, monthly, and high-value checks all within limits. |
+| 18 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.98 = base 0.98; no penalties. |
+| 19 | decision_synthesizer | final decision | FAIL | <1ms | — | REJECTED; approved amount ₹0; confidence 0.98. |
 
 </details>
 
@@ -295,27 +295,27 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 
 <details><summary><b>Full trace</b> (19 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP003 for CONSULTATION, treatment 2024-10-20, amount ₹7500, 2 document(s). |
-| 2 | document_verifier | required document types | PASS | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
-| 3 | extraction_agent | extract structured data from documents | SKIPPED | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
-| 4 | document_verifier | patient consistency | SKIPPED | No patient name could be read from any document; nothing to cross-check. |
-| 5 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | Member EMP003 (Amit Verma, SELF) found in roster. |
-| 7 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-10-20. |
-| 8 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 9 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹7,500 meets the ₹500 minimum. |
-| 10 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹7,500 matches the documented ₹7,500 (itemized line items). |
-| 11 | adjudication_engine | exclusions.claim_level | PASS | Diagnosis/treatment ('Gastroenteritis') matches no policy exclusion. |
-| 12 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 13 | adjudication_engine | waiting_period.condition_specific | PASS | Diagnosis 'Gastroenteritis' matches no condition-specific waiting period. |
-| 14 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to CONSULTATION claims. |
-| 15 | adjudication_engine | line_items | PASS | All 2 line item(s) covered under consultation. |
-| 16 | adjudication_engine | per_claim_limit | FAIL | Claimed amount ₹7,500 (eligible ₹7,500) exceeds the per-claim limit of ₹5,000 for CONSULTATION claims. Claims above this limit are not payable. |
-| 17 | fraud_checker | velocity and threshold rules | PASS | No fraud signals: same-day, monthly, and high-value checks all within limits. |
-| 18 | decision_synthesizer | confidence rollup | PASS | Confidence 0.98 = base 0.98; no penalties. |
-| 19 | decision_synthesizer | final decision | FAIL | REJECTED; approved amount ₹0; confidence 0.98. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP003 for CONSULTATION, treatment 2024-10-20, amount ₹7500, 2 document(s). |
+| 2 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
+| 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
+| 4 | document_verifier | patient consistency | SKIPPED | <1ms | — | No patient name could be read from any document; nothing to cross-check. |
+| 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 6 | adjudication_engine | eligibility.member | PASS | 2ms | — | Member EMP003 (Amit Verma, SELF) found in roster. |
+| 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-20. |
+| 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹7,500 meets the ₹500 minimum. |
+| 10 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹7,500 matches the documented ₹7,500 (itemized line items). |
+| 11 | adjudication_engine | exclusions.claim_level | PASS | <1ms | — | Diagnosis/treatment ('Gastroenteritis') matches no policy exclusion. |
+| 12 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 13 | adjudication_engine | waiting_period.condition_specific | PASS | <1ms | — | Diagnosis 'Gastroenteritis' matches no condition-specific waiting period. |
+| 14 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to CONSULTATION claims. |
+| 15 | adjudication_engine | line_items | PASS | <1ms | — | All 2 line item(s) covered under consultation. |
+| 16 | adjudication_engine | per_claim_limit | FAIL | <1ms | — | Claimed amount ₹7,500 (eligible ₹7,500) exceeds the per-claim limit of ₹5,000 for CONSULTATION claims. Claims above this limit are not payable. |
+| 17 | fraud_checker | velocity and threshold rules | PASS | <1ms | — | No fraud signals: same-day, monthly, and high-value checks all within limits. |
+| 18 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.98 = base 0.98; no penalties. |
+| 19 | decision_synthesizer | final decision | FAIL | <1ms | — | REJECTED; approved amount ₹0; confidence 0.98. |
 
 </details>
 
@@ -347,28 +347,28 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 
 <details><summary><b>Full trace</b> (20 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP008 for CONSULTATION, treatment 2024-10-30, amount ₹4800, 2 document(s). |
-| 2 | document_verifier | required document types | PASS | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
-| 3 | extraction_agent | extract structured data from documents | SKIPPED | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
-| 4 | document_verifier | patient consistency | SKIPPED | No patient name could be read from any document; nothing to cross-check. |
-| 5 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | Member EMP008 (Ravi Menon, SELF) found in roster. |
-| 7 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-10-30. |
-| 8 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 9 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹4,800 meets the ₹500 minimum. |
-| 10 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹4,800 matches the documented ₹4,800 (billed total). |
-| 11 | adjudication_engine | exclusions.claim_level | PASS | Diagnosis/treatment ('Migraine') matches no policy exclusion. |
-| 12 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 13 | adjudication_engine | waiting_period.condition_specific | PASS | Diagnosis 'Migraine' matches no condition-specific waiting period. |
-| 14 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to CONSULTATION claims. |
-| 15 | adjudication_engine | line_items | PASS | All 1 line item(s) covered under consultation. |
-| 16 | adjudication_engine | per_claim_limit | PASS | Eligible amount ₹4,800 is within the ₹5,000 per-claim limit. |
-| 17 | adjudication_engine | financial computation | PASS | eligible_base ₹4800.00 → network_discount ₹4800.00 → copay ₹4320.00 → sub_limit_cap ₹4320.00 → annual_limit_cap ₹4320.00 |
-| 18 | fraud_checker | velocity and threshold rules | FAIL | This is claim #4 from member EMP008 on 2024-10-30 (earlier today: CLM_0081, CLM_0082, CLM_0083) — above the same-day limit of 2. |
-| 19 | decision_synthesizer | confidence rollup | PASS | Confidence 0.93 = base 0.98 -0.05 (bill not itemized; adjudicated on billed total) |
-| 20 | decision_synthesizer | final decision | PASS | MANUAL_REVIEW; approved amount ₹0; confidence 0.93. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP008 for CONSULTATION, treatment 2024-10-30, amount ₹4800, 2 document(s). |
+| 2 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
+| 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
+| 4 | document_verifier | patient consistency | SKIPPED | <1ms | — | No patient name could be read from any document; nothing to cross-check. |
+| 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 6 | adjudication_engine | eligibility.member | PASS | 1ms | — | Member EMP008 (Ravi Menon, SELF) found in roster. |
+| 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-30. |
+| 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹4,800 meets the ₹500 minimum. |
+| 10 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹4,800 matches the documented ₹4,800 (billed total). |
+| 11 | adjudication_engine | exclusions.claim_level | PASS | <1ms | — | Diagnosis/treatment ('Migraine') matches no policy exclusion. |
+| 12 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 13 | adjudication_engine | waiting_period.condition_specific | PASS | <1ms | — | Diagnosis 'Migraine' matches no condition-specific waiting period. |
+| 14 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to CONSULTATION claims. |
+| 15 | adjudication_engine | line_items | PASS | <1ms | — | All 1 line item(s) covered under consultation. |
+| 16 | adjudication_engine | per_claim_limit | PASS | <1ms | — | Eligible amount ₹4,800 is within the ₹5,000 per-claim limit. |
+| 17 | adjudication_engine | financial computation | PASS | <1ms | — | eligible_base ₹4800.00 → network_discount ₹4800.00 → copay ₹4320.00 → sub_limit_cap ₹4320.00 → annual_limit_cap ₹4320.00 |
+| 18 | fraud_checker | velocity and threshold rules | FAIL | <1ms | — | This is claim #4 from member EMP008 on 2024-10-30 (earlier today: CLM_0081, CLM_0082, CLM_0083) — above the same-day limit of 2. |
+| 19 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.93 = base 0.98 -0.05 (bill not itemized; adjudicated on billed total) |
+| 20 | decision_synthesizer | final decision | PASS | <1ms | — | MANUAL_REVIEW; approved amount ₹0; confidence 0.93. |
 
 </details>
 
@@ -395,28 +395,28 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 
 <details><summary><b>Full trace</b> (20 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP010 for CONSULTATION, treatment 2024-11-03, amount ₹4500, 2 document(s). |
-| 2 | document_verifier | required document types | PASS | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
-| 3 | extraction_agent | extract structured data from documents | SKIPPED | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
-| 4 | document_verifier | patient consistency | PASS | All named documents agree on patient 'Deepak Shah'. |
-| 5 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | Member EMP010 (Deepak Shah, SELF) found in roster. |
-| 7 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-11-03. |
-| 8 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 9 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹4,500 meets the ₹500 minimum. |
-| 10 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹4,500 matches the documented ₹4,500 (itemized line items). |
-| 11 | adjudication_engine | exclusions.claim_level | PASS | Diagnosis/treatment ('Acute Bronchitis') matches no policy exclusion. |
-| 12 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 13 | adjudication_engine | waiting_period.condition_specific | PASS | Diagnosis 'Acute Bronchitis' matches no condition-specific waiting period. |
-| 14 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to CONSULTATION claims. |
-| 15 | adjudication_engine | line_items | PASS | All 2 line item(s) covered under consultation. |
-| 16 | adjudication_engine | per_claim_limit | PASS | Eligible amount ₹4,500 is within the ₹5,000 per-claim limit. |
-| 17 | adjudication_engine | financial computation | PASS | eligible_base ₹4500.00 → network_discount ₹3600.00 → copay ₹3240.00 → sub_limit_cap ₹3240.00 → annual_limit_cap ₹3240.00 |
-| 18 | fraud_checker | velocity and threshold rules | PASS | No fraud signals: same-day, monthly, and high-value checks all within limits. |
-| 19 | decision_synthesizer | confidence rollup | PASS | Confidence 0.98 = base 0.98; no penalties. |
-| 20 | decision_synthesizer | final decision | PASS | APPROVED; approved amount ₹3,240; confidence 0.98. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP010 for CONSULTATION, treatment 2024-11-03, amount ₹4500, 2 document(s). |
+| 2 | document_verifier | required document types | PASS | 3ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
+| 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
+| 4 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Deepak Shah'. |
+| 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 6 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP010 (Deepak Shah, SELF) found in roster. |
+| 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-11-03. |
+| 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹4,500 meets the ₹500 minimum. |
+| 10 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹4,500 matches the documented ₹4,500 (itemized line items). |
+| 11 | adjudication_engine | exclusions.claim_level | PASS | <1ms | — | Diagnosis/treatment ('Acute Bronchitis') matches no policy exclusion. |
+| 12 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 13 | adjudication_engine | waiting_period.condition_specific | PASS | <1ms | — | Diagnosis 'Acute Bronchitis' matches no condition-specific waiting period. |
+| 14 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to CONSULTATION claims. |
+| 15 | adjudication_engine | line_items | PASS | <1ms | — | All 2 line item(s) covered under consultation. |
+| 16 | adjudication_engine | per_claim_limit | PASS | <1ms | — | Eligible amount ₹4,500 is within the ₹5,000 per-claim limit. |
+| 17 | adjudication_engine | financial computation | PASS | <1ms | — | eligible_base ₹4500.00 → network_discount ₹3600.00 → copay ₹3240.00 → sub_limit_cap ₹3240.00 → annual_limit_cap ₹3240.00 |
+| 18 | fraud_checker | velocity and threshold rules | PASS | <1ms | — | No fraud signals: same-day, monthly, and high-value checks all within limits. |
+| 19 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.98 = base 0.98; no penalties. |
+| 20 | decision_synthesizer | final decision | PASS | <1ms | — | APPROVED; approved amount ₹3,240; confidence 0.98. |
 
 </details>
 
@@ -446,28 +446,28 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 
 <details><summary><b>Full trace</b> (20 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP006 for ALTERNATIVE_MEDICINE, treatment 2024-10-28, amount ₹4000, 2 document(s). |
-| 2 | document_verifier | required document types | PASS | All required types for ALTERNATIVE_MEDICINE present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
-| 3 | extraction_agent | extract structured data from documents | SKIPPED | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
-| 4 | document_verifier | patient consistency | SKIPPED | No patient name could be read from any document; nothing to cross-check. |
-| 5 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | Member EMP006 (Kavita Nair, SELF) found in roster. |
-| 7 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-10-28. |
-| 8 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 9 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹4,000 meets the ₹500 minimum. |
-| 10 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹4,000 matches the documented ₹4,000 (itemized line items). |
-| 11 | adjudication_engine | exclusions.claim_level | PASS | Diagnosis/treatment ('Chronic Joint Pain') matches no policy exclusion. |
-| 12 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 13 | adjudication_engine | waiting_period.condition_specific | PASS | Diagnosis 'Chronic Joint Pain' matches no condition-specific waiting period. |
-| 14 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to ALTERNATIVE_MEDICINE claims. |
-| 15 | adjudication_engine | line_items | PASS | All 2 line item(s) covered under alternative_medicine. |
-| 16 | adjudication_engine | per_claim_limit | PASS | Eligible amount ₹4,000 is within the ₹8,000 per-claim limit. |
-| 17 | adjudication_engine | financial computation | PASS | eligible_base ₹4000.00 → network_discount ₹4000.00 → copay ₹4000.00 → sub_limit_cap ₹4000.00 → annual_limit_cap ₹4000.00 |
-| 18 | fraud_checker | component failure handled | DEGRADED | Component failure (simulated): fraud checker crashed and was skipped; velocity rules were not evaluated for this claim. |
-| 19 | decision_synthesizer | confidence rollup | PASS | Confidence 0.78 = base 0.98 -0.20 (fraud_checker failed and was skipped) |
-| 20 | decision_synthesizer | final decision | PASS | APPROVED; approved amount ₹4,000; confidence 0.78. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP006 for ALTERNATIVE_MEDICINE, treatment 2024-10-28, amount ₹4000, 2 document(s). |
+| 2 | document_verifier | required document types | PASS | <1ms | — | All required types for ALTERNATIVE_MEDICINE present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
+| 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
+| 4 | document_verifier | patient consistency | SKIPPED | <1ms | — | No patient name could be read from any document; nothing to cross-check. |
+| 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 6 | adjudication_engine | eligibility.member | PASS | 3ms | — | Member EMP006 (Kavita Nair, SELF) found in roster. |
+| 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-28. |
+| 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹4,000 meets the ₹500 minimum. |
+| 10 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹4,000 matches the documented ₹4,000 (itemized line items). |
+| 11 | adjudication_engine | exclusions.claim_level | PASS | <1ms | — | Diagnosis/treatment ('Chronic Joint Pain') matches no policy exclusion. |
+| 12 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 13 | adjudication_engine | waiting_period.condition_specific | PASS | <1ms | — | Diagnosis 'Chronic Joint Pain' matches no condition-specific waiting period. |
+| 14 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to ALTERNATIVE_MEDICINE claims. |
+| 15 | adjudication_engine | line_items | PASS | <1ms | — | All 2 line item(s) covered under alternative_medicine. |
+| 16 | adjudication_engine | per_claim_limit | PASS | <1ms | — | Eligible amount ₹4,000 is within the ₹8,000 per-claim limit. |
+| 17 | adjudication_engine | financial computation | PASS | <1ms | — | eligible_base ₹4000.00 → network_discount ₹4000.00 → copay ₹4000.00 → sub_limit_cap ₹4000.00 → annual_limit_cap ₹4000.00 |
+| 18 | fraud_checker | component failure handled | DEGRADED | <1ms | -0.20 | Component failure (simulated): fraud checker crashed and was skipped; velocity rules were not evaluated for this claim. |
+| 19 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.78 = base 0.98 -0.20 (fraud_checker failed and was skipped) |
+| 20 | decision_synthesizer | final decision | PASS | <1ms | — | APPROVED; approved amount ₹4,000; confidence 0.78. |
 
 </details>
 
@@ -490,27 +490,27 @@ The same 12 also run as **real document uploads** through GPT-4o classification 
 
 <details><summary><b>Full trace</b> (19 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP009 for CONSULTATION, treatment 2024-10-18, amount ₹8000, 2 document(s). |
-| 2 | document_verifier | required document types | PASS | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
-| 3 | extraction_agent | extract structured data from documents | SKIPPED | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
-| 4 | document_verifier | patient consistency | SKIPPED | No patient name could be read from any document; nothing to cross-check. |
-| 5 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 6 | adjudication_engine | eligibility.member | PASS | Member EMP009 (Anita Desai, SELF) found in roster. |
-| 7 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-10-18. |
-| 8 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 9 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹8,000 meets the ₹500 minimum. |
-| 10 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹8,000 matches the documented ₹8,000 (itemized line items). |
-| 11 | adjudication_engine | exclusions.claim_level | FAIL | 'Morbid Obesity — BMI 37' matches policy exclusion 'Obesity and weight loss programs' (matched on: obesity). This condition is not covered under the policy at any time. |
-| 12 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 13 | adjudication_engine | waiting_period.obesity_treatment | FAIL | Diagnosis 'Morbid Obesity — BMI 37' falls under the 365-day waiting period for obesity treatment (member joined 2024-04-01). Treatment on 2024-10-18 is inside this period. The member is eligible for obesity treatment-related claims from 2025-04-01. |
-| 14 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to CONSULTATION claims. |
-| 15 | adjudication_engine | line_items | FAIL | All 2 line item(s) rejected — the claim is excluded. |
-| 16 | adjudication_engine | per_claim_limit | PASS | Eligible amount ₹0 is within the ₹5,000 per-claim limit. |
-| 17 | fraud_checker | velocity and threshold rules | PASS | No fraud signals: same-day, monthly, and high-value checks all within limits. |
-| 18 | decision_synthesizer | confidence rollup | PASS | Confidence 0.98 = base 0.98; no penalties. |
-| 19 | decision_synthesizer | final decision | FAIL | REJECTED; approved amount ₹0; confidence 0.98. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP009 for CONSULTATION, treatment 2024-10-18, amount ₹8000, 2 document(s). |
+| 2 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION, HOSPITAL_BILL. |
+| 3 | extraction_agent | extract structured data from documents | SKIPPED | <1ms | — | Pre-extracted content supplied with the submission; vision extraction skipped (test mode). |
+| 4 | document_verifier | patient consistency | SKIPPED | <1ms | — | No patient name could be read from any document; nothing to cross-check. |
+| 5 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 6 | adjudication_engine | eligibility.member | PASS | 1ms | — | Member EMP009 (Anita Desai, SELF) found in roster. |
+| 7 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-18. |
+| 8 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 9 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹8,000 meets the ₹500 minimum. |
+| 10 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹8,000 matches the documented ₹8,000 (itemized line items). |
+| 11 | adjudication_engine | exclusions.claim_level | FAIL | <1ms | — | 'Morbid Obesity — BMI 37' matches policy exclusion 'Obesity and weight loss programs' (matched on: obesity). This condition is not covered under the policy at any time. |
+| 12 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 13 | adjudication_engine | waiting_period.obesity_treatment | FAIL | <1ms | — | Diagnosis 'Morbid Obesity — BMI 37' falls under the 365-day waiting period for obesity treatment (member joined 2024-04-01). Treatment on 2024-10-18 is inside this period. The member is eligible for obesity treatment-related claims from 2025-04-01. |
+| 14 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to CONSULTATION claims. |
+| 15 | adjudication_engine | line_items | FAIL | <1ms | — | All 2 line item(s) rejected — the claim is excluded. |
+| 16 | adjudication_engine | per_claim_limit | PASS | <1ms | — | Eligible amount ₹0 is within the ₹5,000 per-claim limit. |
+| 17 | fraud_checker | velocity and threshold rules | PASS | <1ms | — | No fraud signals: same-day, monthly, and high-value checks all within limits. |
+| 18 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.98 = base 0.98; no penalties. |
+| 19 | decision_synthesizer | final decision | FAIL | <1ms | — | REJECTED; approved amount ₹0; confidence 0.98. |
 
 </details>
 
@@ -535,13 +535,13 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 
 <details><summary><b>Full trace</b> (5 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | F002: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
-| 4 | document_verifier | required document types | FAIL | Missing required type(s): HOSPITAL_BILL. Uploaded: PRESCRIPTION (prescription_rajesh.jpg), PRESCRIPTION (prescription_followup.jpg). |
-| 5 | document_verifier | verification stopped | FAIL | 1 document problem(s) found; processing stopped before any decision. The claim is returned to the member with instructions. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
+| 2 | document_verifier | document classification | PASS | 8.4s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.4s | — | F002: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
+| 4 | document_verifier | required document types | FAIL | <1ms | — | Missing required type(s): HOSPITAL_BILL. Uploaded: PRESCRIPTION (prescription_rajesh.jpg), PRESCRIPTION (prescription_followup.jpg). |
+| 5 | document_verifier | verification stopped | FAIL | <1ms | — | 1 document problem(s) found; processing stopped before any decision. The claim is returned to the member with instructions. |
 
 </details>
 
@@ -559,14 +559,14 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 
 <details><summary><b>Full trace</b> (6 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP004 for PHARMACY, treatment 2024-10-25, amount ₹800, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
-| 3 | document_verifier | image legibility | FAIL | F002 ('pharmacy_bill_unreadable.jpg') measured focus score 0.42, below the legibility floor of 2.0 — the image carries no readable detail. Classification and extraction skipped; nothing can be read from it. |
-| 4 | document_verifier | required document types | SKIPPED | 1 document(s) could not be read, so their type is unknown; the PHARMACY requirement (PRESCRIPTION, PHARMACY_BILL) is re-checked once a legible copy is uploaded. |
-| 5 | document_verifier | readability check | FAIL | 'pharmacy_bill_unreadable.jpg' is unreadable. Claim not rejected; a re-upload of this one document is all that is required. |
-| 6 | document_verifier | verification stopped | FAIL | 1 document problem(s) found; processing stopped before any decision. The claim is returned to the member with instructions. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP004 for PHARMACY, treatment 2024-10-25, amount ₹800, 2 document(s). |
+| 2 | document_verifier | document classification | PASS | 1.3s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
+| 3 | document_verifier | image legibility | FAIL | 66ms | — | F002 ('pharmacy_bill_unreadable.jpg') measured focus score 0.42, below the legibility floor of 2.0 — the image carries no readable detail. Classification and extraction skipped; nothing can be read from it. |
+| 4 | document_verifier | required document types | SKIPPED | <1ms | — | 1 document(s) could not be read, so their type is unknown; the PHARMACY requirement (PRESCRIPTION, PHARMACY_BILL) is re-checked once a legible copy is uploaded. |
+| 5 | document_verifier | readability check | FAIL | <1ms | — | 'pharmacy_bill_unreadable.jpg' is unreadable. Claim not rejected; a re-upload of this one document is all that is required. |
+| 6 | document_verifier | verification stopped | FAIL | <1ms | — | 1 document problem(s) found; processing stopped before any decision. The claim is returned to the member with instructions. |
 
 </details>
 
@@ -584,15 +584,15 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 
 <details><summary><b>Full trace</b> (7 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
-| 4 | document_verifier | required document types | PASS | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_rajesh.jpg), HOSPITAL_BILL (hospital_bill_arjun_mehta.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
-| 6 | document_verifier | patient consistency | FAIL | Documents name different patients: PRESCRIPTION ('prescription_rajesh.jpg') is for Rajesh Kumar; HOSPITAL_BILL ('hospital_bill_arjun_mehta.jpg') is for Arjun Mehta. |
-| 7 | document_verifier | verification stopped | FAIL | 1 document problem(s) found after reading the documents; processing stopped before any decision. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
+| 2 | document_verifier | document classification | PASS | 1.9s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.3s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 4 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_rajesh.jpg), HOSPITAL_BILL (hospital_bill_arjun_mehta.jpg). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 3.1s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 6 | document_verifier | patient consistency | FAIL | <1ms | — | Documents name different patients: PRESCRIPTION ('prescription_rajesh.jpg') is for Rajesh Kumar; HOSPITAL_BILL ('hospital_bill_arjun_mehta.jpg') is for Arjun Mehta. |
+| 7 | document_verifier | verification stopped | FAIL | <1ms | — | 1 document problem(s) found after reading the documents; processing stopped before any decision. |
 
 </details>
 
@@ -616,30 +616,30 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 
 <details><summary><b>Full trace</b> (22 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | F001: classified as PRESCRIPTION (conf 0.95), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
-| 4 | document_verifier | required document types | PASS | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_rajesh.jpg), HOSPITAL_BILL (hospital_bill_city_clinic.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
-| 6 | document_verifier | patient consistency | PASS | All named documents agree on patient 'Rajesh Kumar'. |
-| 7 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 8 | adjudication_engine | eligibility.member | PASS | Member EMP001 (Rajesh Kumar, SELF) found in roster. |
-| 9 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-11-01. |
-| 10 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 11 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹1,500 meets the ₹500 minimum. |
-| 12 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹1,500 matches the documented ₹1,500 (itemized line items). |
-| 13 | adjudication_engine | exclusions.claim_level | PASS | Diagnosis/treatment ('Viral Fever') matches no policy exclusion. |
-| 14 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 15 | adjudication_engine | waiting_period.condition_specific | PASS | Diagnosis 'Viral Fever' matches no condition-specific waiting period. |
-| 16 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to CONSULTATION claims. |
-| 17 | adjudication_engine | line_items | PASS | All 3 line item(s) covered under consultation. |
-| 18 | adjudication_engine | per_claim_limit | PASS | Eligible amount ₹1,500 is within the ₹5,000 per-claim limit. |
-| 19 | adjudication_engine | financial computation | PASS | eligible_base ₹1500.00 → network_discount ₹1500.00 → copay ₹1350.00 → sub_limit_cap ₹1350.00 → annual_limit_cap ₹1350.00 |
-| 20 | fraud_checker | velocity and threshold rules | PASS | No fraud signals: same-day, monthly, and high-value checks all within limits. |
-| 21 | decision_synthesizer | confidence rollup | PASS | Confidence 0.98 = base 0.98; no penalties. |
-| 22 | decision_synthesizer | final decision | PASS | APPROVED; approved amount ₹1,350; confidence 0.98. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP001 for CONSULTATION, treatment 2024-11-01, amount ₹1500, 2 document(s). |
+| 2 | document_verifier | document classification | PASS | 1.2s | — | F001: classified as PRESCRIPTION (conf 0.98), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.5s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 4 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_rajesh.jpg), HOSPITAL_BILL (hospital_bill_city_clinic.jpg). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 2.5s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 6 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Rajesh Kumar'. |
+| 7 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 8 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP001 (Rajesh Kumar, SELF) found in roster. |
+| 9 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-11-01. |
+| 10 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 11 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹1,500 meets the ₹500 minimum. |
+| 12 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹1,500 matches the documented ₹1,500 (itemized line items). |
+| 13 | adjudication_engine | exclusions.claim_level | PASS | <1ms | — | Diagnosis/treatment ('Viral Fever') matches no policy exclusion. |
+| 14 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 15 | adjudication_engine | waiting_period.condition_specific | PASS | <1ms | — | Diagnosis 'Viral Fever' matches no condition-specific waiting period. |
+| 16 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to CONSULTATION claims. |
+| 17 | adjudication_engine | line_items | PASS | <1ms | — | All 3 line item(s) covered under consultation. |
+| 18 | adjudication_engine | per_claim_limit | PASS | <1ms | — | Eligible amount ₹1,500 is within the ₹5,000 per-claim limit. |
+| 19 | adjudication_engine | financial computation | PASS | <1ms | — | eligible_base ₹1500.00 → network_discount ₹1500.00 → copay ₹1350.00 → sub_limit_cap ₹1350.00 → annual_limit_cap ₹1350.00 |
+| 20 | fraud_checker | velocity and threshold rules | PASS | <1ms | — | No fraud signals: same-day, monthly, and high-value checks all within limits. |
+| 21 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.98 = base 0.98; no penalties. |
+| 22 | decision_synthesizer | final decision | PASS | <1ms | — | APPROVED; approved amount ₹1,350; confidence 0.98. |
 
 </details>
 
@@ -666,29 +666,29 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 
 <details><summary><b>Full trace</b> (21 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP005 for CONSULTATION, treatment 2024-10-15, amount ₹3000, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
-| 4 | document_verifier | required document types | PASS | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_vikram_diabetes.jpg), HOSPITAL_BILL (hospital_bill_vikram.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
-| 6 | document_verifier | patient consistency | PASS | All named documents agree on patient 'Vikram Joshi'. |
-| 7 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 8 | adjudication_engine | eligibility.member | PASS | Member EMP005 (Vikram Joshi, SELF) found in roster. |
-| 9 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-10-15. |
-| 10 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 11 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹3,000 meets the ₹500 minimum. |
-| 12 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹3,000 matches the documented ₹3,000 (itemized line items). |
-| 13 | adjudication_engine | exclusions.claim_level | PASS | Diagnosis/treatment ('Type 2 Diabetes Mellitus') matches no policy exclusion. |
-| 14 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-09-01). |
-| 15 | adjudication_engine | waiting_period.diabetes | FAIL | Diagnosis 'Type 2 Diabetes Mellitus' falls under the 90-day waiting period for diabetes (member joined 2024-09-01). Treatment on 2024-10-15 is inside this period. The member is eligible for diabetes-related claims from 2024-11-30. |
-| 16 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to CONSULTATION claims. |
-| 17 | adjudication_engine | line_items | PASS | All 4 line item(s) covered under consultation. |
-| 18 | adjudication_engine | per_claim_limit | PASS | Eligible amount ₹3,000 is within the ₹5,000 per-claim limit. |
-| 19 | fraud_checker | velocity and threshold rules | PASS | No fraud signals: same-day, monthly, and high-value checks all within limits. |
-| 20 | decision_synthesizer | confidence rollup | PASS | Confidence 0.98 = base 0.98; no penalties. |
-| 21 | decision_synthesizer | final decision | FAIL | REJECTED; approved amount ₹0; confidence 0.98. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP005 for CONSULTATION, treatment 2024-10-15, amount ₹3000, 2 document(s). |
+| 2 | document_verifier | document classification | PASS | 1.2s | — | F001: classified as PRESCRIPTION (conf 0.98), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.4s | — | F002: classified as HOSPITAL_BILL (conf 0.98), quality GOOD. |
+| 4 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_vikram_diabetes.jpg), HOSPITAL_BILL (hospital_bill_vikram.jpg). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 2.0s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 6 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Vikram Joshi'. |
+| 7 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 8 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP005 (Vikram Joshi, SELF) found in roster. |
+| 9 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-15. |
+| 10 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 11 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹3,000 meets the ₹500 minimum. |
+| 12 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹3,000 matches the documented ₹3,000 (itemized line items). |
+| 13 | adjudication_engine | exclusions.claim_level | PASS | <1ms | — | Diagnosis/treatment ('Type 2 Diabetes Mellitus') matches no policy exclusion. |
+| 14 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-09-01). |
+| 15 | adjudication_engine | waiting_period.diabetes | FAIL | <1ms | — | Diagnosis 'Type 2 Diabetes Mellitus' falls under the 90-day waiting period for diabetes (member joined 2024-09-01). Treatment on 2024-10-15 is inside this period. The member is eligible for diabetes-related claims from 2024-11-30. |
+| 16 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to CONSULTATION claims. |
+| 17 | adjudication_engine | line_items | PASS | <1ms | — | All 4 line item(s) covered under consultation. |
+| 18 | adjudication_engine | per_claim_limit | PASS | <1ms | — | Eligible amount ₹3,000 is within the ₹5,000 per-claim limit. |
+| 19 | fraud_checker | velocity and threshold rules | PASS | <1ms | — | No fraud signals: same-day, monthly, and high-value checks all within limits. |
+| 20 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.98 = base 0.98; no penalties. |
+| 21 | decision_synthesizer | final decision | FAIL | <1ms | — | REJECTED; approved amount ₹0; confidence 0.98. |
 
 </details>
 
@@ -715,28 +715,28 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 
 <details><summary><b>Full trace</b> (20 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP002 for DENTAL, treatment 2024-10-15, amount ₹12000, 1 document(s). |
-| 2 | document_verifier | document classification | PASS | F001: classified as HOSPITAL_BILL (conf 0.98), quality GOOD. |
-| 3 | document_verifier | required document types | PASS | All required types for DENTAL present (HOSPITAL_BILL). Uploaded: HOSPITAL_BILL (dental_bill_priya.jpg). |
-| 4 | extraction_agent | extract structured data from documents | PASS | 1 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
-| 5 | document_verifier | patient consistency | PASS | All named documents agree on patient 'Priya Singh'. |
-| 6 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 7 | adjudication_engine | eligibility.member | PASS | Member EMP002 (Priya Singh, SELF) found in roster. |
-| 8 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-10-15. |
-| 9 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 10 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹12,000 meets the ₹500 minimum. |
-| 11 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹12,000 matches the documented ₹12,000 (itemized line items). |
-| 12 | adjudication_engine | exclusions.claim_level | SKIPPED | No diagnosis or treatment text available to screen against exclusions. |
-| 13 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 14 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to DENTAL claims. |
-| 15 | adjudication_engine | line_items | FAIL | 1 of 2 line item(s) approved; 'Teeth Whitening' rejected: 'Teeth Whitening' is an excluded procedure under the dental category ('Teeth Whitening'). |
-| 16 | adjudication_engine | per_claim_limit | PASS | Eligible amount ₹8,000 is within the ₹10,000 per-claim limit. |
-| 17 | adjudication_engine | financial computation | PASS | eligible_base ₹8000.00 → network_discount ₹8000.00 → copay ₹8000.00 → sub_limit_cap ₹8000.00 → annual_limit_cap ₹8000.00 |
-| 18 | fraud_checker | velocity and threshold rules | PASS | No fraud signals: same-day, monthly, and high-value checks all within limits. |
-| 19 | decision_synthesizer | confidence rollup | PASS | Confidence 0.98 = base 0.98; no penalties. |
-| 20 | decision_synthesizer | final decision | PASS | PARTIAL; approved amount ₹8,000; confidence 0.98. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP002 for DENTAL, treatment 2024-10-15, amount ₹12000, 1 document(s). |
+| 2 | document_verifier | document classification | PASS | 1.3s | — | F001: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 3 | document_verifier | required document types | PASS | <1ms | — | All required types for DENTAL present (HOSPITAL_BILL). Uploaded: HOSPITAL_BILL (dental_bill_priya.jpg). |
+| 4 | extraction_agent | extract structured data from documents | PASS | 1.9s | — | 1 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 5 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Priya Singh'. |
+| 6 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 7 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP002 (Priya Singh, SELF) found in roster. |
+| 8 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-15. |
+| 9 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 10 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹12,000 meets the ₹500 minimum. |
+| 11 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹12,000 matches the documented ₹12,000 (itemized line items). |
+| 12 | adjudication_engine | exclusions.claim_level | SKIPPED | <1ms | — | No diagnosis or treatment text available to screen against exclusions. |
+| 13 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 14 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to DENTAL claims. |
+| 15 | adjudication_engine | line_items | FAIL | <1ms | — | 1 of 2 line item(s) approved; 'Teeth Whitening' rejected: 'Teeth Whitening' is an excluded procedure under the dental category ('Teeth Whitening'). |
+| 16 | adjudication_engine | per_claim_limit | PASS | <1ms | — | Eligible amount ₹8,000 is within the ₹10,000 per-claim limit. |
+| 17 | adjudication_engine | financial computation | PASS | <1ms | — | eligible_base ₹8000.00 → network_discount ₹8000.00 → copay ₹8000.00 → sub_limit_cap ₹8000.00 → annual_limit_cap ₹8000.00 |
+| 18 | fraud_checker | velocity and threshold rules | PASS | <1ms | — | No fraud signals: same-day, monthly, and high-value checks all within limits. |
+| 19 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.98 = base 0.98; no penalties. |
+| 20 | decision_synthesizer | final decision | PASS | <1ms | — | PARTIAL; approved amount ₹8,000; confidence 0.98. |
 
 </details>
 
@@ -763,31 +763,31 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 
 <details><summary><b>Full trace</b> (23 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP007 for DIAGNOSTIC, treatment 2024-11-02, amount ₹15000, 3 document(s). |
-| 2 | document_verifier | document classification | PASS | F001: classified as PRESCRIPTION (conf 0.95), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | F002: classified as DIAGNOSTIC_REPORT (conf 0.99), quality GOOD. |
-| 4 | document_verifier | document classification | PASS | F003: classified as HOSPITAL_BILL (conf 0.95), quality GOOD. |
-| 5 | document_verifier | required document types | PASS | All required types for DIAGNOSTIC present (PRESCRIPTION, LAB_REPORT, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_suresh_mri.jpg), DIAGNOSTIC_REPORT (lab_report_suresh_mri.jpg), HOSPITAL_BILL (hospital_bill_suresh_mri.jpg). |
-| 6 | extraction_agent | extract structured data from documents | PASS | 3 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
-| 7 | document_verifier | patient consistency | PASS | All named documents agree on patient 'Suresh Patil'. |
-| 8 | document_verifier | registration format | DEGRADED | Registration 'AP67890/2017' on F001 does not match known state formats; unverified. |
-| 9 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 10 | adjudication_engine | eligibility.member | PASS | Member EMP007 (Suresh Patil, SELF) found in roster. |
-| 11 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-11-02. |
-| 12 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 13 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹15,000 meets the ₹500 minimum. |
-| 14 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹15,000 matches the documented ₹15,000 (itemized line items). |
-| 15 | adjudication_engine | exclusions.claim_level | PASS | Diagnosis/treatment ('Suspected Lumbar Disc Herniation') matches no policy exclusion. |
-| 16 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 17 | adjudication_engine | waiting_period.condition_specific | PASS | Diagnosis 'Suspected Lumbar Disc Herniation' matches no condition-specific waiting period. |
-| 18 | adjudication_engine | pre_authorization | FAIL | 'MRI Lumbar Spine' (₹15,000) requires pre-authorization because MRI above ₹10,000 must be pre-approved, and no authorization was obtained. To resubmit: request pre-authorization from the insurer for this procedure and attach the approval reference (valid 30 days from issue). |
-| 19 | adjudication_engine | line_items | PASS | All 1 line item(s) covered under diagnostic. |
-| 20 | adjudication_engine | per_claim_limit | FAIL | Claimed amount ₹15,000 (eligible ₹15,000) exceeds the per-claim limit of ₹10,000 for DIAGNOSTIC claims. Claims above this limit are not payable. |
-| 21 | fraud_checker | velocity and threshold rules | PASS | No fraud signals: same-day, monthly, and high-value checks all within limits. |
-| 22 | decision_synthesizer | confidence rollup | PASS | Confidence 0.93 = base 0.98 -0.05 (Registration 'AP67890/2017' on F001 does not match known state formats; unverified.) |
-| 23 | decision_synthesizer | final decision | FAIL | REJECTED; approved amount ₹0; confidence 0.93. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP007 for DIAGNOSTIC, treatment 2024-11-02, amount ₹15000, 3 document(s). |
+| 2 | document_verifier | document classification | PASS | 1.4s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.3s | — | F002: classified as DIAGNOSTIC_REPORT (conf 0.95), quality GOOD. |
+| 4 | document_verifier | document classification | PASS | 1.4s | — | F003: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 5 | document_verifier | required document types | PASS | <1ms | — | All required types for DIAGNOSTIC present (PRESCRIPTION, LAB_REPORT, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_suresh_mri.jpg), DIAGNOSTIC_REPORT (lab_report_suresh_mri.jpg), HOSPITAL_BILL (hospital_bill_suresh_mri.jpg). |
+| 6 | extraction_agent | extract structured data from documents | PASS | 2.3s | — | 3 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 7 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Suresh Patil'. |
+| 8 | document_verifier | registration format | DEGRADED | <1ms | -0.05 | Registration 'AP67890/2017' on F001 does not match known state formats; unverified. |
+| 9 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 10 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP007 (Suresh Patil, SELF) found in roster. |
+| 11 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-11-02. |
+| 12 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 13 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹15,000 meets the ₹500 minimum. |
+| 14 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹15,000 matches the documented ₹15,000 (itemized line items). |
+| 15 | adjudication_engine | exclusions.claim_level | PASS | <1ms | — | Diagnosis/treatment ('Suspected Lumbar Disc Herniation') matches no policy exclusion. |
+| 16 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 17 | adjudication_engine | waiting_period.condition_specific | PASS | <1ms | — | Diagnosis 'Suspected Lumbar Disc Herniation' matches no condition-specific waiting period. |
+| 18 | adjudication_engine | pre_authorization | FAIL | <1ms | — | 'MRI Lumbar Spine' (₹15,000) requires pre-authorization because MRI above ₹10,000 must be pre-approved, and no authorization was obtained. To resubmit: request pre-authorization from the insurer for this procedure and attach the approval reference (valid 30 days from issue). |
+| 19 | adjudication_engine | line_items | PASS | <1ms | — | All 1 line item(s) covered under diagnostic. |
+| 20 | adjudication_engine | per_claim_limit | FAIL | <1ms | — | Claimed amount ₹15,000 (eligible ₹15,000) exceeds the per-claim limit of ₹10,000 for DIAGNOSTIC claims. Claims above this limit are not payable. |
+| 21 | fraud_checker | velocity and threshold rules | PASS | <1ms | — | No fraud signals: same-day, monthly, and high-value checks all within limits. |
+| 22 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.93 = base 0.98 -0.05 (Registration 'AP67890/2017' on F001 does not match known state formats; unverified.) |
+| 23 | decision_synthesizer | final decision | FAIL | <1ms | — | REJECTED; approved amount ₹0; confidence 0.93. |
 
 </details>
 
@@ -812,29 +812,29 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 
 <details><summary><b>Full trace</b> (21 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP003 for CONSULTATION, treatment 2024-10-20, amount ₹7500, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | F002: classified as HOSPITAL_BILL (conf 0.98), quality GOOD. |
-| 4 | document_verifier | required document types | PASS | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_amit_gastro.jpg), HOSPITAL_BILL (hospital_bill_amit.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
-| 6 | document_verifier | patient consistency | PASS | All named documents agree on patient 'Amit Verma'. |
-| 7 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 8 | adjudication_engine | eligibility.member | PASS | Member EMP003 (Amit Verma, SELF) found in roster. |
-| 9 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-10-20. |
-| 10 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 11 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹7,500 meets the ₹500 minimum. |
-| 12 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹7,500 matches the documented ₹7,500 (itemized line items). |
-| 13 | adjudication_engine | exclusions.claim_level | PASS | Diagnosis/treatment ('Acute Gastroenteritis') matches no policy exclusion. |
-| 14 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 15 | adjudication_engine | waiting_period.condition_specific | PASS | Diagnosis 'Acute Gastroenteritis' matches no condition-specific waiting period. |
-| 16 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to CONSULTATION claims. |
-| 17 | adjudication_engine | line_items | PASS | All 2 line item(s) covered under consultation. |
-| 18 | adjudication_engine | per_claim_limit | FAIL | Claimed amount ₹7,500 (eligible ₹7,500) exceeds the per-claim limit of ₹5,000 for CONSULTATION claims. Claims above this limit are not payable. |
-| 19 | fraud_checker | velocity and threshold rules | PASS | No fraud signals: same-day, monthly, and high-value checks all within limits. |
-| 20 | decision_synthesizer | confidence rollup | PASS | Confidence 0.98 = base 0.98; no penalties. |
-| 21 | decision_synthesizer | final decision | FAIL | REJECTED; approved amount ₹0; confidence 0.98. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP003 for CONSULTATION, treatment 2024-10-20, amount ₹7500, 2 document(s). |
+| 2 | document_verifier | document classification | PASS | 1.6s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.5s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 4 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_amit_gastro.jpg), HOSPITAL_BILL (hospital_bill_amit.jpg). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 2.0s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 6 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Amit Verma'. |
+| 7 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 8 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP003 (Amit Verma, SELF) found in roster. |
+| 9 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-20. |
+| 10 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 11 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹7,500 meets the ₹500 minimum. |
+| 12 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹7,500 matches the documented ₹7,500 (itemized line items). |
+| 13 | adjudication_engine | exclusions.claim_level | PASS | <1ms | — | Diagnosis/treatment ('Acute Gastroenteritis') matches no policy exclusion. |
+| 14 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 15 | adjudication_engine | waiting_period.condition_specific | PASS | <1ms | — | Diagnosis 'Acute Gastroenteritis' matches no condition-specific waiting period. |
+| 16 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to CONSULTATION claims. |
+| 17 | adjudication_engine | line_items | PASS | <1ms | — | All 2 line item(s) covered under consultation. |
+| 18 | adjudication_engine | per_claim_limit | FAIL | <1ms | — | Claimed amount ₹7,500 (eligible ₹7,500) exceeds the per-claim limit of ₹5,000 for CONSULTATION claims. Claims above this limit are not payable. |
+| 19 | fraud_checker | velocity and threshold rules | PASS | <1ms | — | No fraud signals: same-day, monthly, and high-value checks all within limits. |
+| 20 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.98 = base 0.98; no penalties. |
+| 21 | decision_synthesizer | final decision | FAIL | <1ms | — | REJECTED; approved amount ₹0; confidence 0.98. |
 
 </details>
 
@@ -865,30 +865,30 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 
 <details><summary><b>Full trace</b> (22 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP008 for CONSULTATION, treatment 2024-10-30, amount ₹4800, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
-| 4 | document_verifier | required document types | PASS | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_ravi_migraine.jpg), HOSPITAL_BILL (hospital_bill_ravi.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
-| 6 | document_verifier | patient consistency | PASS | All named documents agree on patient 'Ravi Menon'. |
-| 7 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 8 | adjudication_engine | eligibility.member | PASS | Member EMP008 (Ravi Menon, SELF) found in roster. |
-| 9 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-10-30. |
-| 10 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 11 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹4,800 meets the ₹500 minimum. |
-| 12 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹4,800 matches the documented ₹4,800 (itemized line items). |
-| 13 | adjudication_engine | exclusions.claim_level | PASS | Diagnosis/treatment ('Migraine without aura') matches no policy exclusion. |
-| 14 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 15 | adjudication_engine | waiting_period.condition_specific | PASS | Diagnosis 'Migraine without aura' matches no condition-specific waiting period. |
-| 16 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to CONSULTATION claims. |
-| 17 | adjudication_engine | line_items | PASS | All 2 line item(s) covered under consultation. |
-| 18 | adjudication_engine | per_claim_limit | PASS | Eligible amount ₹4,800 is within the ₹5,000 per-claim limit. |
-| 19 | adjudication_engine | financial computation | PASS | eligible_base ₹4800.00 → network_discount ₹4800.00 → copay ₹4320.00 → sub_limit_cap ₹4320.00 → annual_limit_cap ₹4320.00 |
-| 20 | fraud_checker | velocity and threshold rules | FAIL | This is claim #4 from member EMP008 on 2024-10-30 (earlier today: CLM_0081, CLM_0082, CLM_0083) — above the same-day limit of 2. |
-| 21 | decision_synthesizer | confidence rollup | PASS | Confidence 0.98 = base 0.98; no penalties. |
-| 22 | decision_synthesizer | final decision | PASS | MANUAL_REVIEW; approved amount ₹0; confidence 0.98. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP008 for CONSULTATION, treatment 2024-10-30, amount ₹4800, 2 document(s). |
+| 2 | document_verifier | document classification | PASS | 1.1s | — | F001: classified as PRESCRIPTION (conf 0.98), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.3s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 4 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_ravi_migraine.jpg), HOSPITAL_BILL (hospital_bill_ravi.jpg). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 2.1s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 6 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Ravi Menon'. |
+| 7 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 8 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP008 (Ravi Menon, SELF) found in roster. |
+| 9 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-30. |
+| 10 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 11 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹4,800 meets the ₹500 minimum. |
+| 12 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹4,800 matches the documented ₹4,800 (itemized line items). |
+| 13 | adjudication_engine | exclusions.claim_level | PASS | <1ms | — | Diagnosis/treatment ('Migraine without aura') matches no policy exclusion. |
+| 14 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 15 | adjudication_engine | waiting_period.condition_specific | PASS | <1ms | — | Diagnosis 'Migraine without aura' matches no condition-specific waiting period. |
+| 16 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to CONSULTATION claims. |
+| 17 | adjudication_engine | line_items | PASS | <1ms | — | All 2 line item(s) covered under consultation. |
+| 18 | adjudication_engine | per_claim_limit | PASS | <1ms | — | Eligible amount ₹4,800 is within the ₹5,000 per-claim limit. |
+| 19 | adjudication_engine | financial computation | PASS | <1ms | — | eligible_base ₹4800.00 → network_discount ₹4800.00 → copay ₹4320.00 → sub_limit_cap ₹4320.00 → annual_limit_cap ₹4320.00 |
+| 20 | fraud_checker | velocity and threshold rules | FAIL | <1ms | — | This is claim #4 from member EMP008 on 2024-10-30 (earlier today: CLM_0081, CLM_0082, CLM_0083) — above the same-day limit of 2. |
+| 21 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.98 = base 0.98; no penalties. |
+| 22 | decision_synthesizer | final decision | PASS | <1ms | — | MANUAL_REVIEW; approved amount ₹0; confidence 0.98. |
 
 </details>
 
@@ -897,12 +897,10 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 **Expected:** APPROVED, ₹3,240  
 **Got:** APPROVED
 
-**Approved:** ₹3,240 · **Confidence:** 0.88
+**Approved:** ₹3,240 · **Confidence:** 0.98
 
 **Reasons given:**
 - Approved ₹3,240 of claimed ₹4,500.
-- Confidence 0.88 (from 0.98); the following were noted.
-- Some fields on 'hospital_bill_apollo_deepak.jpg' were hard to read; the reader noted: Doctor registration number not provided; Diagnosis and treatment details not provided; Specific medicines not listed; Tests ordered not listed.
 - Network hospital discount (20%) applied. -₹900 (₹4,500 → ₹3,600)
 - Co-pay (10%) borne by member. -₹360 (₹3,600 → ₹3,240)
 
@@ -915,33 +913,32 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 **system_must checks:**
 - ✅ shows discount and co-pay breakdown
 
-<details><summary><b>Full trace</b> (23 steps)</summary>
+<details><summary><b>Full trace</b> (22 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP010 for CONSULTATION, treatment 2024-11-03, amount ₹4500, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | F001: classified as PRESCRIPTION (conf 0.95), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
-| 4 | document_verifier | required document types | PASS | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_deepak_apollo.jpg), HOSPITAL_BILL (hospital_bill_apollo_deepak.jpg). |
-| 5 | extraction_agent | field confidence review | DEGRADED | Some fields on 'hospital_bill_apollo_deepak.jpg' were hard to read; the reader noted: Doctor registration number not provided; Diagnosis and treatment details not provided; Specific medicines not listed; Tests ordered not listed. |
-| 6 | extraction_agent | extract structured data from documents | PASS | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
-| 7 | document_verifier | patient consistency | PASS | All named documents agree on patient 'Deepak Shah'. |
-| 8 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 9 | adjudication_engine | eligibility.member | PASS | Member EMP010 (Deepak Shah, SELF) found in roster. |
-| 10 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-11-03. |
-| 11 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 12 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹4,500 meets the ₹500 minimum. |
-| 13 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹4,500 matches the documented ₹4,500 (itemized line items). |
-| 14 | adjudication_engine | exclusions.claim_level | PASS | Diagnosis/treatment ('Acute Bronchitis') matches no policy exclusion. |
-| 15 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 16 | adjudication_engine | waiting_period.condition_specific | PASS | Diagnosis 'Acute Bronchitis' matches no condition-specific waiting period. |
-| 17 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to CONSULTATION claims. |
-| 18 | adjudication_engine | line_items | PASS | All 2 line item(s) covered under consultation. |
-| 19 | adjudication_engine | per_claim_limit | PASS | Eligible amount ₹4,500 is within the ₹5,000 per-claim limit. |
-| 20 | adjudication_engine | financial computation | PASS | eligible_base ₹4500.00 → network_discount ₹3600.00 → copay ₹3240.00 → sub_limit_cap ₹3240.00 → annual_limit_cap ₹3240.00 |
-| 21 | fraud_checker | velocity and threshold rules | PASS | No fraud signals: same-day, monthly, and high-value checks all within limits. |
-| 22 | decision_synthesizer | confidence rollup | PASS | Confidence 0.88 = base 0.98 -0.10 (Some fields on 'hospital_bill_apollo_deepak.jpg' were hard to read; the reader noted: Doctor registration number not provided; Diagnosis and treatment details not provided; Specific medicines not listed; Tests ordered not listed.) |
-| 23 | decision_synthesizer | final decision | PASS | APPROVED; approved amount ₹3,240; confidence 0.88. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP010 for CONSULTATION, treatment 2024-11-03, amount ₹4500, 2 document(s). |
+| 2 | document_verifier | document classification | PASS | 1.3s | — | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.3s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 4 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_deepak_apollo.jpg), HOSPITAL_BILL (hospital_bill_apollo_deepak.jpg). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 2.4s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 6 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Deepak Shah'. |
+| 7 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 8 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP010 (Deepak Shah, SELF) found in roster. |
+| 9 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-11-03. |
+| 10 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 11 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹4,500 meets the ₹500 minimum. |
+| 12 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹4,500 matches the documented ₹4,500 (itemized line items). |
+| 13 | adjudication_engine | exclusions.claim_level | PASS | <1ms | — | Diagnosis/treatment ('Acute Bronchitis') matches no policy exclusion. |
+| 14 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 15 | adjudication_engine | waiting_period.condition_specific | PASS | <1ms | — | Diagnosis 'Acute Bronchitis' matches no condition-specific waiting period. |
+| 16 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to CONSULTATION claims. |
+| 17 | adjudication_engine | line_items | PASS | <1ms | — | All 2 line item(s) covered under consultation. |
+| 18 | adjudication_engine | per_claim_limit | PASS | <1ms | — | Eligible amount ₹4,500 is within the ₹5,000 per-claim limit. |
+| 19 | adjudication_engine | financial computation | PASS | <1ms | — | eligible_base ₹4500.00 → network_discount ₹3600.00 → copay ₹3240.00 → sub_limit_cap ₹3240.00 → annual_limit_cap ₹3240.00 |
+| 20 | fraud_checker | velocity and threshold rules | PASS | <1ms | — | No fraud signals: same-day, monthly, and high-value checks all within limits. |
+| 21 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.98 = base 0.98; no penalties. |
+| 22 | decision_synthesizer | final decision | PASS | <1ms | — | APPROVED; approved amount ₹3,240; confidence 0.98. |
 
 </details>
 
@@ -971,30 +968,30 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 
 <details><summary><b>Full trace</b> (22 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP006 for ALTERNATIVE_MEDICINE, treatment 2024-10-28, amount ₹4000, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | F001: classified as PRESCRIPTION (conf 0.98), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | F002: classified as HOSPITAL_BILL (conf 0.95), quality GOOD. |
-| 4 | document_verifier | required document types | PASS | All required types for ALTERNATIVE_MEDICINE present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_kavita_ayurveda.jpg), HOSPITAL_BILL (hospital_bill_ayur_wellness.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
-| 6 | document_verifier | patient consistency | PASS | All named documents agree on patient 'Kavita Nair'. |
-| 7 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 8 | adjudication_engine | eligibility.member | PASS | Member EMP006 (Kavita Nair, SELF) found in roster. |
-| 9 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-10-28. |
-| 10 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 11 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹4,000 meets the ₹500 minimum. |
-| 12 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹4,000 matches the documented ₹4,000 (itemized line items). |
-| 13 | adjudication_engine | exclusions.claim_level | PASS | Diagnosis/treatment ('Chronic Joint Pain (Sandhigata Vata)') matches no policy exclusion. |
-| 14 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 15 | adjudication_engine | waiting_period.condition_specific | PASS | Diagnosis 'Chronic Joint Pain (Sandhigata Vata)' matches no condition-specific waiting period. |
-| 16 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to ALTERNATIVE_MEDICINE claims. |
-| 17 | adjudication_engine | line_items | PASS | All 2 line item(s) covered under alternative_medicine. |
-| 18 | adjudication_engine | per_claim_limit | PASS | Eligible amount ₹4,000 is within the ₹8,000 per-claim limit. |
-| 19 | adjudication_engine | financial computation | PASS | eligible_base ₹4000.00 → network_discount ₹4000.00 → copay ₹4000.00 → sub_limit_cap ₹4000.00 → annual_limit_cap ₹4000.00 |
-| 20 | fraud_checker | component failure handled | DEGRADED | Component failure (simulated): fraud checker crashed and was skipped; velocity rules were not evaluated for this claim. |
-| 21 | decision_synthesizer | confidence rollup | PASS | Confidence 0.78 = base 0.98 -0.20 (fraud_checker failed and was skipped) |
-| 22 | decision_synthesizer | final decision | PASS | APPROVED; approved amount ₹4,000; confidence 0.78. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP006 for ALTERNATIVE_MEDICINE, treatment 2024-10-28, amount ₹4000, 2 document(s). |
+| 2 | document_verifier | document classification | PASS | 1.4s | — | F001: classified as PRESCRIPTION (conf 0.98), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.2s | — | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
+| 4 | document_verifier | required document types | PASS | <1ms | — | All required types for ALTERNATIVE_MEDICINE present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_kavita_ayurveda.jpg), HOSPITAL_BILL (hospital_bill_ayur_wellness.jpg). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 2.0s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 6 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Kavita Nair'. |
+| 7 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 8 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP006 (Kavita Nair, SELF) found in roster. |
+| 9 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-28. |
+| 10 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 11 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹4,000 meets the ₹500 minimum. |
+| 12 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹4,000 matches the documented ₹4,000 (itemized line items). |
+| 13 | adjudication_engine | exclusions.claim_level | PASS | <1ms | — | Diagnosis/treatment ('Chronic Joint Pain (Sandhigata Vata)') matches no policy exclusion. |
+| 14 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 15 | adjudication_engine | waiting_period.condition_specific | PASS | <1ms | — | Diagnosis 'Chronic Joint Pain (Sandhigata Vata)' matches no condition-specific waiting period. |
+| 16 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to ALTERNATIVE_MEDICINE claims. |
+| 17 | adjudication_engine | line_items | PASS | <1ms | — | All 2 line item(s) covered under alternative_medicine. |
+| 18 | adjudication_engine | per_claim_limit | PASS | <1ms | — | Eligible amount ₹4,000 is within the ₹8,000 per-claim limit. |
+| 19 | adjudication_engine | financial computation | PASS | <1ms | — | eligible_base ₹4000.00 → network_discount ₹4000.00 → copay ₹4000.00 → sub_limit_cap ₹4000.00 → annual_limit_cap ₹4000.00 |
+| 20 | fraud_checker | component failure handled | DEGRADED | <1ms | -0.20 | Component failure (simulated): fraud checker crashed and was skipped; velocity rules were not evaluated for this claim. |
+| 21 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.78 = base 0.98 -0.20 (fraud_checker failed and was skipped) |
+| 22 | decision_synthesizer | final decision | PASS | <1ms | — | APPROVED; approved amount ₹4,000; confidence 0.78. |
 
 </details>
 
@@ -1017,28 +1014,28 @@ Documents are the generated fixtures in `data/mock_documents/`, uploaded with th
 
 <details><summary><b>Full trace</b> (21 steps)</summary>
 
-| # | Component | Action | Outcome | Detail |
-|---|-----------|--------|---------|--------|
-| 1 | intake_validator | validate submission payload | PASS | Claim by EMP009 for CONSULTATION, treatment 2024-10-18, amount ₹8000, 2 document(s). |
-| 2 | document_verifier | document classification | PASS | F001: classified as PRESCRIPTION (conf 0.99), quality GOOD. |
-| 3 | document_verifier | document classification | PASS | F002: classified as HOSPITAL_BILL (conf 0.99), quality GOOD. |
-| 4 | document_verifier | required document types | PASS | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_anita_bariatric.jpg), HOSPITAL_BILL (hospital_bill_anita_bariatric.jpg). |
-| 5 | extraction_agent | extract structured data from documents | PASS | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
-| 6 | document_verifier | patient consistency | PASS | All named documents agree on patient 'Anita Desai'. |
-| 7 | policy_retriever | rule source | PASS | In-memory policy snapshot (authoritative; no policy graph configured). |
-| 8 | adjudication_engine | eligibility.member | PASS | Member EMP009 (Anita Desai, SELF) found in roster. |
-| 9 | adjudication_engine | eligibility.policy | PASS | Policy PLUM_GHI_2024 active on treatment date 2024-10-18. |
-| 10 | adjudication_engine | submission.deadline | PASS | Submitted 0 days after treatment, within the 30-day deadline. |
-| 11 | adjudication_engine | submission.minimum_amount | PASS | Claimed amount ₹8,000 meets the ₹500 minimum. |
-| 12 | adjudication_engine | amount_reconciliation | PASS | Claimed ₹8,000 matches the documented ₹8,000 (itemized line items). |
-| 13 | adjudication_engine | exclusions.claim_level | FAIL | 'Morbid Obesity - BMI 37' matches policy exclusion 'Obesity and weight loss programs' (matched on: obesity). This condition is not covered under the policy at any time. |
-| 14 | adjudication_engine | waiting_period.initial | PASS | Initial 30-day waiting period complete (joined 2024-04-01). |
-| 15 | adjudication_engine | waiting_period.obesity_treatment | FAIL | Diagnosis 'Morbid Obesity - BMI 37' falls under the 365-day waiting period for obesity treatment (member joined 2024-04-01). Treatment on 2024-10-18 is inside this period. The member is eligible for obesity treatment-related claims from 2025-04-01. |
-| 16 | adjudication_engine | pre_authorization | PASS | No pre-authorization rules apply to CONSULTATION claims. |
-| 17 | adjudication_engine | line_items | FAIL | All 2 line item(s) rejected — the claim is excluded. |
-| 18 | adjudication_engine | per_claim_limit | PASS | Eligible amount ₹0 is within the ₹5,000 per-claim limit. |
-| 19 | fraud_checker | velocity and threshold rules | PASS | No fraud signals: same-day, monthly, and high-value checks all within limits. |
-| 20 | decision_synthesizer | confidence rollup | PASS | Confidence 0.98 = base 0.98; no penalties. |
-| 21 | decision_synthesizer | final decision | FAIL | REJECTED; approved amount ₹0; confidence 0.98. |
+| # | Component | Action | Outcome | Took | Δ conf | Detail |
+|---|-----------|--------|---------|------|--------|--------|
+| 1 | intake_validator | validate submission payload | PASS | <1ms | — | Claim by EMP009 for CONSULTATION, treatment 2024-10-18, amount ₹8000, 2 document(s). |
+| 2 | document_verifier | document classification | PASS | 1.4s | — | F001: classified as PRESCRIPTION (conf 0.90), quality GOOD. |
+| 3 | document_verifier | document classification | PASS | 1.5s | — | F002: classified as HOSPITAL_BILL (conf 0.98), quality GOOD. |
+| 4 | document_verifier | required document types | PASS | <1ms | — | All required types for CONSULTATION present (PRESCRIPTION, HOSPITAL_BILL). Uploaded: PRESCRIPTION (prescription_anita_bariatric.jpg), HOSPITAL_BILL (hospital_bill_anita_bariatric.jpg). |
+| 5 | extraction_agent | extract structured data from documents | PASS | 2.0s | — | 2 document(s) extracted via GPT-4o vision; 0 used pre-extracted content (test mode). |
+| 6 | document_verifier | patient consistency | PASS | <1ms | — | All named documents agree on patient 'Anita Desai'. |
+| 7 | policy_retriever | rule source | PASS | <1ms | — | In-memory policy snapshot (authoritative; no policy graph configured). |
+| 8 | adjudication_engine | eligibility.member | PASS | <1ms | — | Member EMP009 (Anita Desai, SELF) found in roster. |
+| 9 | adjudication_engine | eligibility.policy | PASS | <1ms | — | Policy PLUM_GHI_2024 active on treatment date 2024-10-18. |
+| 10 | adjudication_engine | submission.deadline | PASS | <1ms | — | Submitted 0 days after treatment, within the 30-day deadline. |
+| 11 | adjudication_engine | submission.minimum_amount | PASS | <1ms | — | Claimed amount ₹8,000 meets the ₹500 minimum. |
+| 12 | adjudication_engine | amount_reconciliation | PASS | <1ms | — | Claimed ₹8,000 matches the documented ₹8,000 (itemized line items). |
+| 13 | adjudication_engine | exclusions.claim_level | FAIL | <1ms | — | 'Morbid Obesity - BMI 37' matches policy exclusion 'Obesity and weight loss programs' (matched on: obesity). This condition is not covered under the policy at any time. |
+| 14 | adjudication_engine | waiting_period.initial | PASS | <1ms | — | Initial 30-day waiting period complete (joined 2024-04-01). |
+| 15 | adjudication_engine | waiting_period.obesity_treatment | FAIL | <1ms | — | Diagnosis 'Morbid Obesity - BMI 37' falls under the 365-day waiting period for obesity treatment (member joined 2024-04-01). Treatment on 2024-10-18 is inside this period. The member is eligible for obesity treatment-related claims from 2025-04-01. |
+| 16 | adjudication_engine | pre_authorization | PASS | <1ms | — | No pre-authorization rules apply to CONSULTATION claims. |
+| 17 | adjudication_engine | line_items | FAIL | <1ms | — | All 2 line item(s) rejected — the claim is excluded. |
+| 18 | adjudication_engine | per_claim_limit | PASS | <1ms | — | Eligible amount ₹0 is within the ₹5,000 per-claim limit. |
+| 19 | fraud_checker | velocity and threshold rules | PASS | <1ms | — | No fraud signals: same-day, monthly, and high-value checks all within limits. |
+| 20 | decision_synthesizer | confidence rollup | PASS | <1ms | — | Confidence 0.98 = base 0.98; no penalties. |
+| 21 | decision_synthesizer | final decision | FAIL | <1ms | — | REJECTED; approved amount ₹0; confidence 0.98. |
 
 </details>

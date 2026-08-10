@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import DocumentPreview from "./DocumentPreview";
 import TraceTimeline from "./TraceTimeline";
 
@@ -102,6 +103,48 @@ function Decision({ result }) {
   );
 }
 
+/**
+ * What the pipeline is doing, while it is doing it.
+ *
+ * The confidence figure is shown as the running adjustment rather than an
+ * absolute score: the starting value is the synthesizer's to decide, and
+ * duplicating it here would put a second copy of a backend rule in the UI.
+ * Watching penalties arrive is the informative part either way.
+ */
+function LiveProgress({ steps }) {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const started = performance.now();
+    const timer = setInterval(() => setElapsed((performance.now() - started) / 1000), 100);
+    return () => clearInterval(timer);
+  }, []);
+
+  const current = steps[steps.length - 1];
+  const adjustment = steps.reduce((sum, s) => sum + (s.confidence_delta || 0), 0);
+
+  return (
+    <div className="live">
+      <div className="live-stat">
+        <b>{steps.length}</b> check{steps.length === 1 ? "" : "s"}
+      </div>
+      <div className="live-stat">
+        <b>{elapsed.toFixed(1)}s</b> elapsed
+      </div>
+      {adjustment !== 0 && (
+        <div className="live-stat">
+          confidence <b className="down">−{Math.abs(adjustment).toFixed(2)}</b>
+        </div>
+      )}
+      {current && (
+        <div className="live-now">
+          <span className="dots" /> {current.component.replace(/_/g, " ")}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ResultView({ result, liveSteps, emptyHint }) {
   if (!result && liveSteps) {
     return (
@@ -114,7 +157,8 @@ export default function ResultView({ result, liveSteps, emptyHint }) {
           Each check appears as the pipeline performs it. Nothing is decided until every
           check below has run.
         </p>
-        <TraceTimeline trace={{ steps: liveSteps }} />
+        <LiveProgress steps={liveSteps} />
+        <TraceTimeline trace={{ steps: liveSteps }} live />
       </div>
     );
   }

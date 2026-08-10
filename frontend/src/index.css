@@ -437,18 +437,83 @@ tr.clickable:hover { background: #f4f5fb; }
 .problem .action { margin-top: 6px; font-weight: 600; }
 
 .trace { margin-top: 6px; }
-.step { display: flex; gap: 12px; padding: 9px 4px; border-bottom: 1px solid var(--line); font-size: 13px; }
+/* Grid, not flex: the timing and confidence columns must line up down the
+   page whatever length the detail text wraps to — they are read vertically. */
+.step {
+  display: grid;
+  grid-template-columns: 22px 76px minmax(0, 1fr) 52px 46px;
+  gap: 12px;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
 .step:last-child { border-bottom: none; }
-.step .seq { color: var(--muted); width: 22px; flex: none; text-align: right; }
-.step .outcome { width: 84px; flex: none; font-weight: 700; font-size: 11px; padding-top: 2px; }
+.step .seq { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.step .outcome { font-weight: 700; font-size: 11px; padding-top: 2px; letter-spacing: 0.04em; }
 .step .outcome.PASS { color: var(--green); }
 .step .outcome.FAIL { color: var(--red); }
 .step .outcome.SKIPPED { color: var(--muted); }
 .step .outcome.DEGRADED { color: var(--amber); }
-.step .body { flex: 1; }
-.step .component { font-weight: 600; }
+.step .action { font-weight: 600; }
 .step .detail { color: #3d4459; margin-top: 2px; line-height: 1.45; }
 .step .meta { color: var(--muted); font-size: 11.5px; margin-top: 3px; }
+.step .took,
+.step .delta {
+  text-align: right;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* The stage that costs seconds should be visible without reading every row. */
+.step .took.dominant { color: var(--ink); font-weight: 700; }
+.step .delta .down { color: var(--amber); font-weight: 700; }
+.step .delta .up { color: var(--green); font-weight: 700; }
+
+/* One label per run of steps from the same component: the flat list becomes
+   the sequence of pipeline stages it actually is. */
+.stage {
+  margin: 14px 0 2px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--accent);
+}
+.trace > div:first-child .stage { margin-top: 4px; }
+.trace-foot {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+/* Live run: the newest step announces itself so the eye follows the work. */
+.step.latest { background: #fdf6f8; border-radius: 8px; animation: step-in 0.35s ease; }
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .step.latest { animation: none; }
+}
+.live {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  margin: 12px 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fbfbfd;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.live-stat b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.live-stat b.down { color: var(--amber); }
+.live-now { margin-left: auto; color: var(--accent); font-weight: 600; }
 
 .thumbs { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0 4px; }
 .thumb {

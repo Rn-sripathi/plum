@@ -232,6 +232,13 @@ def run_all_uploads() -> list[CaseResult]:
 # --- report rendering --------------------------------------------------------
 
 
+def _took(ms: float) -> str:
+    """Step duration, so the trace shows where a claim's time actually goes."""
+    if ms >= 1000:
+        return f"{ms / 1000:.1f}s"
+    return f"{ms:.0f}ms" if ms >= 1 else "<1ms"
+
+
 def _render_case(cr: CaseResult, suffix: str = "") -> str:
     lines = [f"## {cr.case_id}{suffix} — {cr.case_name} {'✅' if cr.matched else '❌'}", ""]
     exp = cr.expected
@@ -292,12 +299,17 @@ def _render_case(cr: CaseResult, suffix: str = "") -> str:
         "",
         "<details><summary><b>Full trace</b> (" + str(len(trace.steps)) + " steps)</summary>",
         "",
-        "| # | Component | Action | Outcome | Detail |",
-        "|---|-----------|--------|---------|--------|",
+        "| # | Component | Action | Outcome | Took | Δ conf | Detail |",
+        "|---|-----------|--------|---------|------|--------|--------|",
     ]
     for s in trace.steps:
         detail = s.detail.replace("|", "\\|")
-        lines.append(f"| {s.seq} | {s.component} | {s.action} | {s.outcome.value} | {detail} |")
+        took = "—" if s.duration_ms is None else _took(s.duration_ms)
+        delta = f"{s.confidence_delta:+.2f}" if s.confidence_delta else "—"
+        lines.append(
+            f"| {s.seq} | {s.component} | {s.action} | {s.outcome.value} | "
+            f"{took} | {delta} | {detail} |"
+        )
     lines += ["", "</details>", ""]
     return "\n".join(lines)
 
