@@ -25,43 +25,69 @@ specific reasons, a confidence score, and a **complete decision trace**.
 4. **Policy is data, not code.** The engine interprets `policy_terms.json`
    through typed lookups. A new policy is a data change; no rule is hardcoded.
 
-## Component map
+## How a claim is decided
 
-Two paths through one system. **Deciding** a claim is deterministic and writes a
-trace. **Asking about** what was decided only reads — it can reach every store,
-and it can produce no decision.
+### What happens to a claim
+
+The shape that matters is where a claim can *stop*. Three of the four exits are
+reached before any money is computed, and only one of them is a rejection.
 
 ```mermaid
 flowchart TD
-    UI[React console\nsubmit · review · analytics · assistant] --> API[FastAPI\napi/routes.py]
+    IN([Member submits<br/>details + documents]) --> INTAKE{Member in roster?<br/>Policy active, within<br/>deadline and minimum?}
+    INTAKE -->|no| BAD([Refused at intake<br/>names the field · no decision])
 
-    API -->|POST /claims· /claims/upload| P[Pipeline\norchestrator/pipeline.py\nowns TraceBuilder]
-    P --> V[Document Verifier\nagents/verifier.py]
-    V -->|member-fixable problem| STOP[DocumentProblemReport\nno decision, specific actions]
-    V --> X[Extraction Agent\nagents/extraction.py\nconcurrent · test mode or GPT-4o vision]
-    X --> A[Adjudication Engine\nengine/* — deterministic, zero LLM]
-    A --> F[Fraud Checker\nengine/fraud.py]
-    F --> S[Decision Synthesizer\nengine/synthesizer.py\nconfidence rollup]
-    S --> OUT[ClaimDecision\namount · reasons · confidence · trace]
+    INTAKE -->|yes| OPEN{Does every file open?}
+    OPEN -->|no| BACK([Handed back to the member<br/>names the file and what to do<br/><b>NO DECISION MADE</b>])
+    OPEN -->|yes| LEG{Legible enough to read?<br/>focus measured in code,<br/>never asked of the model}
+    LEG -->|no| BACK
+    LEG -->|yes| WHAT[Read every page:<br/>what document is this?]
+    WHAT --> REQ{Required documents present<br/>for this treatment type?}
+    REQ -->|no| BACK
+    REQ -->|yes| WHO{Do all documents<br/>name the same patient?}
+    WHO -->|no| BACK
 
-    API -->|POST /assistant/chat| AS[Assistant\nagents/assistant.py\ntool loop + grounding gates]
-    AS <-->|typed tools, read-only| RKB[Knowledge Base\nkb/retrieval.py\nScope-filtered]
-    AS --> ANS[ChatAnswer\ncitations · grounded · trace]
-    API -->|GET /analytics| AN[Portfolio aggregation\ncore/analytics.py]
+    WHO -->|yes| READ[Extract the fields from each document<br/>diagnosis · amounts · dates · doctor]
+    READ --> RULES[Apply the policy in fixed order:<br/>eligibility → submission rules → exclusions →<br/>waiting periods → pre-auth → line items → limits]
+    RULES --> MONEY[Compute the money in fixed order:<br/>eligible base → network discount → co-pay →<br/>category sub-limit → annual cap]
+    MONEY --> FRAUD{Unusual claim pattern?<br/>same-day and monthly velocity}
+    FRAUD -->|signals found| REVIEW([MANUAL REVIEW<br/>signals named · never auto-rejected])
+    FRAUD -->|none| CONF{How much of the evidence<br/>was solid?<br/>0.98 minus each doubt}
+    CONF -->|below 0.50| REVIEW
+    CONF -->|0.50 – 0.75| SOFT([Decision stands<br/>+ review recommended])
+    CONF -->|above 0.75| DONE([APPROVED · PARTIAL · REJECTED<br/>amount · reasons · confidence])
 
-    A -.reads.-> SNAP[(PolicySnapshot\nkb/snapshot.py)]
-    X -.calls.-> LLM[DocumentAI\nagents/llm.py\nGPT-4o, optional]
-    P -.persists.-> DB[(ClaimStore\ncore/store.py\nPostgres or SQLite)]
-    RKB -.-> SNAP
-    RKB -.-> VEC[(Qdrant\nkb/semantic.py)]
-    RKB -.-> GR[(Neo4j\nkb/graph.py)]
-    RKB -.-> DB
-    RKB -.-> DOCS[(docs/*.md)]
-    AN -.reads.-> DB
+    DEG[/A component failed<br/>LLM, vector index, graph, store/] -.->|continue on the fallback,<br/>record it, lower confidence| CONF
 ```
 
-The assistant has no edge into the engine, by design: it explains decisions and
-cites clauses, and the pipeline stays the only thing that decides money.
+Two properties are worth reading off the picture. **A document problem is not a
+rejection** — the claim is handed back with instructions and no decision is made,
+which is a different outcome from REJECTED and is modelled as one. And **a
+component failing is not an exit**: it feeds the confidence score, so processing
+continues on a fallback and the shortfall shows up as a lower number with the
+reason attached.
+
+Every box appends to the claim's trace as it happens — component, action,
+outcome, the numbers it looked at, the policy clause it applied, what it cost in
+milliseconds, and how it moved confidence. The trace is the output, not a log.
+
+### Where the code lives
+
+| The step above | The component | Reads from |
+|---|---|---|
+| Intake | `api/routes.py` → Pydantic models | — |
+| Open · legible · what is this | `agents/verifier.py`, `agents/imaging.py`, `agents/llm.py` | GPT-4o vision (optional) |
+| Required documents · same patient | `agents/verifier.py` | `policy_terms.json` via `kb/snapshot.py`, Neo4j when reachable |
+| Extract the fields | `agents/extraction.py` (documents read concurrently) | GPT-4o vision, or content supplied by an eval case |
+| Apply the policy · compute the money | `engine/checks.py`, `engine/financial.py` — **no LLM, no I/O** | `kb/snapshot.py`, Qdrant for paraphrase candidates |
+| Claim pattern | `engine/fraud.py` | claim history from the payload or the store |
+| Confidence and wording | `engine/synthesizer.py` | the accumulated penalties |
+| Persist and serve | `core/store.py` | Postgres, or SQLite |
+
+Two surfaces only read what the pipeline already decided, and neither can reach
+the engine: the **assistant** (`agents/assistant.py` over `kb/retrieval.py`) and
+**analytics** (`core/analytics.py`). That separation is the reason a chat answer
+can never contradict a decision — it has no way to make one.
 
 ### Pipeline stages
 
