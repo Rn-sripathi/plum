@@ -38,7 +38,7 @@ flowchart TD
     INTAKE -->|no| BAD([Refused at intake<br/>names the field · no decision])
 
     INTAKE -->|yes| OPEN{Does every file open?}
-    OPEN -->|no| BACK([Handed back to the member<br/>names the file and what to do<br/><b>NO DECISION MADE</b>])
+    OPEN -->|no| BACK([Handed back to the member<br/>names the file and what to do<br/>NO DECISION MADE])
     OPEN -->|yes| LEG{Legible enough to read?<br/>focus measured in code,<br/>never asked of the model}
     LEG -->|no| BACK
     LEG -->|yes| WHAT[Read every page:<br/>what document is this?]
@@ -58,6 +58,15 @@ flowchart TD
     CONF -->|above 0.75| DONE([APPROVED · PARTIAL · REJECTED<br/>amount · reasons · confidence])
 
     DEG[/A component failed<br/>LLM, vector index, graph, store/] -.->|continue on the fallback,<br/>record it, lower confidence| CONF
+
+    classDef handback fill:#fff3e0,stroke:#e8c68a,color:#7a4a00;
+    classDef decided fill:#e7f6ef,stroke:#bfe3d2,color:#0f5c40;
+    classDef refused fill:#fdecee,stroke:#f3c2c8,color:#8f1a26;
+    classDef review fill:#f0ecfd,stroke:#ddd6fa,color:#4a32b8;
+    class BACK handback
+    class BAD refused
+    class DONE,SOFT decided
+    class REVIEW review
 ```
 
 Two properties are worth reading off the picture. **A document problem is not a

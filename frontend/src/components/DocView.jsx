@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { api } from "../api";
+import Mermaid from "./Mermaid";
 
 /** The project documents, also listed in the nav's Docs menu. */
 export const DOC_TABS = [
@@ -56,7 +57,23 @@ export default function DocView({ slug }) {
           printing their own tags. Raw HTML is only safe because the source is
           fixed: the API serves a four-entry allowlist of files from this
           repo's docs/, never an arbitrary path. */}
-      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
+        components={{
+          /* Intercepted at `pre`, not at `code`: replacing the inner element
+             would leave the diagram inside a <pre>, inheriting monospace and
+             pre-wrap, and nesting a block element where one is not allowed. */
+          pre({ children, ...props }) {
+            const block = Array.isArray(children) ? children[0] : children;
+            const language = block?.props?.className || "";
+            if (/language-mermaid/.test(language)) {
+              return <Mermaid chart={String(block.props.children).replace(/\n$/, "")} />;
+            }
+            return <pre {...props}>{children}</pre>;
+          },
+        }}
+      >
         {doc.markdown}
       </ReactMarkdown>
     </div>

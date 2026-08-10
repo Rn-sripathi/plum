@@ -942,3 +942,24 @@ input[type="file"] { padding: 7px; background: #fbfbfd; }
 .msg-trace summary { cursor: pointer; font-size: 12px; color: var(--muted); font-weight: 500; padding: 5px 5px; }
 .msg-trace summary:hover { color: var(--plum-coral); }
 .msg-trace[open] { width: 100%; margin-top: 6px; }
+
+/* Mermaid diagrams in the project documents. Wide ones scroll in their own box
+   so the page never scrolls sideways; the source shows until mermaid resolves. */
+.doc .diagram {
+  margin: 18px 0 22px;
+  padding: 18px 8px;
+  overflow-x: auto;
+  background: #fdfbfa;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  text-align: center;
+}
+.doc .diagram svg { max-width: 100%; height: auto; }
+.doc .diagram-source {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-height: 220px;
+  overflow: auto;
+}
+.doc .diagram-source.loading { opacity: 0.55; }
